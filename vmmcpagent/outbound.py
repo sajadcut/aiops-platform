@@ -230,10 +230,54 @@ async def run_outbound_forever() -> None:
                             await socket.close(code=1008)
                             break
                         tool, args, deadline = prepared.pop(ident)
-                        executed = _monotonic_time() <= deadline
-                        result = (await execute_tool(tool, args) if executed else
-                                  _execution_failure(tool, "request_expired",
-                                                     sent_to_executor=False))
+                        remaining = deadline - _monotonic_time()
+                        executed = remaining > 0
+                        if executed and tool == "config_change_apply":
+                            # The signed API approval has a 55-second expiry
+                            # in API-local UTC. A Linux VM can have an arbitrary
+                            # wall-clock offset. ONLY a fresh two-phase v2
+                            # commit may translate its HMAC-authenticated
+                            # scope to VM-local expiry (also checked by the
+                            # root-owned Ed25519 guard). Never skip expiry in
+                            # legacy, inbound or direct MCP execution.
+                            from apps.config_change_authorization import (
+                                rebase_authenticated_outbound_claim,
+                            )
+                            try:
+                                scoped, signed = rebase_authenticated_outbound_claim(
+                                    args.get("claims"), args.get("signature"),
+                                    target=settings.VM_AGENT_TARGET,
+                                    service=str(args.get("service") or ""),
+                                    remaining_seconds=remaining,
+                                )
+                                args = {**args, "claims": scoped, "signature": signed}
+                            except PermissionError as exc:
+                                # No MCP executor or root guard was invoked.
+                                # Only stable, safe error codes are disclosed.
+                                reason = str(exc)
+                                if reason not in {
+                                    "config_execution_claim_missing",
+                                    "config_execution_claim_fields",
+                                    "config_execution_claim_recovery_scope",
+                                    "config_execution_claim_scope",
+                                    "config_execution_claim_expired",
+                                    "config_execution_claim_signature_invalid",
+                                    "config_execution_lease_expired",
+                                    "mcp_bearer_token_not_configured_for_signing",
+                                    "mcp_bearer_token_too_weak_for_signing",
+                                }:
+                                    reason = "config_execution_claim_rebase_rejected"
+                                logger.warning("vm_agent_config_claim_rebase_rejected",
+                                               target=settings.VM_AGENT_TARGET, reason=reason)
+                                executed = False
+                                result = _execution_failure(tool, reason,
+                                                            sent_to_executor=False)
+                        if executed:
+                            result = await execute_tool(tool, args)
+                        elif tool != "config_change_apply" or remaining <= 0:
+                            result = _execution_failure(
+                                tool, "request_expired", sent_to_executor=False,
+                            )
                         await send_result(tool, ident, result, received_at, executed=executed)
                         set_trace_id("")
                         continue

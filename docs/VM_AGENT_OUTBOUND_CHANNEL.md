@@ -370,3 +370,35 @@ skew-independent operation. Do not disable replay checks or change
 system clocks to bypass this policy. An unbounded network stall can still
 delay an already granted commit, so independent post-write verification and
 normal human approval requirements remain necessary.
+
+
+## Cross-clock signed configuration apply (outbound-v2)
+
+A relative WebSocket TTL alone is insufficient for configuration apply:
+the API's HMAC-signed approval and the root-owned Ed25519 config guard also
+use short absolute expiries. With API/VM clocks offset by minutes, the
+outbound channel could authenticate and successfully validate a staged
+candidate, but a later approved `config_change_apply` failed with
+`PermissionError` before the root guard ran.
+
+For the negotiated `relative_monotonic_v2` two-phase commit **only**:
+
+1. The API verifies the **original** HMAC claim, target, config hashes and
+   expiry against its own local clock before dispatch. The broker checks the
+   same original expiry **again** immediately before `execute_commit` and
+   refuses an expired approval as `NOT_STARTED`.
+2. The authenticated Agent accepts the write **only** after a fresh commit
+   within its own monotonic lease. It verifies the original HMAC, field scope
+   and recovery action without comparing independent machine wall clocks.
+3. The Agent generates a new, HMAC-signed copy of the identical approval
+   scope, translating **only expiry** to its local clock, capped by 55 seconds
+   and remaining lease time. Ordinary on-host `verify_claim` and the
+   root-owned Ed25519 verifier still demand a valid local expiry; CAS, vendor
+   validation, rollback, and signed approval provenance remain unchanged.
+4. Legacy WebSocket, direct MCP, inbound Agent, SSH, and unconfirmed writes
+   keep the original strict expiry behavior. An invalid/tampered HMAC or an
+   expired transport lease can never be rebased.
+
+Both API and the **installed Linux Agent executable** must be upgraded.
+Use a new human-approved change after independently checking the consumed
+approval's prior outcome and current file hash; NEVER auto-retry writes.

@@ -48,6 +48,7 @@ class AgentSession:
     relative_deadlines: bool = False
     pending_deadlines: dict[str, float] = field(default_factory=dict)
     pending_tools: dict[str, str] = field(default_factory=dict)
+    pending_claim_expiries: dict[str, int] = field(default_factory=dict)
     confirmed_writes: set[str] = field(default_factory=set)
 
     def fail_pending(self) -> None:
@@ -57,6 +58,7 @@ class AgentSession:
         self.pending.clear()
         self.pending_deadlines.clear()
         self.pending_tools.clear()
+        self.pending_claim_expiries.clear()
         self.confirmed_writes.clear()
 
 
@@ -168,6 +170,17 @@ class OutboundAgentBroker:
                         break
                     if time.monotonic() >= session.pending_deadlines.get(ident, -1):
                         continue  # Timed out/cancelled: never issue execute_commit.
+                    # The HMAC claim's UTC lifetime is checked only on the
+                    # *issuing API's own clock*. A VM-local replacement expiry
+                    # cannot extend an already-expired API authorization.
+                    claim_expires = session.pending_claim_expiries.get(ident)
+                    if claim_expires is not None and int(time.time()) > claim_expires:
+                        future = session.pending.get(ident)
+                        if future is not None and not future.done():
+                            future.set_result(self._not_dispatched(
+                                "config_change_apply", "config_execution_claim_expired",
+                            ))
+                        continue  # Never commit a stale signed approval.
                     session.confirmed_writes.add(ident)
                     async with session.sending:
                         if self.sessions.get(target) is not session:
@@ -239,6 +252,8 @@ class OutboundAgentBroker:
         session.pending[request_id] = future
         session.pending_deadlines[request_id] = time.monotonic() + deadline_seconds
         session.pending_tools[request_id] = tool
+        if tool == "config_change_apply":
+            session.pending_claim_expiries[request_id] = args["claims"]["expires"]
         message = {
             "type": "execute", "id": request_id, "target": target,
             "tool": tool, "arguments": args,
@@ -280,6 +295,7 @@ class OutboundAgentBroker:
             session.pending.pop(request_id, None)
             session.pending_deadlines.pop(request_id, None)
             session.pending_tools.pop(request_id, None)
+            session.pending_claim_expiries.pop(request_id, None)
             session.confirmed_writes.discard(request_id)
             # Consume possible disconnect exception if the result was abandoned.
             if future.done() and not future.cancelled():

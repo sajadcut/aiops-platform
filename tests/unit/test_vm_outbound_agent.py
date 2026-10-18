@@ -506,3 +506,52 @@ async def test_expired_relative_write_is_never_committed_by_api(pull, monkeypatc
     assert socket.outbound.empty(), "Expired write must never receive commit"
     await socket.inbound.put(None)
     await connected
+
+
+@pytest.mark.asyncio
+async def test_relative_config_claim_must_be_live_at_api_commit(pull, monkeypatch):
+    """No API commit if signed claim expires during network/queue delay."""
+    from apps.config_change_authorization import create_claim
+    from apps.api import vm_agent_broker as broker_module
+
+    monkeypatch.setattr(settings, "VM_AGENT_EXECUTION_CREDENTIALS", {
+        "vm-01": {"username": "opsbot", "password": "test-password"},
+    })
+    hub = OutboundAgentBroker()
+    socket, connected = await _connected(hub)
+    await socket.outbound.get()
+    await socket.inbound.put(json.dumps({
+        "type": "credentials_ack", "target": "vm-01", "username": "opsbot",
+        "ok": True, "lease_protocol": "relative_monotonic_v2",
+    }))
+    for _ in range(100):
+        if hub.is_connected("vm-01"):
+            break
+        await asyncio.sleep(.001)
+    claims, signature = create_claim(
+        approval_id="approval-123", incident_id="incident-123",
+        target="vm-01", service="nginx",
+        config_file="/etc/nginx/nginx.conf",
+        original_sha256="a"*64, candidate_sha256="b"*64,
+        proposed_change="remove_extra_opening_brace",
+    )
+    task = asyncio.create_task(hub.dispatch(
+        "vm-01", "config_change_apply",
+        {"target": "vm-01", "service": "nginx",
+         "claims": claims, "signature": signature},
+        timeout=60,
+    ))
+    frame = await asyncio.wait_for(socket.outbound.get(), 1)
+    assert frame["ttl_seconds"] == 60
+    # Simulate the *issuing API's* UTC clock passing original approval expiry.
+    monkeypatch.setattr(broker_module.time, "time",
+                        lambda: claims["expires"] + 5)
+    await socket.inbound.put(json.dumps({
+        "type": "execute_ready", "id": frame["id"],
+    }))
+    result = await asyncio.wait_for(task, 1)
+    assert result["execution_outcome"] == "NOT_STARTED"
+    assert result["status"] == "config_execution_claim_expired"
+    assert socket.outbound.empty(), "An expired approval must never commit"
+    await socket.inbound.put(None)
+    await connected
