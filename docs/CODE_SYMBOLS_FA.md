@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 574 | Dashboard JS files scanned: 8 | Symbols indexed: 6497**
+**Python files scanned: 574 | Dashboard JS files scanned: 8 | Symbols indexed: 6498**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -6086,6 +6086,7 @@
 | `tests/unit/test_vm_agent_package_layout.py` | `test_entrypoint_refuses_symlink_agent_env` | 77 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_agent_package_layout.py` | `test_service_and_build_target_exact_same_agent_directory` | 87 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_agent_package_layout.py` | `test_installer_reapplies_traversable_mode_after_archive_copy` | 117 | function | Regression: cp -a SOURCE/. TARGET/ can restore a 0700 build directory. | module |
+| `tests/unit/test_vm_agent_package_layout.py` | `test_installer_makes_private_pyinstaller_runtime_readable_without_widening_secrets` | 149 | function | A root/umask-077 build must work under the unprivileged systemd user. | module |
 | `tests/unit/test_vm_agent_sudo_credentials.py` | `provision` | 18 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_vm_agent_sudo_credentials.py` | `test_authenticated_agent_gets_only_its_own_bootstrap_credentials` | 33 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_agent_sudo_credentials.py` | `test_agent_rejects_mismatched_bootstrap_ack_and_never_dispatches` | 74 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
