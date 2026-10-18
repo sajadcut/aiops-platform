@@ -84,3 +84,58 @@ async def test_installed_agent_uses_signed_fixed_guard_and_not_root_shell(
         assert outcome["status"] == "isolated_vendor_validation_passed"
         assert outcome["production_write_performed"] is False
         assert len(command.split()) == 6  # guard + 5 validated arguments
+
+
+def test_root_guard_signer_preflight_detects_missing_mismatch_and_valid_key(monkeypatch, tmp_path):
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+    import apps.config_change_authorization as auth
+
+    seed = bytes([19]) * 32
+    public_file = tmp_path / "verify.pem"
+    public = Ed25519PrivateKey.from_private_bytes(seed).public_key()
+    public_file.write_bytes(public.public_bytes(Encoding.PEM, PublicFormat.SubjectPublicKeyInfo))
+    monkeypatch.setattr(auth, "_ROOT_GUARD_VERIFY_PEM", str(public_file))
+    monkeypatch.delenv("AIOPS_CONFIG_GUARD_ED25519_PRIVATE_KEY", raising=False)
+    assert auth.root_guard_apply_signing_status() == (False, "config_guard_private_key_missing")
+    monkeypatch.setenv("AIOPS_CONFIG_GUARD_ED25519_PRIVATE_KEY", base64.b64encode(seed).decode())
+    assert auth.root_guard_apply_signing_status() == (True, "ready")
+    monkeypatch.setenv("AIOPS_CONFIG_GUARD_ED25519_PRIVATE_KEY",
+                       base64.b64encode(bytes([20]) * 32).decode())
+    assert auth.root_guard_apply_signing_status() == (False, "config_guard_keypair_mismatch")
+    monkeypatch.setenv("AIOPS_CONFIG_GUARD_ED25519_PRIVATE_KEY", base64.b64encode(seed).decode())
+    public_file.unlink()
+    assert auth.root_guard_apply_signing_status() == (False, "config_guard_verify_key_missing")
+    public_file.symlink_to(tmp_path / "not-a-verifier")
+    assert auth.root_guard_apply_signing_status() == (False, "config_guard_verify_key_invalid")
+
+
+@pytest.mark.asyncio
+async def test_missing_signing_key_never_runs_privileged_apply(monkeypatch):
+    monkeypatch.setattr(settings, "MCP_SERVER_PROVIDER", "vm_agent")
+    monkeypatch.setattr(settings, "VM_AGENT_BEARER_TOKEN",
+                        "agent-01-only-unique-secret-123456789abcdef")
+    claims, signed = create_claim(
+        approval_id=str(uuid4()), incident_id=str(uuid4()),
+        target="vm-local-01", service="nginx", **VALUES,
+    )
+    monkeypatch.delenv("AIOPS_CONFIG_GUARD_ED25519_PRIVATE_KEY", raising=False)
+    class Connector:
+        uses_root_owned_config_guard = True
+        _validate_target = staticmethod(lambda _: None)
+        _validate_service = staticmethod(lambda _: None)
+        async def config_validate(self, target, service):
+            return {"success": True, "supported": True, "valid": False,
+                    "config_file": FILE, "error_line": 1,
+                    "syntax_error": 'unexpected "{"'}
+        async def _run(self, target, command, *, stdin_data=None):
+            return {"success": True, "stdout": base64.b64encode(SOURCE).decode()}
+        async def _sudo(self, target, command, *, stdin_data=None):
+            raise AssertionError("No privileged executor must run")
+    result = await run_governed_change(
+        Connector(), action="apply", target="vm-local-01", service="nginx",
+        execution_claims=claims, execution_signature=signed, **VALUES,
+    )
+    assert result["status"] == "config_guard_request_rejected"
+    assert result["failure_reason"] == "config_guard_private_key_missing"
+    assert result["production_write_performed"] is False
