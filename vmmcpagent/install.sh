@@ -4,7 +4,8 @@
 set -euo pipefail
 if [[ "${EUID}" -ne 0 ]]; then echo "Run as root" >&2; exit 1; fi
 SRC="${1:-}"
-if [[ -z "$SRC" || ! -f "$SRC/vmmcpagent" || ! -f "$SRC/agent.env.example" ]]; then
+if [[ -z "$SRC" || ! -f "$SRC/vmmcpagent" || ! -f "$SRC/agent.env.example" \
+      || ! -f "$SRC/.env.example" || -L "$SRC/.env.example" ]]; then
   echo "Usage: sudo bash vmmcpagent/install.sh /path/to/dist/vmmcpagent" >&2
   exit 2
 fi
@@ -41,6 +42,9 @@ if [[ -e "$DST/agent.env" ]]; then
   echo "Existing $DST/agent.env will be preserved"
 fi
 install -d -o root -g root -m 0755 "$DST"
+# install -d does not reliably repair an existing directory's mode.
+# systemd runs the agent unprivileged and must be able to CHDIR here.
+chmod 0755 "$DST"
 cp -a "$SRC/." "$DST/"
 # Preserve ownership and ciphertext contents of existing agent runtime data on
 # upgrades. Only trusted package files are root-owned; data dirs are not.
@@ -52,6 +56,15 @@ find "$DST" -mindepth 1 -maxdepth 1 \
 # directory checks. The same private owner is used for on-host log files.
 install -d -o "$ACTOR" -g "$ACTOR_GROUP" -m 0700 \
   "$DST/config-candidates" "$DST/logs"
+# .env.example is the checked-in NON-SECRET Pydantic default baseline.
+# PyInstaller reads it at startup as the unprivileged systemd User, not root.
+# cp -a preserves source modes (which may be 0600), so always normalize.
+# Never do this to agent.env: that file contains live credentials.
+if [[ -L "$DST/.env.example" || ! -f "$DST/.env.example" ]]; then
+  echo "Refusing missing or symlinked non-secret .env.example" >&2; exit 6
+fi
+chown root:root "$DST/.env.example"
+chmod 0644 "$DST/.env.example"
 # Templates and binary may be world-readable; operator secrets may not.
 chmod 0755 "$DST/vmmcpagent"
 if [[ ! -f "$DST/agent.env" ]]; then

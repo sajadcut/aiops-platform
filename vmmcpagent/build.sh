@@ -23,6 +23,8 @@ pyinstaller --clean --noconfirm --onedir --name vmmcpagent \
 BUNDLE="$ROOT/dist/vmmcpagent"
 # BaseSettings expects a complete non-secret configuration baseline.
 cp "$ROOT/.env.example" "$BUNDLE/.env.example"
+# Non-secret baseline must be readable by the unprivileged installed systemd user.
+chmod 0644 "$BUNDLE/.env.example"
 cp "$ROOT/vmmcpagent/agent.env.example" "$BUNDLE/agent.env.example"
 cp "$ROOT/vmmcpagent/vmmcpagent.service" "$BUNDLE/vmmcpagent.service"
 cp "$ROOT/vmmcpagent/sudoers.example" "$BUNDLE/sudoers.example"
