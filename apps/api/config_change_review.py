@@ -235,10 +235,16 @@ def _review_progress(*, status: str, decision: str | None, proposal: dict,
         "approval_eligible": approvable,
         "approval_actionable": approvable,
         "execution_prerequisites": {
-            "signing_source": "MCP_BEARER_TOKEN",
-            "api_signing_key": ("derived_from_mcp_bearer_token"
-                                if config_signing_ready()
-                                else "missing_or_weak_mcp_bearer_token"),
+            "signing_source": ("VM_AGENT_TOKENS"
+                               if settings.VM_EXECUTION_BACKEND in {"agent", "agent_pull"}
+                               else "MCP_BEARER_TOKEN"),
+            "api_signing_key": (
+                ("derived_from_agent_target_tokens"
+                 if config_signing_ready() else "missing_or_weak_agent_target_token")
+                if settings.VM_EXECUTION_BACKEND in {"agent", "agent_pull"}
+                else ("derived_from_mcp_bearer_token"
+                      if config_signing_ready() else "missing_or_weak_mcp_bearer_token")
+            ),
             "vm_mcp_signing_key": "not_checked",
             "signing_key_match": "not_checked",
             "execution_ready": False,
