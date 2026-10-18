@@ -46,6 +46,12 @@ install -d -o root -g root -m 0755 "$DST"
 # systemd runs the agent unprivileged and must be able to CHDIR here.
 chmod 0755 "$DST"
 cp -a "$SRC/." "$DST/"
+# GNU cp -a SRC/. DST/ also copies the source DIRECTORY mode to DST,
+# silently undoing the chmod above (PyInstaller build output can be 0700).
+# Repair the destination *after* the archive copy. Otherwise the unprivileged
+# systemd User cannot traverse WorkingDirectory and exits status=200/CHDIR.
+# Secrets remain restricted individually (agent.env is mode 0600 below).
+chmod 0755 "$DST"
 # Preserve ownership and ciphertext contents of existing agent runtime data on
 # upgrades. Only trusted package files are root-owned; data dirs are not.
 chown root:root "$DST"
