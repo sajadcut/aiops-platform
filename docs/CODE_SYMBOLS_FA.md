@@ -6031,10 +6031,10 @@
 | `tests/unit/test_vm_agent_guarded_config.py` | `test_installed_agent_uses_signed_fixed_guard_and_not_root_shell.Connector._sudo` | 59 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_installed_agent_uses_signed_fixed_guard_and_not_root_shell.Connector |
 | `tests/unit/test_vm_agent_package_layout.py` | `test_vm_agent_entrypoint_and_every_deployment_asset_in_own_directory` | 16 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_agent_package_layout.py` | `test_agent_configuration_template_is_private_and_agent_specific` | 31 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_agent_package_layout.py` | `test_entrypoint_reads_0600_agent_env_alongside_it` | 46 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_agent_package_layout.py` | `test_entrypoint_refuses_world_or_group_readable_secrets` | 66 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_agent_package_layout.py` | `test_entrypoint_refuses_symlink_agent_env` | 75 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_vm_agent_package_layout.py` | `test_service_and_build_target_exact_same_agent_directory` | 85 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_agent_package_layout.py` | `test_entrypoint_reads_0600_agent_env_alongside_it` | 48 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_agent_package_layout.py` | `test_entrypoint_refuses_world_or_group_readable_secrets` | 68 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_agent_package_layout.py` | `test_entrypoint_refuses_symlink_agent_env` | 77 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_agent_package_layout.py` | `test_service_and_build_target_exact_same_agent_directory` | 87 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_config_validation.py` | `test_config_validate_propagates_ssh_failure` | 8 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_config_validation.py` | `test_config_validate_propagates_ssh_failure.failed_run` | 14 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_config_validate_propagates_ssh_failure |
 | `tests/unit/test_vm_config_validation.py` | `test_config_validate_retries_sudo_with_ssh_password_when_permission_denied` | 33 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
