@@ -25,6 +25,8 @@ def provision(monkeypatch):
     })
     monkeypatch.setattr(settings, "VM_AGENT_EXEC_USERNAME", "opsbot")
     monkeypatch.setattr(settings, "VM_AGENT_TARGET", "vm-01")
+    monkeypatch.setattr(settings, "SSH_ENABLED", False)
+    monkeypatch.setattr(settings, "VM_AGENT_ALLOWED_SERVICES", ["nginx"])
 
 
 @pytest.mark.asyncio
@@ -152,6 +154,7 @@ async def test_sudo_fallback_passes_password_on_stdin_and_redacts_output(provisi
 
 @pytest.mark.asyncio
 async def test_sudo_without_bootstrap_credentials_fails_closed(provision, monkeypatch):
+    monkeypatch.setattr(LocalVMConnector, "execution_identity", classmethod(lambda cls: "opsbot"))
     LocalVMConnector.clear_session_credentials()
     connector = LocalVMConnector()
     calls = []
