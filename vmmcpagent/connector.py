@@ -55,21 +55,23 @@ class LocalVMConnector(SSHVMConnector):
                     stdin_data: Optional[str] = None) -> Dict[str, Any]:
         self._validate_target(target)
         # Reuse only trusted allowlisted sudo operations from SSHVMConnector.
-        first = await self._run(
-            target, "sudo -n " + fixed_command, stdin_data=stdin_data)
-        if not self._sudo_requires_password(first):
-            return first
         password = type(self)._session_sudo_password
-        if not password:
-            return {"success": False, "error": "vm_agent_sudo_credentials_not_provisioned"}
-        # -k forces sudo to consume the first stdin line as the password,
-        # before optional signed configuration-guard candidate bytes.
-        payload = password + "\n" + (stdin_data if stdin_data is not None else "")
+        if password:
+            # Exactly one invocation, with a fresh sudo authentication.
+            # Never probe the same mutable action and then try it again.
+            payload = password + "\n" + (stdin_data if stdin_data is not None else "")
+            result = await self._run(
+                target, "sudo -k -S -p '' " + fixed_command, stdin_data=payload)
+            for field in ("stdout", "stderr"):
+                if field in result:
+                    result[field] = str(result[field]).replace(password, "[REDACTED]")
+            return result
+        # Legacy inbound/local NOPASSWD mode remains available without a
+        # transmitted credential; never attempt an interactive password prompt.
         result = await self._run(
-            target, "sudo -k -S -p '' " + fixed_command, stdin_data=payload)
-        for field in ("stdout", "stderr"):
-            if field in result:
-                result[field] = str(result[field]).replace(password, "[REDACTED]")
+            target, "sudo -n " + fixed_command, stdin_data=stdin_data)
+        if self._sudo_requires_password(result):
+            return {"success": False, "error": "vm_agent_sudo_credentials_not_provisioned"}
         return result
 
     @classmethod
