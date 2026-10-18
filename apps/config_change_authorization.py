@@ -132,7 +132,7 @@ def sign_root_guard(claims: dict) -> str:
     except (ValueError, TypeError) as exc:
         raise PermissionError("config_guard_private_key_missing") from exc
     values = (
-        "v1", "apply", str(claims["service"]).removesuffix(".service"),
+        "v1", "apply", str(claims["service"]).lower().removesuffix(".service"),
         claims["config_file"], claims["original_sha256"],
         claims["candidate_sha256"], claims["approval_id"], claims["incident_id"],
         claims["target"], str(claims["expires"]),
