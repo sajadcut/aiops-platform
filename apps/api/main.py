@@ -123,6 +123,21 @@ async def outbound_vm_agent_connection(websocket: WebSocket, target: str) -> Non
     await vm_agent_broker.connect(websocket, target)
 
 
+@app.get("/api/v1/vm-agents/status",
+         dependencies=[Depends(require_permission("read:incident"))])
+async def outbound_vm_agent_status() -> dict:
+    """Authenticated operator view; never return bearer secrets."""
+    if settings.VM_EXECUTION_BACKEND != "agent_pull":
+        return {"backend": settings.VM_EXECUTION_BACKEND, "targets": []}
+    return {
+        "backend": "agent_pull",
+        "targets": [
+            {"target": target, "connected": vm_agent_broker.is_connected(target)}
+            for target in sorted(settings.VM_AGENT_TOKENS)
+        ],
+    }
+
+
 @app.get("/")
 async def root():
     return {
@@ -437,6 +452,7 @@ async def startup_event():
 
 @app.on_event("shutdown")
 async def shutdown_event():
+    await vm_agent_broker.shutdown()
     task = getattr(app.state, "incident_knowledge_task", None)
     if task and not task.done():
         task.cancel()
