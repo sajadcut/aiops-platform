@@ -1,6 +1,6 @@
 import asyncio
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pathlib import Path
@@ -19,6 +19,7 @@ from apps.execution_service.tools.ssh_vm import SSHVMTool
 from apps.execution_service.tools.vm_telemetry import VMTelemetryTool
 from apps.execution_service.tools.kubernetes_mcp import KubernetesMCPTool
 from integrations.vm.mcp_client import VMEdgeMCPClient, vm_transport_configured
+from apps.api.vm_agent_broker import broker as vm_agent_broker
 from integrations.kubernetes.mcp_client import KubernetesMCPClient
 from apps.database.vector_validation import validate_pgvector
 from database import AsyncSessionLocal
@@ -114,6 +115,12 @@ async def approved_ui_font(filename: str):
         media_type="font/ttf",
         headers={"Cache-Control": "public, max-age=3600", "X-Content-Type-Options": "nosniff"},
     )
+
+
+@app.websocket("/api/v1/vm-agents/connect/{target}")
+async def outbound_vm_agent_connection(websocket: WebSocket, target: str) -> None:
+    # Authenticated machine identity is checked BEFORE websocket.accept().
+    await vm_agent_broker.connect(websocket, target)
 
 
 @app.get("/")
@@ -301,23 +308,27 @@ def _validate_production_configuration() -> None:
         errors.append("KUBERNETES_MCP_URL must use HTTP or HTTPS in production")
     if settings.VM_MCP_URL and not _is_http_or_https(settings.VM_MCP_URL):
         errors.append("VM_MCP_URL must use HTTP or HTTPS in production")
-    if settings.VM_EXECUTION_BACKEND == "agent":
-        if not settings.VM_AGENT_ENDPOINTS:
-            errors.append("VM_AGENT_ENDPOINTS required for agent backend")
-        if set(settings.VM_AGENT_TOKENS) != set(settings.VM_AGENT_ENDPOINTS):
-            errors.append("VM_AGENT_TOKENS must have exactly one token for every target")
+    if settings.VM_EXECUTION_BACKEND in {"agent", "agent_pull"}:
+        if settings.VM_EXECUTION_BACKEND == "agent":
+            if not settings.VM_AGENT_ENDPOINTS:
+                errors.append("VM_AGENT_ENDPOINTS required for agent backend")
+            if set(settings.VM_AGENT_TOKENS) != set(settings.VM_AGENT_ENDPOINTS):
+                errors.append("VM_AGENT_TOKENS must have exactly one token for every target")
+        elif not settings.VM_AGENT_TOKENS:
+            errors.append("VM_AGENT_TOKENS required for agent_pull backend")
         agent_secrets = list(settings.VM_AGENT_TOKENS.values())
         if (len(agent_secrets) != len(set(agent_secrets))
                 or any(len(str(secret).encode("utf-8")) < 32
                        or secret == settings.MCP_BEARER_TOKEN
                        for secret in agent_secrets)):
             errors.append("VM_AGENT_TOKENS must contain unique >=32-byte secrets different from MCP_BEARER_TOKEN")
-        for target, url in settings.VM_AGENT_ENDPOINTS.items():
-            parsed = urlparse(str(url))
-            if (not target or parsed.scheme.lower() != "https" or not parsed.netloc
-                    or parsed.username or parsed.password or parsed.query or parsed.fragment
-                    or not parsed.path.endswith("/mcp")):
-                errors.append("VM_AGENT_ENDPOINTS must use pinned HTTPS /mcp URLs without embedded credentials")
+        if settings.VM_EXECUTION_BACKEND == "agent":
+            for target, url in settings.VM_AGENT_ENDPOINTS.items():
+                parsed = urlparse(str(url))
+                if (not target or parsed.scheme.lower() != "https" or not parsed.netloc
+                        or parsed.username or parsed.password or parsed.query or parsed.fragment
+                        or not parsed.path.endswith("/mcp")):
+                    errors.append("VM_AGENT_ENDPOINTS must use pinned HTTPS /mcp URLs without embedded credentials")
     if not settings.MCP_BEARER_TOKEN and not (settings.MCP_CLIENT_CERT_PATH and settings.MCP_CLIENT_KEY_PATH):
         errors.append("production MCP requires bearer identity or mTLS client certificate")
     if bool(settings.MCP_CLIENT_CERT_PATH) != bool(settings.MCP_CLIENT_KEY_PATH):
