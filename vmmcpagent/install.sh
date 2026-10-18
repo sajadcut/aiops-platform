@@ -62,6 +62,17 @@ find "$DST" -mindepth 1 -maxdepth 1 \
 # directory checks. The same private owner is used for on-host log files.
 install -d -o "$ACTOR" -g "$ACTOR_GROUP" -m 0700 \
   "$DST/config-candidates" "$DST/logs"
+# PyInstaller --onedir bundles its runtime under _internal. A build executed
+# as root with umask 077 creates libpython*.so and its ancestor dirs as 0600/
+# 0700; archive copying faithfully preserves those modes. systemd then exits
+# status=255/EXCEPTION before the agent can load the Python runtime.
+# Only the non-secret bundled runtime is made traversable/readable. Never
+# recurse over DST itself: agent.env, logs and config-candidates stay private.
+if [[ -L "$DST/_internal" || ! -d "$DST/_internal" ]]; then
+  echo "Refusing missing or symlinked PyInstaller _internal directory" >&2
+  exit 6
+fi
+chmod -R a+rX "$DST/_internal"
 # .env.example is the checked-in NON-SECRET Pydantic default baseline.
 # PyInstaller reads it at startup as the unprivileged systemd User, not root.
 # cp -a preserves source modes (which may be 0600), so always normalize.
