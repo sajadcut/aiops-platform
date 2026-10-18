@@ -201,8 +201,8 @@ class SignalGateway:
         import re
         allowed = {
             str(item).strip().casefold(): str(item).strip()
-            for item in (settings.VM_AGENT_ENDPOINTS.keys()
-                         if settings.VM_EXECUTION_BACKEND == "agent"
+            for item in ((settings.VM_AGENT_TOKENS if settings.VM_EXECUTION_BACKEND == "agent_pull" else settings.VM_AGENT_ENDPOINTS).keys()
+                         if settings.VM_EXECUTION_BACKEND in {"agent", "agent_pull"}
                          else settings.SSH_ALLOWED_TARGETS)
             if str(item).strip()
         }
