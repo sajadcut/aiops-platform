@@ -306,7 +306,7 @@ async def test_click_recheck_calls_only_readonly_service_status_and_writes_audit
         def __init__(self, db): pass
         async def append(self, event): calls.append(("audit", event))
         async def list(self, incident_id, limit):
-            return [entry for kind, entry in calls if kind == "audit"]
+            return [item[1] for item in calls if item[0] == "audit"]
     async def scope(db, incident_id):
         return (SimpleNamespace(service="gfpapi", source="zabbix",
                                 summary="", context={}, status="open"), [vm_fact()],
