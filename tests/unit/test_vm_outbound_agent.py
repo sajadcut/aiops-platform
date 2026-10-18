@@ -80,6 +80,7 @@ async def test_agent_initiates_authenticated_session_and_tool_result(pull):
     assert outbound["target"] == "vm-01"
     assert outbound["arguments"] == {"target": "vm-01", "service": "nginx"}
     assert outbound["expires_at"] >= time.time()
+    assert "ttl_seconds" not in outbound
     await socket.result(outbound, {"success": True, "active_state": "active"})
     assert (await request)["active_state"] == "active"
     await socket.inbound.put(None)
@@ -431,3 +432,77 @@ async def test_cancelled_in_flight_write_never_requeues_and_clears_pending(pull)
     assert socket.outbound.empty()
     await socket.inbound.put(None)
     await agent_task
+
+
+@pytest.mark.asyncio
+async def test_negotiated_relative_lease_write_requires_fresh_api_commit(pull, monkeypatch):
+    """A write cannot start until the API confirms its own monotonic deadline."""
+    monkeypatch.setattr(settings, "VM_AGENT_EXECUTION_CREDENTIALS", {
+        "vm-01": {"username": "opsbot", "password": "test-password"},
+    })
+    hub = OutboundAgentBroker()
+    socket, connected = await _connected(hub)
+    credential = await asyncio.wait_for(socket.outbound.get(), 1)
+    assert credential["type"] == "credentials"
+    await socket.inbound.put(json.dumps({
+        "type": "credentials_ack", "target": "vm-01", "username": "opsbot",
+        "ok": True, "lease_protocol": "relative_monotonic_v2",
+    }))
+    for _ in range(100):
+        if hub.is_connected("vm-01"):
+            break
+        await asyncio.sleep(.001)
+    assert hub.is_connected("vm-01")
+    task = asyncio.create_task(hub.dispatch(
+        "vm-01", "restart_service",
+        {"target": "vm-01", "service": "nginx",
+         "approval_id": "approval-123", "incident_id": "incident-123"},
+        timeout=60,
+    ))
+    frame = await asyncio.wait_for(socket.outbound.get(), 1)
+    assert frame["ttl_seconds"] == 60
+    assert "expires_at" not in frame
+    await socket.inbound.put(json.dumps({
+        "type": "execute_ready", "id": frame["id"],
+    }))
+    commit = await asyncio.wait_for(socket.outbound.get(), 1)
+    assert commit == {"type": "execute_commit", "id": frame["id"]}
+    await socket.result(frame, {"success": True})
+    assert (await task)["success"] is True
+    await socket.inbound.put(None)
+    await connected
+
+
+@pytest.mark.asyncio
+async def test_expired_relative_write_is_never_committed_by_api(pull, monkeypatch):
+    monkeypatch.setattr(settings, "VM_AGENT_EXECUTION_CREDENTIALS", {
+        "vm-01": {"username": "opsbot", "password": "test-password"},
+    })
+    hub = OutboundAgentBroker()
+    socket, connected = await _connected(hub)
+    await socket.outbound.get()
+    await socket.inbound.put(json.dumps({
+        "type": "credentials_ack", "target": "vm-01", "username": "opsbot",
+        "ok": True, "lease_protocol": "relative_monotonic_v2",
+    }))
+    for _ in range(100):
+        if hub.is_connected("vm-01"):
+            break
+        await asyncio.sleep(.001)
+    task = asyncio.create_task(hub.dispatch(
+        "vm-01", "restart_service",
+        {"target": "vm-01", "service": "nginx",
+         "approval_id": "approval-123", "incident_id": "incident-123"},
+        timeout=1,
+    ))
+    frame = await asyncio.wait_for(socket.outbound.get(), 1)
+    assert frame["ttl_seconds"] == 1
+    result = await asyncio.wait_for(task, 3)
+    assert result["execution_outcome"] == "UNKNOWN"
+    await socket.inbound.put(json.dumps({
+        "type": "execute_ready", "id": frame["id"],
+    }))
+    await asyncio.sleep(.02)
+    assert socket.outbound.empty(), "Expired write must never receive commit"
+    await socket.inbound.put(None)
+    await connected
