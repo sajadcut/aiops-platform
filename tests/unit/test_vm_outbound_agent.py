@@ -198,3 +198,64 @@ def test_source_agent_defaults_to_no_inbound_port():
     assert "EnvironmentFile=/data/aiopsvmagent/agent.env" in (
         root / "vmmcpagent" / "vmmcpagent.service"
     ).read_text()
+
+
+@pytest.mark.asyncio
+async def test_busy_agent_rejects_second_write_before_send(pull):
+    hub = OutboundAgentBroker()
+    socket, task = await _connected(hub)
+    first = asyncio.create_task(hub.dispatch(
+        "vm-01", "service_status", {"target": "vm-01", "service": "nginx"},
+    ))
+    frame = await asyncio.wait_for(socket.outbound.get(), 1)
+    blocked = await hub.dispatch(
+        "vm-01", "restart_service", {
+            "target": "vm-01", "service": "nginx",
+            "approval_id": "approval-123", "incident_id": "incident-123",
+        }
+    )
+    assert blocked["execution_outcome"] == "NOT_STARTED"
+    assert blocked["status"] == "agent_queue_full"
+    assert socket.outbound.empty(), "A queued write must not be dispatched"
+    await socket.result(frame, {"success": True})
+    assert (await first)["success"] is True
+    await socket.inbound.put(None)
+    await task
+
+
+@pytest.mark.asyncio
+async def test_late_or_forged_reply_cannot_satisfy_pending_id(pull):
+    hub = OutboundAgentBroker()
+    socket, task = await _connected(hub)
+    request = asyncio.create_task(hub.dispatch(
+        "vm-01", "service_status", {"target": "vm-01", "service": "nginx"},
+    ))
+    frame = await asyncio.wait_for(socket.outbound.get(), 1)
+    await socket.inbound.put(json.dumps({
+        "type": "result", "id": "not-" + frame["id"],
+        "result": {"success": True, "active_state": "forged"},
+    }))
+    await asyncio.sleep(0)
+    assert not request.done()
+    await socket.result(frame, {"success": True, "active_state": "active"})
+    assert (await request)["active_state"] == "active"
+    await socket.inbound.put(None)
+    await task
+
+
+@pytest.mark.asyncio
+async def test_broker_shutdown_closes_sessions_and_unblocks_pending_write(pull):
+    hub = OutboundAgentBroker()
+    socket, task = await _connected(hub)
+    pending = asyncio.create_task(hub.dispatch(
+        "vm-01", "start_service", {
+            "target": "vm-01", "service": "nginx",
+            "approval_id": "approval-123", "incident_id": "incident-123",
+        },
+    ))
+    await asyncio.wait_for(socket.outbound.get(), 1)
+    await hub.shutdown()
+    assert socket.closed == 1001
+    assert (await pending)["status"] == "execution_outcome_unknown"
+    await socket.inbound.put(None)
+    await task
