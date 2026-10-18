@@ -149,7 +149,7 @@ async def test_api_blocks_unready_agent_signer_before_consuming_approval(monkeyp
     from apps.api import config_change_execution as module
 
     approval = {"status": "approved", "incident_id": str(uuid4())}
-    meta = {**VALUES, "target": "vm-local-01",
+    meta = {**VALUES, "target": "vm-local-01", "service": "nginx",
             "isolated_validation": True,
             "validation_scope":
                 "nginx_mount_namespace_staged_etc_nginx_live_external_read_dependencies"}
