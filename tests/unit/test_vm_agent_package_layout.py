@@ -112,3 +112,35 @@ def test_service_and_build_target_exact_same_agent_directory():
     assert "systemctl daemon-reload" in install
     assert "systemctl enable --now" not in install
     assert "VM_AGENT_BEARER_TOKEN" not in (AGENT / "vmmcpagent.service").read_text()
+
+
+def test_installer_reapplies_traversable_mode_after_archive_copy(tmp_path):
+    """Regression: cp -a SOURCE/. TARGET/ can restore a 0700 build directory."""
+    import os
+    import stat
+    import subprocess
+
+    source = tmp_path / "private-build"
+    destination = tmp_path / "installed"
+    source.mkdir(mode=0o700)
+    destination.mkdir(mode=0o755)
+    # GNU cp -a preserves source directory mode on an EXISTING target.
+    subprocess.run(["cp", "-a", str(source / "."), str(destination) + "/"],
+                   check=True)
+    # GNU cp archive destination mode handling varies with directory state
+    # and version. Simulate the dangerous result explicitly when needed.
+    destination.chmod(0o700)
+    assert stat.S_IMODE(destination.stat().st_mode) == 0o700
+
+    installer = (AGENT / "install.sh").read_text()
+    archive_copy = installer.index('cp -a "$SRC/." "$DST/"')
+    post_copy_chmod = installer.find('chmod 0755 "$DST"', archive_copy + 1)
+    assert post_copy_chmod > archive_copy, (
+        "Installer must restore destination traversal mode AFTER cp -a"
+    )
+    # Only the root directory changes; secret file modes must stay private.
+    private_config = destination / "agent.env"
+    private_config.write_text("VM_AGENT_BEARER_TOKEN=fake-secret\n")
+    private_config.chmod(0o600)
+    os.chmod(destination, 0o755)
+    assert stat.S_IMODE(private_config.stat().st_mode) == 0o600
