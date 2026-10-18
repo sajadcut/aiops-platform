@@ -15,6 +15,7 @@ from apps.approval_service.postgres import PostgreSQLApprovalStore
 from apps.audit_service import AuditService
 from apps.audit_service.postgres import PostgreSQLAuditStore
 from apps.config_change_authorization import create_claim
+from domain.contracts.config import settings
 from apps.orchestrator.workflow_store import WorkflowCheckpointStore
 from apps.security.auth import require_permission
 from database import AsyncSessionLocal
@@ -211,7 +212,8 @@ async def execute_config(approval_id: UUID, identity=Depends(require_permission(
         # disappear or be invalidated after its original validation. Repeat
         # the exact read-only isolated candidate test BEFORE irrevocably
         # consuming the human Approval; production guard repeats live CAS.
-        if meta.get("proposed_change") == "llm_full_file_repair":
+        on_host_pull = settings.VM_EXECUTION_BACKEND == "agent_pull"
+        if on_host_pull or meta.get("proposed_change") == "llm_full_file_repair":
             try:
                 checked = await VMEdgeMCPClient().config_change_validate(
                     meta["target"],
@@ -231,7 +233,23 @@ async def execute_config(approval_id: UUID, identity=Depends(require_permission(
                 and checked.get("candidate_sha256") == meta["candidate_sha256"]
                 and checked.get("validation_scope") == meta.get("validation_scope")
             ):
-                raise HTTPException(status_code=409, detail="llm_candidate_revalidation_required")
+                raise HTTPException(
+                    status_code=409,
+                    detail=("llm_candidate_revalidation_required"
+                            if meta.get("proposed_change") == "llm_full_file_repair"
+                            else "config_candidate_revalidation_required"),
+                )
+            if on_host_pull and checked.get("apply_signing_ready") is not True:
+                reason = str(checked.get("apply_signing_status") or "")
+                if reason not in {
+                    "config_guard_private_key_missing",
+                    "config_guard_verify_key_missing",
+                    "config_guard_verify_key_invalid",
+                    "config_guard_keypair_mismatch",
+                }:
+                    reason = "config_guard_signing_preflight_unavailable"
+                # Keep the human Approval intact; no attempted write.
+                raise HTTPException(status_code=503, detail=reason)
         # Sign before consuming so a missing signing key cannot burn authority.
         try:
             claim, signature = create_claim(
