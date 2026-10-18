@@ -259,3 +259,45 @@ async def test_broker_shutdown_closes_sessions_and_unblocks_pending_write(pull):
     assert (await pending)["status"] == "execution_outcome_unknown"
     await socket.inbound.put(None)
     await task
+
+
+def test_backend_enum_accepts_pull_but_refuses_arbitrary_mode():
+    from domain.contracts.config import Settings
+    assert Settings.validate_vm_execution_backend("agent_pull") == "agent_pull"
+    with pytest.raises(ValueError):
+        Settings.validate_vm_execution_backend("untrusted_backend")
+
+
+def test_outbound_runner_does_not_bind_uvicorn_listener(pull, monkeypatch):
+    from unittest.mock import AsyncMock
+    from vmmcpagent import __main__ as entry
+    from vmmcpagent import connector, outbound
+    import uvicorn
+
+    monkeypatch.setattr(settings, "MCP_SERVER_PROVIDER", "vm_agent")
+    monkeypatch.setattr(settings, "VM_AGENT_CONNECTION_MODE", "outbound")
+    monkeypatch.setattr(settings, "SSH_ENABLED", False)
+    monkeypatch.setattr(settings, "MCP_SERVER_REQUIRE_AUTH", True)
+    monkeypatch.setattr(settings, "VM_AGENT_BEARER_TOKEN", "A" * 40)
+    monkeypatch.setattr(entry, "configure_agent_environment", lambda: None)
+    monkeypatch.setattr(connector, "LocalVMConnector", lambda: object())
+    launched = AsyncMock()
+    monkeypatch.setattr(outbound, "run_outbound_forever", launched)
+
+    def forbidden_listener(*args, **kwargs):
+        raise AssertionError("Outbound Agent must never listen on a VM port")
+
+    monkeypatch.setattr(uvicorn, "run", forbidden_listener)
+    entry.main()
+    launched.assert_awaited_once()
+
+
+def test_operator_connection_status_endpoint_requires_permission():
+    from apps.api.main import app
+    found = [r for r in app.routes
+             if getattr(r, "path", "") == "/api/v1/vm-agents/status"]
+    assert len(found) == 1
+    assert found[0].methods == {"GET"}
+    # Route has a required permission dependency rather than leaking
+    # registered VM identities or tokens anonymously.
+    assert len(found[0].dependencies) > 0
