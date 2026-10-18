@@ -141,3 +141,85 @@ per-host connection state without exposing bearer tokens. Permission
 
 Unit regressions: `tests/unit/test_vm_outbound_agent.py`. Dedicated CI:
 `vm-agent-transport`. These are not substitutes for on-host validation.
+
+## First-connection sudo credentials (per target)
+
+The on-host Agent's `VM_AGENT_EXEC_USERNAME` must be the existing **Linux
+account running the systemd service**, not a shell argument or a remote SSH
+login. The Agent refuses root and any mismatch between this setting,
+`os.geteuid()` and the account sent by the API.
+
+The API keeps the username and password in its **protected API .env** as
+requested (readable plain text in that file, **not** exposed in HTTP responses
+or audit logs). The API validates credentials by VM target; only after
+successfully authenticating the Agent's WSS bearer token does it send one
+`credentials` frame. The Agent checks that its configured and actual Unix
+user match, installs the password only into **process memory**, and replies
+with a password-free `credentials_ack`. The Broker refuses operational
+dispatch until this acknowledgement arrives. Reconnections repeat the
+bootstrap and discard the previous password.
+
+### API server: example .env
+
+```env
+# Other AIOps API variables remain as currently deployed.
+VM_EXECUTION_BACKEND=agent_pull
+SSH_ENABLED=False
+VM_AGENT_ENDPOINTS={}
+VM_AGENT_TOKENS='{"10.248.16.82":"replace-with-unique-strong-agent-token-at-least-32-bytes","10.100.6.199":"replace-with-another-unique-agent-token-at-least-32-bytes"}'
+VM_AGENT_EXECUTION_CREDENTIALS='{"10.248.16.82":{"username":"opsbot","password":"example-sudo-password-for-vm82"},"10.100.6.199":{"username":"opsrunner","password":"example-different-sudo-password-for-vm199"}}'
+```
+
+Each `VM_AGENT_EXECUTION_CREDENTIALS` entry must match a key in
+`VM_AGENT_TOKENS`. The example strings are **not real secrets**: replace
+every token/password and restrict the API `.env` access. Do not commit it to
+Git. This configuration is only used with `agent_pull`, and no SSH password
+is needed.
+
+### Destination VM (10.248.16.82): /data/aiopsvmagent/agent.env
+
+```env
+MCP_SERVER_PROVIDER=vm_agent
+MCP_SERVER_REQUIRE_AUTH=True
+SSH_ENABLED=False
+VM_AGENT_CONNECTION_MODE=outbound
+VM_AGENT_CONTROL_PLANE_WS_URL=wss://aiops.example.internal/api/v1/vm-agents/connect
+VM_AGENT_CA_BUNDLE_PATH=/etc/ssl/certs/your-internal-root-ca.pem
+VM_AGENT_TARGET=10.248.16.82
+VM_AGENT_EXEC_USERNAME=opsbot
+VM_AGENT_ALLOWED_SERVICES='["nginx","gfpapi"]'
+VM_AGENT_BEARER_TOKEN=replace-with-unique-strong-agent-token-at-least-32-bytes
+MCP_BEARER_TOKEN=
+AIOPS_CONFIG_CANDIDATE_DIRECTORY=/data/aiopsvmagent/config-candidates
+LOG_DIR=/data/aiopsvmagent/logs
+```
+
+No Linux password goes in `agent.env`; it is fetched automatically on first
+WSS connection. Ensure that `opsbot` exists on the host, that systemd actually
+runs as it, and that **its Linux password** matches the API password. After
+editing the file, rerun the installer to provision
+`/etc/systemd/system/vmmcpagent.service.d/10-execution-user.conf`, then
+restart the unit. Restarting a running unit is an administrator's planned
+maintenance action, not something performed automatically by API startup.
+Changing account ownership for existing sealed config candidates requires
+manual migration/reapproval.
+
+### Privilege policy (sudoers)
+
+Install and review `vmmcpagent/sudoers.example` with `visudo`, replacing
+`aiops-agent` with the configured Unix username. A scoped
+`PASSWD: /usr/bin/systemctl start/restart/reload <allowlisted-service>`
+entry and `PASSWD: /usr/local/sbin/aiops-config-guard *` are required for
+password-mode privileged operations. The Linux account password is only
+supplied to `sudo -k -S` over child stdin, **not** in shell argv, environment,
+disk or command-result fields. The fixed root guard still validates
+configuration signatures and hashes. Do not grant `NOPASSWD: ALL` or a
+generic root shell. A sudoers profile marked NOPASSWD may perform authorized
+actions without consuming the provisioned password; use PASSWD if your policy
+requires authentication each time.
+
+Credentials are deleted from the Agent's session state upon disconnect, but
+Python cannot guarantee cryptographic zeroization of in-memory string copies.
+The control-plane password remains in its operator-owned configuration and
+process memory by design, so a secret manager or systemd credentials is
+preferable when available. Credential delivery requires verified WSS TLS.
