@@ -7,10 +7,10 @@ Wants=network-online.target
 Type=simple
 User=aiops-agent
 Group=aiops-agent
-WorkingDirectory=/opt/vmmcpagent
+WorkingDirectory=/data/aiopsvmagent
 # Root-owned 0600. systemd reads and injects this file before dropping privileges.
-EnvironmentFile=/opt/vmmcpagent/agent.env
-ExecStart=/opt/vmmcpagent/vmmcpagent
+EnvironmentFile=/data/aiopsvmagent/agent.env
+ExecStart=/data/aiopsvmagent/vmmcpagent
 Restart=on-failure
 RestartSec=5
 UMask=0077
