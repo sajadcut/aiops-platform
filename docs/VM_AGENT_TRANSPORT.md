@@ -53,10 +53,14 @@ certificate/key pair when a mutual TLS gateway requires it.
 ## Install on each Linux target
 
 Use a dedicated unprivileged Linux service account (for example
-`aiops-agent`), with a locally provisioned AIOps package/checkout and
-Python virtual environment. No SSH daemon, SSH key or SSH password is needed
-by this backend. The currently supplied package uses Python; it is **not**
-a separately built single-file native executable.
+`aiops-agent`). No SSH daemon, SSH key or SSH password is needed by this
+backend. You can deploy either a Python virtualenv with the AIOps checkout,
+or build a **Python-runtime-bundled** `--onedir` executable on a matching
+Linux build machine using `scripts/build-vm-agent.sh` (install the project
+requirements and PyInstaller on the build machine). The destination then
+needs only the bundled directory and system libraries compatible with the
+builder; it does not need a separately installed Python interpreter.
+The bundle recipe has not been validated on your private Linux hosts.
 
 Example private environment for the agent on the target:
 
@@ -91,7 +95,10 @@ User=aiops-agent
 Group=aiops-agent
 WorkingDirectory=/opt/aiops
 EnvironmentFile=/etc/aiops/agent.env
-ExecStart=/opt/aiops/.venv/bin/uvicorn apps.mcp_server.main:app --host 127.0.0.1 --port 9105
+# Option 1, checkout + virtualenv:
+ExecStart=/opt/aiops/.venv/bin/python -m apps.vm_agent_runner
+# Option 2, packaged runtime: replace ExecStart above with:
+# ExecStart=/opt/aiops-agent/aiops-vm-agent
 Restart=on-failure
 RestartSec=5
 NoNewPrivileges=no
