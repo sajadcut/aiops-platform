@@ -26,15 +26,25 @@ class VMEdgeMCPClient(MCPClient):
     }
     WRITE_TOOLS = {"restart_service", "reload_service", "start_service", "config_change_apply"}
 
-    def __init__(self, server_url: Optional[str] = None):
+    def __init__(self, server_url: Optional[str] = None, *,
+                 agent_target: Optional[str] = None):
         self._backend = settings.VM_EXECUTION_BACKEND
         # An explicit server_url is a pinned endpoint used by the agent router.
         # The default client routes EACH operation based on its exact target.
         self._endpoint_direct = server_url is not None
+        agent_token = None
         if self._backend == "agent":
             if not settings.VM_AGENT_ENDPOINTS:
                 raise ValueError("vm_agent_endpoints_not_configured")
-            url = server_url or next(iter(settings.VM_AGENT_ENDPOINTS.values()))
+            selected_target = agent_target or next(iter(settings.VM_AGENT_ENDPOINTS))
+            if agent_target and settings.VM_AGENT_ENDPOINTS.get(agent_target) != server_url:
+                raise PermissionError("vm_agent_endpoint_binding_invalid")
+            if server_url is not None and agent_target is None:
+                raise PermissionError("vm_agent_target_binding_required")
+            agent_token = settings.VM_AGENT_TOKENS.get(selected_target)
+            if not agent_token:
+                raise PermissionError("vm_agent_token_not_configured")
+            url = server_url or settings.VM_AGENT_ENDPOINTS[selected_target]
             self.EXPECTED_SERVER_NAME = "aiops-vm-agent-mcp"
         else:
             url = server_url or settings.VM_MCP_URL
@@ -44,8 +54,9 @@ class VMEdgeMCPClient(MCPClient):
         super().__init__(
             url, "vm-edge", allowed_tools=self.READ_TOOLS | self.WRITE_TOOLS,
             write_tools=self.WRITE_TOOLS, protocol_version=settings.MCP_PROTOCOL_VERSION,
-            timeout=settings.MCP_TIMEOUT_SECONDS, bearer_token=settings.MCP_BEARER_TOKEN,
-            write_bearer_token=settings.MCP_BEARER_TOKEN,
+            timeout=settings.MCP_TIMEOUT_SECONDS,
+            bearer_token=agent_token if self._backend == "agent" else settings.MCP_BEARER_TOKEN,
+            write_bearer_token=agent_token if self._backend == "agent" else settings.MCP_BEARER_TOKEN,
             client_cert_path=settings.MCP_CLIENT_CERT_PATH,
             client_key_path=settings.MCP_CLIENT_KEY_PATH,
             verify_tls=self._backend == "agent",
@@ -91,7 +102,7 @@ class VMEdgeMCPClient(MCPClient):
             endpoint = settings.VM_AGENT_ENDPOINTS.get(target)
             if not endpoint:
                 raise PermissionError("vm_target_not_allowed")
-            worker = VMEdgeMCPClient(server_url=endpoint)
+            worker = VMEdgeMCPClient(server_url=endpoint, agent_target=target)
             try:
                 return await worker._invoke(name, target, **params)
             finally:
