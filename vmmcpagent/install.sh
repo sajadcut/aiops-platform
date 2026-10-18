@@ -18,6 +18,9 @@ DST="/data/aiopsvmagent"
 # The service user is selected from agent.env, not from credentials
 # supplied over the network. Never execute sourced operator text as shell code.
 # If the file is not installed yet, read the bundled template.
+if [[ -L "$DST/agent.env" ]]; then
+  echo "Refusing symlinked agent.env" >&2; exit 4
+fi
 ACTOR_CONFIG="$DST/agent.env"
 if [[ ! -f "$ACTOR_CONFIG" ]]; then ACTOR_CONFIG="$SRC/agent.env.example"; fi
 ACTOR="$(sed -n 's/^VM_AGENT_EXEC_USERNAME=//p' "$ACTOR_CONFIG" | tail -n 1)"
