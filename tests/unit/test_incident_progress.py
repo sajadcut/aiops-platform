@@ -174,3 +174,29 @@ async def test_pytest_simulation_skips_optional_live_progress_db(monkeypatch):
         raise AssertionError("unit simulation must not open a live DB")
     monkeypatch.setattr(module, "AsyncSessionLocal", prohibited)
     await module.emit_progress("simulation", "context", "started")
+
+
+def test_legacy_progress_uses_only_explicit_durable_stage_audits():
+    from apps.orchestrator.progress import _legacy_audit_progress_rows
+
+    rows = [
+        {"event_type": "context_loaded", "status": "recorded",
+         "metadata": {"password": "not-for-browser"}, "created_at": BASE},
+        {"event_type": "triage_completed", "status": "recorded",
+         "created_at": BASE + timedelta(seconds=10)},
+        {"event_type": "specialist_analysis_completed", "status": "recorded",
+         "created_at": BASE + timedelta(seconds=12)},
+        {"event_type": "arbitrary_claim_of_success", "status": "recorded",
+         "created_at": BASE + timedelta(seconds=18)},
+        {"event_type": "rca_completed", "status": "failed",
+         "created_at": BASE + timedelta(seconds=19)},
+    ]
+    fallback = _legacy_audit_progress_rows(rows)
+    assert [row["metadata"]["stage"] for row in fallback] == [
+        "context", "triage", "parallel_agents",
+    ]
+    assert "not-for-browser" not in str(fallback)
+    summary = summarize_progress(fallback, checkpoint_status="paused")
+    assert summary["analysis_completed"] == 3
+    assert summary["analysis_percent"] == 50
+    assert "decision" not in summary["stages"]
