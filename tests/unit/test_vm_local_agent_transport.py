@@ -111,3 +111,18 @@ def test_agent_claim_key_is_isolated_from_other_targets(agent_settings, monkeypa
     monkeypatch.setattr(settings, "VM_AGENT_BEARER_TOKEN", "B" * 40)
     with pytest.raises(PermissionError, match="config_execution_claim_signature_invalid"):
         verify_claim(claims, signature, target="vm-01", service="nginx")
+
+
+@pytest.mark.asyncio
+async def test_health_checks_all_agent_targets_not_only_first(agent_settings, monkeypatch):
+    seen = []
+
+    async def fake_health(self):
+        seen.append(self.server_url)
+        return self.server_url.endswith("vm-01.example.internal/mcp")
+
+    monkeypatch.setattr(MCPClient, "health_check", fake_health)
+    client = VMEdgeMCPClient()
+    assert await client.health_check() is False
+    assert set(seen) == set(settings.VM_AGENT_ENDPOINTS.values())
+    await client.close()
