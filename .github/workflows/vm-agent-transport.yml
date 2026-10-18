@@ -59,6 +59,12 @@ jobs:
         run: |
           python -m pip install -r requirements.txt -r requirements-dev.txt
           python -m pip check
+      - name: Validate package shell scripts and restricted config guard syntax
+        shell: bash
+        run: |
+          bash -n vmmcpagent/build.sh vmmcpagent/install.sh scripts/build-vm-agent.sh
+          sh -n vmmcpagent/aiops-config-guard
+          cmp -s vmmcpagent/aiops-config-guard scripts/vm/aiops-config-guard
       - name: Compile implementation and tests
         run: python -m compileall -q integrations/vm apps/mcp_server apps/vm_agent_runner.py vmmcpagent tests/unit/test_vm_local_agent_transport.py tests/unit/test_vm_agent_package_layout.py
       - name: Validate VM MCP SSH and local-agent parity
