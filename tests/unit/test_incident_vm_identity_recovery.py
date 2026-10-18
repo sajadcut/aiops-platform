@@ -462,3 +462,57 @@ async def test_vm_worker_service_status_returns_actual_systemd_id(monkeypatch):
     assert reply["active_state"] == "active"
     assert len(executed) == 1
     assert "--property=Id" in executed[0][1]
+
+
+@pytest.mark.asyncio
+async def test_live_identity_retains_strict_systemd_fields_for_recheck():
+    """Agent success must not become unknown after sanitized observation."""
+    from apps.incident_service.service_recovery_reconciliation import (
+        _bound_systemd_observation,
+    )
+
+    class Agent:
+        async def service_status(self, target, service):
+            return {
+                "success": True, "target": target, "service": service,
+                "unit_id": "nginx.service", "load_state": "loaded",
+                "active_state": "active", "sub_state": "running",
+                "main_pid": 9751, "restart_count": 2, "result": "success",
+                "stdout": "password=not-to-be-kept",
+            }
+
+    ctx = incident_context(service="nginx")
+    bound, diagnosis = await resolve_vm_binding(
+        "nginx", [], ctx, connector=Agent(), force_live=True,
+    )
+    assert bound is not None
+    assert diagnosis["status"] == "verified_from_live_vm_mcp"
+    evidence = diagnosis["live_observation"]
+    assert evidence["load_state"] == "loaded"
+    assert evidence["main_pid"] == 9751
+    assert evidence["restart_count"] == 2
+    assert "stdout" not in evidence
+    safe = _bound_systemd_observation(
+        evidence, target="10.248.16.82", service="nginx",
+    )
+    assert safe["active_state"] == "active"
+    assert safe["sub_state"] == "running"
+    assert safe["main_pid"] == 9751
+
+
+@pytest.mark.asyncio
+async def test_unloaded_live_service_cannot_be_misrepresented_as_loaded():
+    from apps.incident_service.service_recovery_reconciliation import (
+        _bound_systemd_observation,
+    )
+    class Agent:
+        async def service_status(self, target, service):
+            return {"success": True, "target": target, "service": service,
+                    "active_state": "inactive", "sub_state": "dead",
+                    "load_state": "not-found"}
+    binding, diagnosis = await resolve_vm_binding(
+        "nginx", [], incident_context(service="nginx"),
+        connector=Agent(), force_live=True,
+    )
+    assert binding is None
+    assert diagnosis["status"] == "vm_mcp_live_identity_mismatch"
