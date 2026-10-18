@@ -48,6 +48,8 @@ class VMEdgeMCPClient(MCPClient):
             write_bearer_token=settings.MCP_BEARER_TOKEN,
             client_cert_path=settings.MCP_CLIENT_CERT_PATH,
             client_key_path=settings.MCP_CLIENT_KEY_PATH,
+            verify_tls=self._backend == "agent",
+            tls_ca_bundle_path=settings.VM_AGENT_CA_BUNDLE_PATH if self._backend == "agent" else None,
         )
         # Full-file repair runs a bounded LLM call on the trusted MCP worker.
         # Use one longer read, not three 20-second HTTP retries: a lost
