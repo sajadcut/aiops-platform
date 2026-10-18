@@ -304,6 +304,14 @@ def _validate_production_configuration() -> None:
     if settings.VM_EXECUTION_BACKEND == "agent":
         if not settings.VM_AGENT_ENDPOINTS:
             errors.append("VM_AGENT_ENDPOINTS required for agent backend")
+        if set(settings.VM_AGENT_TOKENS) != set(settings.VM_AGENT_ENDPOINTS):
+            errors.append("VM_AGENT_TOKENS must have exactly one token for every target")
+        agent_secrets = list(settings.VM_AGENT_TOKENS.values())
+        if (len(agent_secrets) != len(set(agent_secrets))
+                or any(len(str(secret).encode("utf-8")) < 32
+                       or secret == settings.MCP_BEARER_TOKEN
+                       for secret in agent_secrets)):
+            errors.append("VM_AGENT_TOKENS must contain unique >=32-byte secrets different from MCP_BEARER_TOKEN")
         for target, url in settings.VM_AGENT_ENDPOINTS.items():
             parsed = urlparse(str(url))
             if (not target or parsed.scheme.lower() != "https" or not parsed.netloc
