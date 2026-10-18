@@ -21,4 +21,7 @@ pyinstaller --clean --noconfirm --onedir \
 # Settings reads .env.example relative to systemd WorkingDirectory. Package
 # a non-secret template OUTSIDE PyInstaller's _internal dir for frozen runs.
 cp .env.example dist/aiops-vm-agent/.env.example
+# Privileged host helper is provisioned separately by a trusted root admin.
+# Bundle its source for review/installation, never auto-install as root.
+cp scripts/vm/aiops-config-guard dist/aiops-vm-agent/aiops-config-guard
 echo "Bundle: dist/aiops-vm-agent/ (must undergo Linux runtime acceptance)"
