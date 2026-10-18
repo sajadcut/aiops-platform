@@ -71,7 +71,7 @@ The folder `vmmcpagent/` contains `connector.py`, `__main__.py`,
 `agent.env.example`, `vmmcpagent.service`, `aiops-config-guard`,
 `sudoers.example`, `build.sh`, `install.sh` and its own README. The
 built bundle includes the full **non-secret** Settings baseline at
-`/opt/vmmcpagent/.env.example` and the host-specific `agent.env` beside the
+`/data/aiopsvmagent/.env.example` and the host-specific `agent.env` beside the
 binary. The bundle recipe has not been validated on private Linux hosts.
 
 Example private environment for the agent on the target:
@@ -86,7 +86,8 @@ VM_AGENT_BEARER_TOKEN=<inject-only-this-hosts-unique-secret>
 SSH_ENABLED=False
 VM_AGENT_TARGET=10.100.6.199
 VM_AGENT_ALLOWED_SERVICES=["nginx","haproxy","gfpapi","GFP_Backend"]
-AIOPS_CONFIG_CANDIDATE_DIRECTORY=/var/lib/aiops/config-candidates
+AIOPS_CONFIG_CANDIDATE_DIRECTORY=/data/aiopsvmagent/config-candidates
+LOG_DIR=/data/aiopsvmagent/logs
 ```
 
 Supply the remaining canonical `.env.example` settings appropriate to this
@@ -97,12 +98,17 @@ must not be shared across SSH/agent transport switches mid-approval.
 
 Example systemd service **is provided as a file**:
 [`vmmcpagent/vmmcpagent.service`](../vmmcpagent/vmmcpagent.service).
-It uses `WorkingDirectory=/opt/vmmcpagent`,
-`EnvironmentFile=/opt/vmmcpagent/agent.env` (mode 0600, root-owned)
-and `ExecStart=/opt/vmmcpagent/vmmcpagent`. For a source-based development
+It uses `WorkingDirectory=/data/aiopsvmagent`,
+`EnvironmentFile=/data/aiopsvmagent/agent.env` (mode 0600, root-owned)
+and `ExecStart=/data/aiopsvmagent/vmmcpagent`. For a source-based development
 install, run `python -m vmmcpagent` after copying
 `vmmcpagent/agent.env.example` to `vmmcpagent/agent.env`.
-The secrets remain local to the destination VM, not in the API checkout.
+The installer provisions `config-candidates/` and `logs/` beneath
+`/data/aiopsvmagent/` as mode `0700` owned by `aiops-agent`; the binary and
+`agent.env` remain root-owned. The real secret configuration must remain
+mode `0600`. Root-owned executables and public keys used by the privileged
+config guard remain in their original protected system locations. The secrets
+remain local to the destination VM, not in the API checkout.
 
 Build and stage the standalone distribution:
 
@@ -110,7 +116,7 @@ Build and stage the standalone distribution:
 bash vmmcpagent/build.sh
 # Copy dist/vmmcpagent/ and vmmcpagent/install.sh to destination VM.
 sudo bash vmmcpagent/install.sh /path/to/dist/vmmcpagent
-# Fill /opt/vmmcpagent/agent.env, configure host-specific identity and sudoers.
+# Fill /data/aiopsvmagent/agent.env, configure host-specific identity and sudoers.
 ```
 
 ### Required privileges and protected configuration APPLY
