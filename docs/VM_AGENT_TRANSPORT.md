@@ -36,19 +36,26 @@ Agent mode (multiple destination machines):
 ```env
 VM_EXECUTION_BACKEND=agent
 VM_AGENT_ENDPOINTS={"10.100.6.199":"https://vm199.example.internal/mcp","10.248.16.82":"https://vm82.example.internal/mcp"}
+VM_AGENT_TOKENS={"10.100.6.199":"<vm199-unique-secret-min-32-bytes>","10.248.16.82":"<vm82-different-secret-min-32-bytes>"}
 VM_AGENT_CA_BUNDLE_PATH=/etc/aiops/agent-ca.pem
 SSH_ENABLED=False
 # Optional: retain your legacy VM_MCP_URL for switching back to ssh later.
 VM_MCP_URL=http://127.0.0.1:9105/mcp
 ```
 
-`VM_AGENT_ENDPOINTS` is JSON, not comma-separated URLs. Production demands
-HTTPS endpoints ending in `/mcp` and a valid peer certificate/hostname.
-The optional CA file allows an internal PKI. `MCP_BEARER_TOKEN` must be the
-same secret on the Control Plane and selected VM MCP workers: it authenticates
-MCP requests and derives the separate config-approval signing key. Provision
-it using a secret manager, never commit it to git. Configure the client
-certificate/key pair when a mutual TLS gateway requires it.
+`VM_AGENT_ENDPOINTS` and `VM_AGENT_TOKENS` are JSON maps indexed by the
+**same exact target identity**. Production demands HTTPS endpoints ending in
+`/mcp`, certificate/hostname verification, and distinct strong secret tokens
+for each agent. The optional CA file allows an internal PKI.
+
+Keep the legacy `MCP_BEARER_TOKEN` in the API and original SSH VM MCP
+worker. **Do not copy the central MCP_BEARER_TOKEN to any installed agent.**
+Instead, provide each agent with only its private `VM_AGENT_BEARER_TOKEN`,
+matching the corresponding API map entry. The agent's bounded config-approval
+HMAC and encrypted candidate vault derive keys from its own unique token.
+Provision all secrets using a secret manager, never commit them to git.
+Use a different root-guard Ed25519 signing keypair for each agent/host.
+Configure the client certificate/key pair when a mutual TLS gateway requires it.
 
 ## Install on each Linux target
 
@@ -68,7 +75,9 @@ Example private environment for the agent on the target:
 APP_ENV=production
 MCP_SERVER_PROVIDER=vm_agent
 MCP_SERVER_REQUIRE_AUTH=True
-MCP_BEARER_TOKEN=<inject-the-control-plane-secret>
+# Do not distribute the fleet-wide MCP_BEARER_TOKEN to target machines.
+MCP_BEARER_TOKEN=
+VM_AGENT_BEARER_TOKEN=<inject-only-this-hosts-unique-secret>
 SSH_ENABLED=False
 VM_AGENT_TARGET=10.100.6.199
 VM_AGENT_ALLOWED_SERVICES=["nginx","haproxy","gfpapi","GFP_Backend"]
