@@ -203,3 +203,103 @@ async def test_replay_cache_never_evicts_unexpired_write_ids(monkeypatch):
     assert sent[1]["result"]["status"] == "request_replay_guard_full"
     assert sent[2]["result"]["execution_outcome"] == "UNKNOWN"
     assert sent[2]["result"]["reason"] == "duplicate_request_refused"
+
+
+@pytest.mark.asyncio
+async def test_vm_relative_monotonic_lease_ignores_wall_clock_skew(monkeypatch):
+    """v2 works when the VM wall clock is far from the API wall clock."""
+    import uuid
+    import websockets.asyncio.client as wsclient
+    from apps.mcp_server import main as mcp
+    from vmmcpagent import connector, outbound
+
+    monkeypatch.setattr(settings, "VM_AGENT_TARGET", "vm-01")
+    monkeypatch.setattr(settings, "VM_AGENT_CONTROL_PLANE_WS_URL",
+                        "wss://aiops.example.internal/api/v1/vm-agents/connect")
+    monkeypatch.setattr(settings, "VM_AGENT_BEARER_TOKEN", "A" * 40)
+    monkeypatch.setattr(settings, "MCP_SERVER_REQUIRE_AUTH", True)
+    monkeypatch.setattr(settings, "SSH_ENABLED", False)
+    monkeypatch.setattr(settings, "VM_AGENT_CA_BUNDLE_PATH", None)
+    monkeypatch.setattr(connector, "LocalVMConnector", lambda: object())
+    # The old wall-clock protocol rejects this deliberately extreme skew.
+    monkeypatch.setattr(outbound.time, "time", lambda: 1_000_000)
+    monkeypatch.setattr(outbound, "_monotonic_time", lambda: 12345.0)
+    invoked = AsyncMock(return_value={"success": True, "active_state": "active"})
+    monkeypatch.setattr(mcp, "_call", invoked)
+    ident = str(uuid.uuid4())
+    execute = json.dumps({
+        "type": "execute", "id": ident, "target": "vm-01",
+        "tool": "restart_service",
+        "arguments": {"target": "vm-01", "service": "nginx",
+                      "approval_id": "approved", "incident_id": "incident"},
+        "ttl_seconds": 60,
+    })
+    sent = []
+
+    class FakeConnection:
+        async def __aenter__(self): return self
+        async def __aexit__(self, *args): return None
+        def __aiter__(self):
+            async def frames():
+                yield execute
+                assert invoked.await_count == 0, "Write ran before broker commit"
+                yield json.dumps({"type": "execute_commit", "id": ident})
+            return frames()
+        async def send(self, payload): sent.append(json.loads(payload))
+
+    monkeypatch.setattr(wsclient, "connect", lambda *a, **kw: FakeConnection())
+    async def stop(_delay): raise asyncio.CancelledError()
+    monkeypatch.setattr(outbound.asyncio, "sleep", stop)
+    with pytest.raises(asyncio.CancelledError):
+        await outbound.run_outbound_forever()
+    assert sent[0] == {"type": "execute_ready", "id": ident}
+    assert sent[1]["type"] == "result"
+    assert sent[1]["result"]["success"] is True
+    invoked.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_vm_relative_write_rejects_expired_commit_without_execution(monkeypatch):
+    import uuid
+    import websockets.asyncio.client as wsclient
+    from apps.mcp_server import main as mcp
+    from vmmcpagent import connector, outbound
+
+    monkeypatch.setattr(settings, "VM_AGENT_TARGET", "vm-01")
+    monkeypatch.setattr(settings, "VM_AGENT_CONTROL_PLANE_WS_URL",
+                        "wss://aiops.example.internal/api/v1/vm-agents/connect")
+    monkeypatch.setattr(settings, "VM_AGENT_BEARER_TOKEN", "A" * 40)
+    monkeypatch.setattr(settings, "MCP_SERVER_REQUIRE_AUTH", True)
+    monkeypatch.setattr(settings, "SSH_ENABLED", False)
+    monkeypatch.setattr(settings, "VM_AGENT_CA_BUNDLE_PATH", None)
+    monkeypatch.setattr(connector, "LocalVMConnector", lambda: object())
+    mono = iter([100.0, 102.0])
+    monkeypatch.setattr(outbound, "_monotonic_time", lambda: next(mono))
+    invoked = AsyncMock(return_value={"success": True})
+    monkeypatch.setattr(mcp, "_call", invoked)
+    ident = str(uuid.uuid4())
+    sent = []
+
+    class FakeConnection:
+        async def __aenter__(self): return self
+        async def __aexit__(self, *args): return None
+        def __aiter__(self):
+            async def frames():
+                yield json.dumps({
+                    "type": "execute", "id": ident, "target": "vm-01",
+                    "tool": "restart_service",
+                    "arguments": {"target": "vm-01", "service": "nginx"},
+                    "ttl_seconds": 1,
+                })
+                yield json.dumps({"type": "execute_commit", "id": ident})
+            return frames()
+        async def send(self, payload): sent.append(json.loads(payload))
+    monkeypatch.setattr(wsclient, "connect", lambda *a, **kw: FakeConnection())
+    async def stop(_delay): raise asyncio.CancelledError()
+    monkeypatch.setattr(outbound.asyncio, "sleep", stop)
+    with pytest.raises(asyncio.CancelledError):
+        await outbound.run_outbound_forever()
+    assert sent[0]["type"] == "execute_ready"
+    assert sent[1]["result"]["execution_outcome"] == "NOT_STARTED"
+    assert sent[1]["result"]["status"] == "request_expired"
+    invoked.assert_not_awaited()

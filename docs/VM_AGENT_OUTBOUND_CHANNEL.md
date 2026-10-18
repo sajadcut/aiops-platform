@@ -343,3 +343,30 @@ After the service connects, check the authenticated endpoint
 `GET http://10.248.41.67:80/api/v1/vm-agents/status` and perform a
 read-only `service_status` test. A successful TCP connection alone is
 not proof of matching shared keys or provisioned sudo credentials.
+
+
+## Clock-independent command leases (relative_monotonic_v2)
+
+The Windows API and Linux VM **do not need synchronized wall clocks** for
+new outbound execution requests. After credential provisioning, the agent
+advertises `lease_protocol=relative_monotonic_v2` in its password-free
+`credentials_ack`. The API responds with an integer `ttl_seconds`
+(1..190) rather than an absolute cross-host `expires_at`.
+
+The agent measures expiry with its **own** monotonic clock. The API enforces
+the matching wait deadline using its **own** monotonic clock. For every
+state-changing tool (`start_service`, `restart_service`, `reload_service`,
+`config_change_apply`) the agent sends `execute_ready` without executing;
+the API issues `execute_commit` only while that request is still pending
+and within the API-local deadline. An expired or absent commit cannot start
+a write. Agent restarts lose prepared commands; writes are **never replayed**.
+Replay IDs are retained under VM-local monotonic expirations.
+
+Rolling upgrade: the broker continues supporting legacy absolute
+`expires_at` only for agents that do **not** advertise protocol v2.
+Old binaries therefore still depend on synchronized clocks; rebuild and
+reinstall the Linux `vmmcpagent` binary **and** restart the API to enable
+skew-independent operation. Do not disable replay checks or change
+system clocks to bypass this policy. An unbounded network stall can still
+delay an already granted commit, so independent post-write verification and
+normal human approval requirements remain necessary.

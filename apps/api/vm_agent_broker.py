@@ -11,6 +11,7 @@ from __future__ import annotations
 import asyncio
 import hmac
 import json
+import math
 import re
 import time
 from dataclasses import dataclass, field
@@ -44,12 +45,19 @@ class AgentSession:
     ready: bool = False
     pending: dict[str, asyncio.Future] = field(default_factory=dict)
     sending: asyncio.Lock = field(default_factory=asyncio.Lock)
+    relative_deadlines: bool = False
+    pending_deadlines: dict[str, float] = field(default_factory=dict)
+    pending_tools: dict[str, str] = field(default_factory=dict)
+    confirmed_writes: set[str] = field(default_factory=set)
 
     def fail_pending(self) -> None:
         for future in self.pending.values():
             if not future.done():
                 future.set_exception(AgentDisconnected("agent_channel_disconnected"))
         self.pending.clear()
+        self.pending_deadlines.clear()
+        self.pending_tools.clear()
+        self.confirmed_writes.clear()
 
 
 class OutboundAgentBroker:
@@ -119,9 +127,14 @@ class OutboundAgentBroker:
                         or acknowledgment.get("type") != "credentials_ack"
                         or acknowledgment.get("target") != target
                         or acknowledgment.get("username") != username
-                        or acknowledgment.get("ok") is not True):
+                        or acknowledgment.get("ok") is not True
+                        or acknowledgment.get("lease_protocol") not in
+                        (None, "relative_monotonic_v2")):
                     await socket.close(code=4403)
                     return
+                session.relative_deadlines = (
+                    acknowledgment.get("lease_protocol") == "relative_monotonic_v2"
+                )
             session.ready = True
             logger.info("vm_outbound_agent_connected", target=target)
             while True:
@@ -134,10 +147,38 @@ class OutboundAgentBroker:
                 except (ValueError, TypeError):
                     await socket.close(code=1003)
                     break
-                if not isinstance(payload, dict) or payload.get("type") != "result":
+                if not isinstance(payload, dict):
                     await socket.close(code=1008)
                     break
                 ident = payload.get("id")
+                if payload.get("type") == "execute_ready":
+                    # A write is not allowed to start merely because a delayed
+                    # WebSocket frame finally reached the VM. Reconfirm against
+                    # the API's *local monotonic* deadline before authorizing it.
+                    if not session.relative_deadlines:
+                        await socket.close(code=1008)
+                        break
+                    # The result may arrive after API cancellation/timeout.
+                    # Ignore stale readiness without disconnecting a healthy VM.
+                    if ident not in session.pending:
+                        continue
+                    if (session.pending_tools.get(ident) not in WRITE_TOOLS
+                            or ident in session.confirmed_writes):
+                        await socket.close(code=1008)
+                        break
+                    if time.monotonic() >= session.pending_deadlines.get(ident, -1):
+                        continue  # Timed out/cancelled: never issue execute_commit.
+                    session.confirmed_writes.add(ident)
+                    async with session.sending:
+                        if self.sessions.get(target) is not session:
+                            break
+                        await session.socket.send_text(json.dumps({
+                            "type": "execute_commit", "id": ident,
+                        }, separators=(",", ":")))
+                    continue
+                if payload.get("type") != "result":
+                    await socket.close(code=1008)
+                    break
                 # A request ID belongs solely to its own authenticated
                 # session. Unknown/late result IDs are never applied.
                 if not isinstance(ident, str) or ident not in session.pending:
@@ -196,11 +237,19 @@ class OutboundAgentBroker:
         request_id = str(uuid4())
         future = asyncio.get_running_loop().create_future()
         session.pending[request_id] = future
+        session.pending_deadlines[request_id] = time.monotonic() + deadline_seconds
+        session.pending_tools[request_id] = tool
         message = {
             "type": "execute", "id": request_id, "target": target,
             "tool": tool, "arguments": args,
-            "expires_at": int(time.time() + deadline_seconds),
         }
+        # v2 carries only a bounded relative lease. Neither side compares
+        # timestamps from different machines. Legacy agents retain v1 frames
+        # during a rolling upgrade and must be upgraded to fix clock skew.
+        if session.relative_deadlines:
+            message["ttl_seconds"] = min(MAX_RESULT_SECONDS, math.ceil(deadline_seconds))
+        else:
+            message["expires_at"] = int(time.time() + deadline_seconds)
         logger.info("vm_outbound_dispatch_started", target=target, tool=tool,
                     request_id=request_id)
         try:
@@ -208,7 +257,10 @@ class OutboundAgentBroker:
                 if self.sessions.get(target) is not session:
                     raise AgentDisconnected("agent_session_replaced")
                 await session.socket.send_text(json.dumps(message, separators=(",", ":")))
-            result = await asyncio.wait_for(future, timeout=deadline_seconds)
+            remaining = session.pending_deadlines[request_id] - time.monotonic()
+            if remaining <= 0:
+                raise asyncio.TimeoutError()
+            result = await asyncio.wait_for(future, timeout=remaining)
             logger.info("vm_outbound_dispatch_completed", target=target,
                         tool=tool, request_id=request_id,
                         success=result.get("success") is True)
@@ -226,6 +278,9 @@ class OutboundAgentBroker:
             return self._unavailable(tool, "agent_result_unconfirmed")
         finally:
             session.pending.pop(request_id, None)
+            session.pending_deadlines.pop(request_id, None)
+            session.pending_tools.pop(request_id, None)
+            session.confirmed_writes.discard(request_id)
             # Consume possible disconnect exception if the result was abandoned.
             if future.done() and not future.cancelled():
                 try:

@@ -22,6 +22,12 @@ from vmmcpagent.connector import LocalVMConnector as _SessionCredentials
 
 _MAX_FRAME = 1024 * 1024
 _MAX_REPLAY_ENTRIES = 4096
+_MAX_LEASE_SECONDS = 190
+
+def _monotonic_time() -> float:
+    """Host-local elapsed-time clock; never compare wall clocks across VMs."""
+    return time.monotonic()
+
 _TARGET = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.:-]{0,253}\Z")
 
 
@@ -105,7 +111,7 @@ async def run_outbound_forever() -> None:
                 transport="ws+psk_aead_test_only" if lab_plain_ws else "wss")
     # Retain all unexpired IDs. Never silently evict a still-valid command:
     # doing so would permit replay of a completed write within its TTL.
-    completed: deque[tuple[str, int]] = deque()
+    completed: deque[tuple[str, float]] = deque()
     known: set[str] = set()
     while True:
         try:
@@ -123,10 +129,42 @@ async def run_outbound_forever() -> None:
                 delay = 1
                 _SessionCredentials.clear_session_credentials()
                 channel_provisioned = False
+                prepared: dict[str, tuple[str, dict, float]] = {}
                 logger.info("vm_agent_outbound_channel_connected", target=settings.VM_AGENT_TARGET,
                             tls_verify=settings.VM_AGENT_TLS_VERIFY)
                 audit_frame("vm_agent_ws_connection_established",
                             {"type": "channel_connected", "target": settings.VM_AGENT_TARGET})
+
+                async def execute_tool(tool: str, args: dict) -> dict:
+                    try:
+                        return await _call("vm_agent", tool, args)
+                    except Exception as exc:
+                        # Never log secret-bearing commands or exception bodies.
+                        logger.warning("vm_agent_outbound_operation_failed",
+                                       target=settings.VM_AGENT_TARGET,
+                                       tool=tool, error_type=type(exc).__name__)
+                        return _execution_failure(tool, "agent_execution_failed",
+                                                  sent_to_executor=True)
+
+                async def send_result(tool: str, ident: str, result: dict,
+                                      received_at: float, *, executed: bool) -> None:
+                    payload = json.dumps({"type": "result", "id": ident, "result": result},
+                                         separators=(",", ":"), default=str)
+                    if len(payload.encode("utf-8")) > _MAX_FRAME:
+                        payload = json.dumps({
+                            "type": "result", "id": ident,
+                            "result": _execution_failure(
+                                tool, "agent_result_too_large",
+                                sent_to_executor=executed),
+                        })
+                    await socket.send(payload)
+                    audit_frame("vm_agent_ws_response_sent",
+                                {"type": "result", "id": ident,
+                                 "result": json.loads(payload).get("result")},
+                                trace_id=ident,
+                                duration_ms=(time.perf_counter() - received_at) * 1000,
+                                byte_count=len(payload.encode("utf-8")))
+
                 async for raw in socket:
                     received_at = time.perf_counter()
                     if not isinstance(raw, str) or len(raw.encode("utf-8")) > _MAX_FRAME:
@@ -170,6 +208,7 @@ async def run_outbound_forever() -> None:
                             "type": "credentials_ack", "ok": True,
                             "target": settings.VM_AGENT_TARGET,
                             "username": settings.VM_AGENT_EXEC_USERNAME,
+                            "lease_protocol": "relative_monotonic_v2",
                         }
                         wire_ack = json.dumps(acknowledgment, separators=(",", ":"))
                         await socket.send(wire_ack)
@@ -183,6 +222,21 @@ async def run_outbound_forever() -> None:
                                     trace_id=trace, error_type="policy_rejected")
                         await socket.close(code=1008)
                         break
+                    if isinstance(request, dict) and request.get("type") == "execute_commit":
+                        ident = request.get("id")
+                        if (not isinstance(ident, str) or ident not in prepared):
+                            audit_frame("vm_agent_ws_request_rejected", request,
+                                        trace_id=trace, error_type="policy_rejected")
+                            await socket.close(code=1008)
+                            break
+                        tool, args, deadline = prepared.pop(ident)
+                        executed = _monotonic_time() <= deadline
+                        result = (await execute_tool(tool, args) if executed else
+                                  _execution_failure(tool, "request_expired",
+                                                     sent_to_executor=False))
+                        await send_result(tool, ident, result, received_at, executed=executed)
+                        set_trace_id("")
+                        continue
                     if not isinstance(request, dict) or request.get("type") != "execute":
                         audit_frame("vm_agent_ws_request_rejected", request,
                                     trace_id=trace, error_type="policy_rejected")
@@ -192,61 +246,60 @@ async def run_outbound_forever() -> None:
                     tool = request.get("tool")
                     args = request.get("arguments")
                     expires = request.get("expires_at")
+                    ttl = request.get("ttl_seconds")
+                    relative = type(ttl) is int and expires is None
+                    legacy = type(expires) is int and ttl is None
                     if (not isinstance(ident, str)
                             or not re.fullmatch(r"[0-9a-f-]{36}", ident)
                             or not isinstance(tool, str)
                             or tool not in _TOOL_SCHEMAS["vm_agent"]
                             or not isinstance(args, dict)
                             or args.get("target") != settings.VM_AGENT_TARGET
-                            or type(expires) is not int):
+                            or not (relative or legacy)
+                            or (relative and not 1 <= ttl <= _MAX_LEASE_SECONDS)):
                         audit_frame("vm_agent_ws_request_rejected", request,
                                     trace_id=trace, error_type="policy_rejected")
                         await socket.close(code=1008)
                         break
-                    # Retain every live ID until its execution deadline has
-                    # safely passed. On cache saturation reject new commands
-                    # rather than evict unexpired IDs (which permits replay).
-                    now = int(time.time())
+                    # Relative leases use *only* this VM's monotonic clock.
+                    # Legacy frames remain supported for rolling upgrades.
+                    now = _monotonic_time()
+                    wall_now = int(time.time()) if legacy else None
+                    deadline = (now + ttl if relative
+                                else now + max(0, expires - wall_now))
                     while completed and completed[0][1] < now:
                         known.discard(completed.popleft()[0])
+                    executed = False
                     if ident in known:
-                        result = _execution_failure(tool, "duplicate_request_refused", sent_to_executor=True)
-                    elif expires < now or expires > now + 191:
-                        result = _execution_failure(tool, "request_expired", sent_to_executor=False)
+                        result = _execution_failure(tool, "duplicate_request_refused",
+                                                    sent_to_executor=True)
+                    elif legacy and (expires < wall_now or expires > wall_now + 191):
+                        result = _execution_failure(tool, "request_expired",
+                                                    sent_to_executor=False)
                     elif len(completed) >= _MAX_REPLAY_ENTRIES:
-                        result = _execution_failure(tool, "request_replay_guard_full", sent_to_executor=False)
+                        result = _execution_failure(tool, "request_replay_guard_full",
+                                                    sent_to_executor=False)
                     else:
                         known.add(ident)
-                        completed.append((ident, expires + 2))
-                        try:
-                            result = await _call("vm_agent", tool, args)
-                        except Exception as exc:
-                            # No secrets, commands, output or raw exceptions in
-                            # control-plane messages/logs.
-                            logger.warning("vm_agent_outbound_operation_failed",
-                                           target=settings.VM_AGENT_TARGET,
-                                           tool=tool, error_type=type(exc).__name__)
-                            result = _execution_failure(tool, "agent_execution_failed", sent_to_executor=True)
-                    payload = json.dumps({"type": "result", "id": ident, "result": result},
-                                         separators=(",", ":"), default=str)
-                    if len(payload.encode("utf-8")) > _MAX_FRAME:
-                        # The write may be fully committed even though its
-                        # response exceeded the transport cap. Never claim no
-                        # production change or invite a blind re-execution.
-                        payload = json.dumps({
-                            "type": "result", "id": ident,
-                            "result": _execution_failure(
-                                tool, "agent_result_too_large",
-                                sent_to_executor=(ident in known)),
-                        })
-                    await socket.send(payload)
-                    # Full wire exchange is represented by safe metadata, not
-                    # sensitive headers, config values or command stdout.
-                    audit_frame("vm_agent_ws_response_sent",
-                                {"type": "result", "id": ident, "result": json.loads(payload).get("result")},
-                                trace_id=ident,
-                                duration_ms=(time.perf_counter() - received_at) * 1000,
-                                byte_count=len(payload.encode("utf-8")))
+                        completed.append((ident, deadline + 2))
+                        if relative and tool in _WRITE_TOOLS:
+                            # Two-phase commit: the API must re-check its own
+                            # monotonic deadline *after* the VM receives the
+                            # command. Without execute_commit, no write starts.
+                            prepared[ident] = (tool, args, deadline)
+                            response = json.dumps({"type": "execute_ready", "id": ident},
+                                                  separators=(",", ":"))
+                            await socket.send(response)
+                            audit_frame("vm_agent_ws_response_sent",
+                                        {"type": "execute_ready", "id": ident},
+                                        trace_id=ident,
+                                        duration_ms=(time.perf_counter() - received_at) * 1000,
+                                        byte_count=len(response.encode("utf-8")))
+                            set_trace_id("")
+                            continue
+                        executed = True
+                        result = await execute_tool(tool, args)
+                    await send_result(tool, ident, result, received_at, executed=executed)
                     set_trace_id("")
         except asyncio.CancelledError:
             raise
