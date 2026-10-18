@@ -179,3 +179,17 @@ def test_installer_makes_private_pyinstaller_runtime_readable_without_widening_s
     assert install.index('chmod -R a+rX "$DST/_internal"') > install.index(
         'cp -a "$SRC/." "$DST/"'
     )
+
+
+def test_root_guard_credentials_are_managed_by_installer_and_systemd():
+    script = (AGENT / "install.sh").read_text()
+    unit = (AGENT / "vmmcpagent.service").read_text()
+    template = (AGENT / "agent.env.example").read_text()
+    assert "openssl genpkey -algorithm Ed25519" in script
+    assert '[[ ! -e "$GUARD_PRIVATE" && ! -e "$GUARD_PUBLIC" ]]' in script
+    assert "Incomplete existing Root Guard keypair" in script
+    assert "do not match" in script
+    assert 'chmod 0600 "$GUARD_PRIVATE"' in script
+    assert 'chmod 0644 "$GUARD_PUBLIC"' in script
+    assert "LoadCredential=config-change-sign.pem:/etc/aiops/config-change-sign.pem" in unit
+    assert "AIOPS_CONFIG_GUARD_ED25519_PRIVATE_KEY=" not in template

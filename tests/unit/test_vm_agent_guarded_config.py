@@ -191,3 +191,32 @@ async def test_api_blocks_unready_agent_signer_before_consuming_approval(monkeyp
         )
     assert exc.value.status_code == 503, (exc.value.detail, validator_called)
     assert exc.value.detail == "config_guard_private_key_missing"
+
+
+def test_managed_private_credential_signs_without_env_secret(monkeypatch, tmp_path):
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    from cryptography.hazmat.primitives.serialization import (
+        Encoding, PrivateFormat, PublicFormat, NoEncryption,
+    )
+    import apps.config_change_authorization as auth
+    seed = Ed25519PrivateKey.generate()
+    cred = tmp_path / "config-change-sign.pem"
+    cred.write_bytes(seed.private_bytes(Encoding.PEM, PrivateFormat.PKCS8, NoEncryption()))
+    cred.chmod(0o600)
+    verifier = tmp_path / "verify.pem"
+    verifier.write_bytes(seed.public_key().public_bytes(
+        Encoding.PEM, PublicFormat.SubjectPublicKeyInfo))
+    monkeypatch.setenv("CREDENTIALS_DIRECTORY", str(tmp_path))
+    monkeypatch.delenv("AIOPS_CONFIG_GUARD_ED25519_PRIVATE_KEY", raising=False)
+    monkeypatch.setattr(auth, "_ROOT_GUARD_VERIFY_PEM", str(verifier))
+    assert auth.root_guard_apply_signing_status() == (True, "ready")
+    claims = {"service":"nginx", "config_file":FILE,
+              "original_sha256":VALUES["original_sha256"],
+              "candidate_sha256":VALUES["candidate_sha256"],
+              "approval_id":"approval-1", "incident_id":"incident-1",
+              "target":"vm-01", "expires":123456789}
+    assert len(base64.b64decode(auth.sign_root_guard(claims))) == 64
+    cred.unlink()
+    assert auth.root_guard_apply_signing_status() == (
+        False, "config_guard_private_key_missing"
+    )

@@ -175,22 +175,35 @@ def rebase_authenticated_outbound_claim(
 _ROOT_GUARD_VERIFY_PEM = "/etc/aiops/config-change-verify.pem"
 
 
-def root_guard_apply_signing_status() -> tuple[bool, str]:
-    """Safe, read-only verification of the local Ed25519 signing prerequisites.
+def _root_guard_private_key():
+    """Load the installer-managed systemd credential; support legacy env keys.
 
-    Syntax validation does not establish that an approved APPLY can be signed.
-    Never transmit a key or a probe signature over MCP, and never follow
-    symlinks in the installed root-owned public verifier.
+    No private key enters command-line arguments, audit logs or an Agent
+    configuration template. A file credential cannot be a symlink and must
+    remain private to the Agent process.
     """
     import base64
-    import stat
     from pathlib import Path
-    from cryptography.exceptions import InvalidSignature
-    from cryptography.hazmat.primitives.asymmetric.ed25519 import (
-        Ed25519PrivateKey, Ed25519PublicKey,
-    )
-    from cryptography.hazmat.primitives.serialization import load_pem_public_key
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    from cryptography.hazmat.primitives.serialization import load_pem_private_key
 
+    directory = os.environ.get("CREDENTIALS_DIRECTORY")
+    if directory:
+        path = Path(directory) / "config-change-sign.pem"
+        try:
+            if path.is_symlink() or not path.is_file():
+                raise ValueError("invalid_credential")
+            data = path.read_bytes()
+            if len(data) > 8192:
+                raise ValueError("oversized_credential")
+            private = load_pem_private_key(data, password=None)
+            if not isinstance(private, Ed25519PrivateKey):
+                raise ValueError("unexpected_key_type")
+            return private
+        except (OSError, ValueError, TypeError) as exc:
+            raise PermissionError("config_guard_private_key_missing") from exc
+
+    # Backwards compatibility only for deployments not yet migrated.
     try:
         seed = base64.b64decode(
             os.environ.get("AIOPS_CONFIG_GUARD_ED25519_PRIVATE_KEY", ""),
@@ -198,8 +211,27 @@ def root_guard_apply_signing_status() -> tuple[bool, str]:
         )
         if len(seed) != 32:
             raise ValueError("wrong_key_size")
-        private = Ed25519PrivateKey.from_private_bytes(seed)
-    except (ValueError, TypeError):
+        return Ed25519PrivateKey.from_private_bytes(seed)
+    except (ValueError, TypeError) as exc:
+        raise PermissionError("config_guard_private_key_missing") from exc
+
+
+def root_guard_apply_signing_status() -> tuple[bool, str]:
+    """Safe, read-only verification of the local Ed25519 signing prerequisites.
+
+    Syntax validation does not establish that an approved APPLY can be signed.
+    Never transmit a key or a probe signature over MCP, and never follow
+    symlinks in the installed root-owned public verifier.
+    """
+    import stat
+    from pathlib import Path
+    from cryptography.exceptions import InvalidSignature
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+    from cryptography.hazmat.primitives.serialization import load_pem_public_key
+
+    try:
+        private = _root_guard_private_key()
+    except PermissionError:
         return False, "config_guard_private_key_missing"
 
     verifier = Path(_ROOT_GUARD_VERIFY_PEM)
@@ -232,16 +264,8 @@ def sign_root_guard(claims: dict) -> str:
     no private key ever appears in SSH argv, stdout or the target VM.
     """
     import base64
-    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-    encoded = os.environ.get("AIOPS_CONFIG_GUARD_ED25519_PRIVATE_KEY", "")
-    try:
-        seed = base64.b64decode(encoded, validate=True)
-        if len(seed) != 32:
-            raise ValueError("wrong_key_size")
-        private = Ed25519PrivateKey.from_private_bytes(seed)
-    except (ValueError, TypeError) as exc:
-        raise PermissionError("config_guard_private_key_missing") from exc
+    private = _root_guard_private_key()
     values = (
         "v1", "apply", str(claims["service"]).lower().removesuffix(".service"),
         claims["config_file"], claims["original_sha256"],

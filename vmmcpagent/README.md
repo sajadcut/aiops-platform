@@ -60,9 +60,9 @@ provisions `/data/aiopsvmagent/config-candidates` and
 `/data/aiopsvmagent/logs` owned by `aiops-agent` with mode `0700`,
 and **does not** enable the service. Before starting, provide `VM_AGENT_TARGET`, per-host
 `VM_AGENT_BEARER_TOKEN`, and the service allowlist in that config. The
-`aiops-agent` system user/group must already exist. Configure the public
-verification key at `/etc/aiops/config-change-verify.pem`, and a **distinct**
-Ed25519 private signing key for this VM, before enabling approved config APPLY.
+`aiops-agent` system user/group must already exist. The installer automatically provisions a host-specific Ed25519 keypair with
+a root-owned public verifier and a private systemd LoadCredential, preserving
+both on upgrades. No private signing key is required in agent.env.
 
 Next, review `sudoers.example` and configure **narrow** sudoers only for approved `systemctl` actions and
 `/usr/local/sbin/aiops-config-guard`. The root guard validates arguments,

@@ -89,6 +89,44 @@ if [[ ! -f "$DST/agent.env" ]]; then
 else
   chmod 0600 "$DST/agent.env"
 fi
+# Provision per-host Ed25519 credentials automatically. Existing credentials
+# are NEVER overwritten (avoid invalidating pending signed approvals).
+# systemd LoadCredential exposes the private PEM only to the service, and the
+# root-owned fixed guard reads only the matching public verification key.
+install -d -o root -g root -m 0755 /etc/aiops
+GUARD_PRIVATE=/etc/aiops/config-change-sign.pem
+GUARD_PUBLIC=/etc/aiops/config-change-verify.pem
+if [[ -L "$GUARD_PRIVATE" || -L "$GUARD_PUBLIC" ]]; then
+  echo "Refusing symlinked Root Guard credentials" >&2; exit 7
+fi
+if [[ ! -e "$GUARD_PRIVATE" && ! -e "$GUARD_PUBLIC" ]]; then
+  umask 077
+  candidate="$(mktemp /etc/aiops/.guard-key.XXXXXXXX)"
+  trap 'rm -f -- "$candidate"' EXIT
+  openssl genpkey -algorithm Ed25519 -out "$candidate" >/dev/null
+  chmod 0600 "$candidate"
+  openssl pkey -in "$candidate" -pubout -out "$GUARD_PUBLIC"
+  chown root:root "$GUARD_PUBLIC"
+  chmod 0644 "$GUARD_PUBLIC"
+  mv -n "$candidate" "$GUARD_PRIVATE"
+  trap - EXIT
+elif [[ ! -f "$GUARD_PRIVATE" || ! -f "$GUARD_PUBLIC" ]]; then
+  echo "Incomplete existing Root Guard keypair; refusing automatic rotation" >&2
+  exit 7
+fi
+if [[ ! -f "$GUARD_PRIVATE" || ! -f "$GUARD_PUBLIC" ]]; then
+  echo "Root Guard keypair is incomplete" >&2; exit 7
+fi
+chown root:root "$GUARD_PRIVATE" "$GUARD_PUBLIC"
+chmod 0600 "$GUARD_PRIVATE"
+chmod 0644 "$GUARD_PUBLIC"
+# Compare canonical public key derived from the private PEM, without printing
+# any key material. Refuse mismatched or malformed keys rather than rotating.
+derived="$(openssl pkey -in "$GUARD_PRIVATE" -pubout 2>/dev/null | openssl dgst -sha256)"
+installed="$(openssl pkey -pubin -in "$GUARD_PUBLIC" -pubout 2>/dev/null | openssl dgst -sha256)"
+if [[ -z "$derived" || "$derived" != "$installed" ]]; then
+  echo "Root Guard signing and verification keys do not match" >&2; exit 7
+fi
 install -o root -g root -m 0750 "$DST/aiops-config-guard" /usr/local/sbin/aiops-config-guard
 install -o root -g root -m 0644 "$DST/vmmcpagent.service" /etc/systemd/system/vmmcpagent.service
 # systemd cannot expand User= from EnvironmentFile; install a root-owned
@@ -100,5 +138,5 @@ chmod 0644 /etc/systemd/system/vmmcpagent.service.d/10-execution-user.conf
 systemctl daemon-reload
 echo "Installed. Edit $DST/agent.env and configure:"
 echo " - VM_AGENT_TARGET, VM_AGENT_ALLOWED_SERVICES, VM_AGENT_BEARER_TOKEN"
-echo " - root-owned /etc/aiops/config-change-verify.pem and host-specific signing seed for APPLY"
+echo " - Root Guard signing credentials are provisioned automatically and preserved on upgrades"
 echo " - restricted sudoers and TLS reverse proxy. Service NOT automatically enabled."
