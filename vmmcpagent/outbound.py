@@ -23,6 +23,11 @@ from vmmcpagent.connector import LocalVMConnector as _SessionCredentials
 _MAX_FRAME = 1024 * 1024
 _MAX_REPLAY_ENTRIES = 4096
 _MAX_LEASE_SECONDS = 190
+
+def _monotonic_time() -> float:
+    """Host-local elapsed-time clock; never compare wall clocks across VMs."""
+    return time.monotonic()
+
 _TARGET = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.:-]{0,253}\Z")
 
 
@@ -225,7 +230,7 @@ async def run_outbound_forever() -> None:
                             await socket.close(code=1008)
                             break
                         tool, args, deadline = prepared.pop(ident)
-                        executed = time.monotonic() <= deadline
+                        executed = _monotonic_time() <= deadline
                         result = (await execute_tool(tool, args) if executed else
                                   _execution_failure(tool, "request_expired",
                                                      sent_to_executor=False))
@@ -258,7 +263,7 @@ async def run_outbound_forever() -> None:
                         break
                     # Relative leases use *only* this VM's monotonic clock.
                     # Legacy frames remain supported for rolling upgrades.
-                    now = time.monotonic()
+                    now = _monotonic_time()
                     wall_now = int(time.time()) if legacy else None
                     deadline = (now + ttl if relative
                                 else now + max(0, expires - wall_now))
