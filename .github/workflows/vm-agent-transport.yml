@@ -13,6 +13,7 @@ on:
       - 'domain/contracts/config.py'
       - 'tests/unit/test_vm_local_agent_transport.py'
       - 'tests/unit/test_vm_agent_package_layout.py'
+      - 'tests/unit/test_vm_outbound_agent.py'
       - 'tests/unit/test_vm_agent_all_tools_parity.py'
       - 'tests/unit/test_vm_agent_ambiguous_apply.py'
       - 'tests/unit/test_vm_agent_guarded_config.py'
@@ -30,6 +31,7 @@ on:
       - 'domain/contracts/config.py'
       - 'tests/unit/test_vm_local_agent_transport.py'
       - 'tests/unit/test_vm_agent_package_layout.py'
+      - 'tests/unit/test_vm_outbound_agent.py'
       - 'tests/unit/test_vm_agent_all_tools_parity.py'
       - 'tests/unit/test_vm_agent_ambiguous_apply.py'
       - 'tests/unit/test_vm_agent_guarded_config.py'
@@ -66,12 +68,13 @@ jobs:
           sh -n vmmcpagent/aiops-config-guard
           cmp -s vmmcpagent/aiops-config-guard scripts/vm/aiops-config-guard
       - name: Compile implementation and tests
-        run: python -m compileall -q integrations/vm apps/mcp_server apps/vm_agent_runner.py vmmcpagent tests/unit/test_vm_local_agent_transport.py tests/unit/test_vm_agent_package_layout.py
+        run: python -m compileall -q integrations/vm apps/mcp_server apps/api/vm_agent_broker.py apps/vm_agent_runner.py vmmcpagent tests/unit/test_vm_local_agent_transport.py tests/unit/test_vm_agent_package_layout.py tests/unit/test_vm_outbound_agent.py
       - name: Validate VM MCP SSH and local-agent parity
         run: |
           python -m pytest -q \
             tests/unit/test_vm_local_agent_transport.py \
             tests/unit/test_vm_agent_package_layout.py \
+            tests/unit/test_vm_outbound_agent.py \
             tests/unit/test_vm_agent_all_tools_parity.py \
             tests/unit/test_vm_agent_ambiguous_apply.py \
             tests/unit/test_vm_agent_guarded_config.py \

@@ -55,6 +55,12 @@ def main() -> None:
 
     from vmmcpagent.connector import LocalVMConnector
     LocalVMConnector()
+    if settings.VM_AGENT_CONNECTION_MODE == "outbound":
+        import asyncio
+        from vmmcpagent.outbound import run_outbound_forever
+        asyncio.run(run_outbound_forever())
+        return
+
     import uvicorn
     from apps.mcp_server.main import app
     # Raw HTTP is always loopback-only. Put an authenticated, TLS-verified

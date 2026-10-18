@@ -32,7 +32,7 @@ def _derive_mcp_key(context: bytes, *, target: str | None = None) -> bytes:
     if settings.MCP_SERVER_PROVIDER == "vm_agent":
         # An installed agent never needs the fleet-wide Control Plane secret.
         token = settings.VM_AGENT_BEARER_TOKEN or ""
-    elif settings.VM_EXECUTION_BACKEND == "agent" and context == _SIGNING_CONTEXT and target:
+    elif settings.VM_EXECUTION_BACKEND in {"agent", "agent_pull"} and context == _SIGNING_CONTEXT and target:
         # The API signs for exactly the agent named in the approved intent.
         token = settings.VM_AGENT_TOKENS.get(target) or ""
     else:

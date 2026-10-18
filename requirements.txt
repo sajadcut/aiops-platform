@@ -21,3 +21,4 @@ python-multipart>=0.0.20,<1
 PyYAML>=6.0,<7
 asyncssh>=2.24,<3
 cryptography>=50,<52  # explicit Ed25519 execution-signature dependency
+websockets>=14,<17  # outbound agent WSS client (websockets.asyncio)

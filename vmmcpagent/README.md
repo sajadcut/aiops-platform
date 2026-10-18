@@ -1,8 +1,9 @@
-# vmmcpagent — SSH-free VM MCP agent
+# vmmcpagent — SSH-free VM MCP agent (Puppet-style outbound WSS supported)
 
 This directory contains the **installed, on-target** VM execution agent.
 The existing VM MCP SSH backend is intentionally retained. The API selects
-`VM_EXECUTION_BACKEND=ssh` or `VM_EXECUTION_BACKEND=agent`.
+`VM_EXECUTION_BACKEND=ssh`, `agent` (inbound HTTPS) or `agent_pull` (Puppet-style
+outbound persistent WebSocket). The on-host template defaults to outbound mode.
 
 ## Files
 
@@ -58,7 +59,14 @@ hashes and signed claims; never grant `sudo /bin/sh` or `NOPASSWD: ALL`.
 Root guard validation can require `jq`, `xmllint` or `nginx` and
 `unshare` depending on profile.
 
-The MCP HTTP listener binds **only** `127.0.0.1:9105` (port configurable).
+In the default **outbound** mode the Agent opens **no HTTP listener** and
+connects to the central API using outbound WSS. Its configuration must set
+`VM_AGENT_CONTROL_PLANE_WS_URL` and it uses its per-host bearer as the
+Authorization header, never as a URL query parameter. Details and operational
+constraints: [`docs/VM_AGENT_OUTBOUND_CHANNEL.md`](../docs/VM_AGENT_OUTBOUND_CHANNEL.md).
+
+Only in explicit `VM_AGENT_CONNECTION_MODE=inbound` does the MCP HTTP listener
+bind **only** `127.0.0.1:9105` (port configurable).
 Publish to the API exclusively through a trusted HTTPS reverse proxy that
 validates client identity/firewalls as appropriate. Restrict source hosts and
 enable certificate verification. An agent never opens SSH.
@@ -78,6 +86,11 @@ VM_AGENT_ENDPOINTS={"10.248.16.82":"https://vm82.example.internal/mcp"}
 VM_AGENT_TOKENS={"10.248.16.82":"<different-random-secret-for-that-host>"}
 VM_AGENT_CA_BUNDLE_PATH=/etc/aiops/agent-ca.pem
 ```
+
+For outbound (no open VM port) configure API
+`VM_EXECUTION_BACKEND=agent_pull`, its `VM_AGENT_TOKENS` target map, and
+`VM_AGENT_ENDPOINTS={}`. Inspect connected hosts through the authenticated
+API route `GET /api/v1/vm-agents/status` (requires `read:incident`).
 
 To use the original SSH worker, set `VM_EXECUTION_BACKEND=ssh` and use
 the existing `VM_MCP_URL`. There is **no automatic SSH fallback**.

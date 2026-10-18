@@ -1,5 +1,11 @@
 # Agent-based VM execution without SSH
 
+A Puppet Enterprise-style **agent-initiated outbound WSS** transport is also
+available as `VM_EXECUTION_BACKEND=agent_pull`. For the configuration, no
+inbound VM ports, operational guarantees and scaling limitations, see
+[`VM_AGENT_OUTBOUND_CHANNEL.md`](VM_AGENT_OUTBOUND_CHANNEL.md). Existing
+`VM_EXECUTION_BACKEND=ssh` and `agent` modes remain supported.
+
 The legacy `VM_MCP_URL` / `MCP_SERVER_PROVIDER=vm` SSH worker remains
 unchanged. The alternative is an **on-host** MCP worker:
 `MCP_SERVER_PROVIDER=vm_agent`. The API chooses exactly one backend with
