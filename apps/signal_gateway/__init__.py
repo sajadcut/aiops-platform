@@ -200,7 +200,10 @@ class SignalGateway:
         import re
         allowed = {
             str(item).strip().casefold(): str(item).strip()
-            for item in settings.SSH_ALLOWED_TARGETS if str(item).strip()
+            for item in (settings.VM_AGENT_ENDPOINTS.keys()
+                         if settings.VM_EXECUTION_BACKEND == "agent"
+                         else settings.SSH_ALLOWED_TARGETS)
+            if str(item).strip()
         }
         raw_ips = candidate.get("ip_addresses") or []
         if isinstance(raw_ips, str):
