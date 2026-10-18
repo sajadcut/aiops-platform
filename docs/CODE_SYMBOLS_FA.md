@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 569 | Dashboard JS files scanned: 8 | Symbols indexed: 6389**
+**Python files scanned: 570 | Dashboard JS files scanned: 8 | Symbols indexed: 6413**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -831,10 +831,10 @@
 | `apps/api/main.py` | `chatbot_transport_script` | 270 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/main.py` | `_is_http_or_https` | 274 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/main.py` | `_validate_production_configuration` | 281 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `startup_event` | 393 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `shutdown_event` | 454 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `dashboard_decision_brief_script` | 467 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/main.py` | `dashboard_decision_brief_stylesheet` | 472 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `startup_event` | 406 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `shutdown_event` | 467 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `dashboard_decision_brief_script` | 480 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/main.py` | `dashboard_decision_brief_stylesheet` | 485 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/remediation.py` | `_audit_durable` | 29 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/remediation.py` | `_read_vm` | 35 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/remediation.py` | `RemediationRequest` | 42 | class | کلاس | module |
@@ -875,17 +875,17 @@
 | `apps/api/signals.py` | `ingest_prometheus_alertmanager` | 245 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/signals.py` | `ingest_prometheus_signal` | 254 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/signals.py` | `ingest_zabbix_signal` | 274 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/vm_agent_broker.py` | `AgentDisconnected` | 33 | class | کلاس | module |
-| `apps/api/vm_agent_broker.py` | `AgentSession` | 38 | class | کلاس | module |
-| `apps/api/vm_agent_broker.py` | `AgentSession.fail_pending` | 45 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AgentSession |
-| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker` | 52 | class | کلاس | module |
-| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker.__init__` | 53 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OutboundAgentBroker |
-| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker.is_connected` | 57 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OutboundAgentBroker |
-| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker.connect` | 60 | async method | Authenticate before accepting; reject duplicate host identities. | OutboundAgentBroker |
-| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker.dispatch` | 116 | async method | Never retry an ambiguous write; surface UNKNOWN for reconciliation. | OutboundAgentBroker |
-| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker._not_dispatched` | 188 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OutboundAgentBroker |
-| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker.shutdown` | 197 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OutboundAgentBroker |
-| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker._unavailable` | 209 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OutboundAgentBroker |
+| `apps/api/vm_agent_broker.py` | `AgentDisconnected` | 35 | class | کلاس | module |
+| `apps/api/vm_agent_broker.py` | `AgentSession` | 40 | class | کلاس | module |
+| `apps/api/vm_agent_broker.py` | `AgentSession.fail_pending` | 48 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AgentSession |
+| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker` | 55 | class | کلاس | module |
+| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker.__init__` | 56 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OutboundAgentBroker |
+| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker.is_connected` | 60 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OutboundAgentBroker |
+| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker.connect` | 64 | async method | Authenticate before accepting; reject duplicate host identities. | OutboundAgentBroker |
+| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker.dispatch` | 153 | async method | Never retry an ambiguous write; surface UNKNOWN for reconciliation. | OutboundAgentBroker |
+| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker._not_dispatched` | 225 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OutboundAgentBroker |
+| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker.shutdown` | 234 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OutboundAgentBroker |
+| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker._unavailable` | 246 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OutboundAgentBroker |
 | `apps/api/workflow.py` | `WorkflowRequest` | 18 | class | کلاس | module |
 | `apps/api/workflow.py` | `WorkflowResponse` | 25 | class | کلاس | module |
 | `apps/api/workflow.py` | `run_workflow` | 39 | async function | Compatibility analysis endpoint backed by the canonical durable E2E runtime. | module |
@@ -2145,27 +2145,27 @@
 | `domain/action_plan.py` | `ActionPlan` | 5 | class | کلاس | module |
 | `domain/audit_event.py` | `AuditEvent` | 6 | class | کلاس | module |
 | `domain/contracts/config.py` | `Settings` | 8 | class | Typed loader for the centralized runtime environment contract. | module |
-| `domain/contracts/config.py` | `Settings.validate_app_env` | 212 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_vm_execution_backend` | 220 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_vm_agent_connection_mode` | 228 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_ssh_auth_mode` | 236 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.parse_optional_cognia_ids` | 244 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Settings |
-| `domain/contracts/config.py` | `Settings.validate_cognia_knowledge_base_ids` | 251 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_log_rotation_mode` | 263 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_log_level` | 271 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_elastic_agent_builder_version` | 279 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_elastic_agent_builder_endpoint` | 292 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_elastic_mcp_protocol_version` | 314 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_elastic_mcp_auth_header` | 324 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_elastic_mcp_authentication` | 335 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_elastic_namespaces` | 352 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_elastic_anomaly_job_service_map` | 360 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_jenkins_mcp_protocol_version` | 372 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_jenkins_basic_auth_header` | 380 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_prometheus_mcp_protocol_version` | 388 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_external_contracts` | 397 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_embedding_contract` | 421 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_cognia_contract` | 451 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_app_env` | 215 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_vm_execution_backend` | 223 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_vm_agent_connection_mode` | 231 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_ssh_auth_mode` | 239 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.parse_optional_cognia_ids` | 247 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Settings |
+| `domain/contracts/config.py` | `Settings.validate_cognia_knowledge_base_ids` | 254 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_log_rotation_mode` | 266 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_log_level` | 274 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_elastic_agent_builder_version` | 282 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_elastic_agent_builder_endpoint` | 295 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_elastic_mcp_protocol_version` | 317 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_elastic_mcp_auth_header` | 327 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_elastic_mcp_authentication` | 338 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_elastic_namespaces` | 355 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_elastic_anomaly_job_service_map` | 363 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_jenkins_mcp_protocol_version` | 375 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_jenkins_basic_auth_header` | 383 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_prometheus_mcp_protocol_version` | 391 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_external_contracts` | 400 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_embedding_contract` | 424 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_cognia_contract` | 454 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
 | `domain/contracts/context.py` | `set_trace_id` | 15 | function | Set the request/correlation trace id for the current execution context. | module |
 | `domain/contracts/context.py` | `get_trace_id` | 20 | function | Return the request/correlation trace id for the current context. | module |
 | `domain/contracts/context.py` | `generate_trace_id` | 25 | function | Generate a compact request trace id. | module |
@@ -6049,6 +6049,26 @@
 | `tests/unit/test_vm_agent_package_layout.py` | `test_entrypoint_refuses_world_or_group_readable_secrets` | 68 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_agent_package_layout.py` | `test_entrypoint_refuses_symlink_agent_env` | 77 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_agent_package_layout.py` | `test_service_and_build_target_exact_same_agent_directory` | 87 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_agent_sudo_credentials.py` | `provision` | 18 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_vm_agent_sudo_credentials.py` | `test_authenticated_agent_gets_only_its_own_bootstrap_credentials` | 33 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_agent_sudo_credentials.py` | `test_agent_rejects_mismatched_bootstrap_ack_and_never_dispatches` | 74 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_agent_sudo_credentials.py` | `test_wrong_bearer_never_receives_password` | 90 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_agent_sudo_credentials.py` | `test_invalid_api_credentials_never_leave_control_plane` | 99 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_agent_sudo_credentials.py` | `test_agent_accepts_password_only_for_matching_real_execution_identity` | 110 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_agent_sudo_credentials.py` | `test_sudo_fallback_passes_password_on_stdin_and_redacts_output` | 126 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_agent_sudo_credentials.py` | `test_sudo_fallback_passes_password_on_stdin_and_redacts_output.fake_run` | 133 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_sudo_fallback_passes_password_on_stdin_and_redacts_output |
+| `tests/unit/test_vm_agent_sudo_credentials.py` | `test_sudo_without_bootstrap_credentials_fails_closed` | 154 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_agent_sudo_credentials.py` | `test_sudo_without_bootstrap_credentials_fails_closed.fail_sudo` | 159 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_sudo_without_bootstrap_credentials_fails_closed |
+| `tests/unit/test_vm_agent_sudo_credentials.py` | `test_agent_bootstrap_ack_is_password_free_and_password_cleared_on_disconnect` | 169 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_agent_sudo_credentials.py` | `test_agent_bootstrap_ack_is_password_free_and_password_cleared_on_disconnect.Socket` | 198 | class | کلاس | test_agent_bootstrap_ack_is_password_free_and_password_cleared_on_disconnect |
+| `tests/unit/test_vm_agent_sudo_credentials.py` | `test_agent_bootstrap_ack_is_password_free_and_password_cleared_on_disconnect.Socket.__aenter__` | 199 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_agent_bootstrap_ack_is_password_free_and_password_cleared_on_disconnect.Socket |
+| `tests/unit/test_vm_agent_sudo_credentials.py` | `test_agent_bootstrap_ack_is_password_free_and_password_cleared_on_disconnect.Socket.__aexit__` | 200 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_agent_bootstrap_ack_is_password_free_and_password_cleared_on_disconnect.Socket |
+| `tests/unit/test_vm_agent_sudo_credentials.py` | `test_agent_bootstrap_ack_is_password_free_and_password_cleared_on_disconnect.Socket.__aiter__` | 201 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_agent_bootstrap_ack_is_password_free_and_password_cleared_on_disconnect.Socket |
+| `tests/unit/test_vm_agent_sudo_credentials.py` | `test_agent_bootstrap_ack_is_password_free_and_password_cleared_on_disconnect.Socket.__aiter__.stream` | 202 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_agent_bootstrap_ack_is_password_free_and_password_cleared_on_disconnect.Socket.__aiter__ |
+| `tests/unit/test_vm_agent_sudo_credentials.py` | `test_agent_bootstrap_ack_is_password_free_and_password_cleared_on_disconnect.Socket.send` | 205 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_agent_bootstrap_ack_is_password_free_and_password_cleared_on_disconnect.Socket |
+| `tests/unit/test_vm_agent_sudo_credentials.py` | `test_agent_bootstrap_ack_is_password_free_and_password_cleared_on_disconnect.stop` | 208 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_agent_bootstrap_ack_is_password_free_and_password_cleared_on_disconnect |
+| `tests/unit/test_vm_agent_sudo_credentials.py` | `test_package_has_safe_execution_username_and_dynamic_systemd_user` | 219 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_agent_sudo_credentials.py` | `test_api_production_requires_one_username_password_for_each_target` | 231 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_config_validation.py` | `test_config_validate_propagates_ssh_failure` | 8 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_config_validation.py` | `test_config_validate_propagates_ssh_failure.failed_run` | 14 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_config_validate_propagates_ssh_failure |
 | `tests/unit/test_vm_config_validation.py` | `test_config_validate_retries_sudo_with_ssh_password_when_permission_denied` | 33 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
@@ -6388,11 +6408,15 @@
 | `vmmcpagent/__main__.py` | `configure_agent_environment` | 20 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `vmmcpagent/__main__.py` | `main` | 44 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `vmmcpagent/connector.py` | `LocalVMConnector` | 23 | class | Run existing bounded VM diagnostics/repairs on this host, not over SSH. | module |
-| `vmmcpagent/connector.py` | `LocalVMConnector._validate_runtime_security` | 32 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | LocalVMConnector |
-| `vmmcpagent/connector.py` | `LocalVMConnector._auth_mode` | 49 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | LocalVMConnector |
-| `vmmcpagent/connector.py` | `LocalVMConnector._validate_target` | 53 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | LocalVMConnector |
-| `vmmcpagent/connector.py` | `LocalVMConnector._validate_service` | 59 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | LocalVMConnector |
-| `vmmcpagent/connector.py` | `LocalVMConnector._run` | 65 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | LocalVMConnector |
-| `vmmcpagent/outbound.py` | `broker_url` | 25 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `vmmcpagent/outbound.py` | `_execution_failure` | 41 | function | A write may already have completed even if its response cannot be sent. | module |
-| `vmmcpagent/outbound.py` | `run_outbound_forever` | 54 | async function | Reconnect with bounded backoff, but NEVER resend an interrupted write. | module |
+| `vmmcpagent/connector.py` | `LocalVMConnector.execution_identity` | 34 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | LocalVMConnector |
+| `vmmcpagent/connector.py` | `LocalVMConnector.set_session_credentials` | 41 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | LocalVMConnector |
+| `vmmcpagent/connector.py` | `LocalVMConnector.clear_session_credentials` | 51 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | LocalVMConnector |
+| `vmmcpagent/connector.py` | `LocalVMConnector._sudo` | 54 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | LocalVMConnector |
+| `vmmcpagent/connector.py` | `LocalVMConnector._validate_runtime_security` | 78 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | LocalVMConnector |
+| `vmmcpagent/connector.py` | `LocalVMConnector._auth_mode` | 99 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | LocalVMConnector |
+| `vmmcpagent/connector.py` | `LocalVMConnector._validate_target` | 103 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | LocalVMConnector |
+| `vmmcpagent/connector.py` | `LocalVMConnector._validate_service` | 109 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | LocalVMConnector |
+| `vmmcpagent/connector.py` | `LocalVMConnector._run` | 115 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | LocalVMConnector |
+| `vmmcpagent/outbound.py` | `broker_url` | 26 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `vmmcpagent/outbound.py` | `_execution_failure` | 42 | function | A write may already have completed even if its response cannot be sent. | module |
+| `vmmcpagent/outbound.py` | `run_outbound_forever` | 55 | async function | Reconnect with bounded backoff, but NEVER resend an interrupted write. | module |
