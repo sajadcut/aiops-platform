@@ -126,3 +126,21 @@ async def test_health_checks_all_agent_targets_not_only_first(agent_settings, mo
     assert await client.health_check() is False
     assert set(seen) == set(settings.VM_AGENT_ENDPOINTS.values())
     await client.close()
+
+
+@pytest.mark.asyncio
+async def test_on_host_command_environment_does_not_inherit_agent_secrets(agent_settings, monkeypatch):
+    monkeypatch.setenv("VM_AGENT_BEARER_TOKEN", "never-expose-agent-token")
+    monkeypatch.setenv("MCP_BEARER_TOKEN", "never-expose-fleet-secret")
+    monkeypatch.setenv("AIOPS_CONFIG_GUARD_ED25519_PRIVATE_KEY", "never-expose-signing-key")
+    monkeypatch.setenv("LLM_API_KEY", "never-expose-llm-token")
+    connector = LocalVMConnector()
+    result = await connector._run(
+        "vm-01",
+        "printf '%s:%s:%s:%s' \"${VM_AGENT_BEARER_TOKEN-unset}\" "
+        "\"${MCP_BEARER_TOKEN-unset}\" "
+        "\"${AIOPS_CONFIG_GUARD_ED25519_PRIVATE_KEY-unset}\" "
+        "\"${LLM_API_KEY-unset}\"",
+    )
+    assert result["success"] is True
+    assert result["stdout"] == "unset:unset:unset:unset"
