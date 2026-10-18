@@ -126,6 +126,15 @@ class OutboundAgentBroker:
             raise PermissionError("vm_agent_tool_not_allowed")
         if args.get("target") != target:
             raise PermissionError("vm_agent_target_binding_invalid")
+        if tool in {"start_service", "restart_service", "reload_service"}:
+            if not (str(args.get("approval_id") or "").strip()
+                    and str(args.get("incident_id") or "").strip()
+                    and str(args.get("service") or "").strip()):
+                raise PermissionError("vm_agent_write_approval_context_required")
+        if tool == "config_change_apply":
+            from apps.config_change_authorization import verify_claim
+            verify_claim(args.get("claims"), args.get("signature"),
+                         target=target, service=str(args.get("service") or ""))
         session = self.sessions.get(target)
         # No command has been sent if the agent was disconnected or busy.
         if session is None:
@@ -141,13 +150,21 @@ class OutboundAgentBroker:
             "tool": tool, "arguments": args,
             "expires_at": int(time.time() + deadline_seconds),
         }
+        logger.info("vm_outbound_dispatch_started", target=target, tool=tool,
+                    request_id=request_id)
         try:
             async with session.sending:
                 if self.sessions.get(target) is not session:
                     raise AgentDisconnected("agent_session_replaced")
                 await session.socket.send_text(json.dumps(message, separators=(",", ":")))
-            return await asyncio.wait_for(future, timeout=deadline_seconds)
+            result = await asyncio.wait_for(future, timeout=deadline_seconds)
+            logger.info("vm_outbound_dispatch_completed", target=target,
+                        tool=tool, request_id=request_id,
+                        success=result.get("success") is True)
+            return result
         except (asyncio.TimeoutError, RuntimeError, OSError, WebSocketDisconnect):
+            logger.warning("vm_outbound_dispatch_unconfirmed", target=target,
+                           tool=tool, request_id=request_id)
             return self._unavailable(tool, "agent_result_unconfirmed")
         finally:
             session.pending.pop(request_id, None)
