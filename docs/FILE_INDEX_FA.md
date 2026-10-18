@@ -3,7 +3,7 @@
 > این فایل فهرست فایل‌به‌فایل repository است. توضیح معماری و flow در `CODEBASE_GUIDE_FA.md` آمده است.
 > این فایل با `scripts/generate_file_index_fa.py` ساخته و در CI کنترل می‌شود.
 
-**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 717**
+**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 719**
 
 | Path | Type | Purpose | Called By | Calls/Depends On | Runtime/Test/Docs | Notes |
 |---|---|---|---|---|---|---|
@@ -691,6 +691,7 @@
 | `tests/unit/test_verify_operational_memory.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_vm_agent_all_tools_parity.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_vm_agent_ambiguous_apply.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
+| `tests/unit/test_vm_agent_audit_tls.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_vm_agent_guarded_config.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_vm_agent_package_layout.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_vm_agent_sudo_credentials.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
@@ -718,6 +719,7 @@
 | `vmmcpagent/__main__.py` | File | فایل پروژه | — | — | Other |  |
 | `vmmcpagent/agent.env.example` | File | فایل پروژه | — | — | Other |  |
 | `vmmcpagent/aiops-config-guard` | File | فایل پروژه | — | — | Other |  |
+| `vmmcpagent/audit.py` | File | فایل پروژه | — | — | Other |  |
 | `vmmcpagent/build.sh` | File | فایل پروژه | — | — | Other |  |
 | `vmmcpagent/connector.py` | File | فایل پروژه | — | — | Other |  |
 | `vmmcpagent/install.sh` | File | فایل پروژه | — | — | Other |  |

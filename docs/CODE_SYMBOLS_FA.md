@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 570 | Dashboard JS files scanned: 8 | Symbols indexed: 6413**
+**Python files scanned: 572 | Dashboard JS files scanned: 8 | Symbols indexed: 6431**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2145,27 +2145,27 @@
 | `domain/action_plan.py` | `ActionPlan` | 5 | class | کلاس | module |
 | `domain/audit_event.py` | `AuditEvent` | 6 | class | کلاس | module |
 | `domain/contracts/config.py` | `Settings` | 8 | class | Typed loader for the centralized runtime environment contract. | module |
-| `domain/contracts/config.py` | `Settings.validate_app_env` | 215 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_vm_execution_backend` | 223 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_vm_agent_connection_mode` | 231 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_ssh_auth_mode` | 239 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.parse_optional_cognia_ids` | 247 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Settings |
-| `domain/contracts/config.py` | `Settings.validate_cognia_knowledge_base_ids` | 254 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_log_rotation_mode` | 266 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_log_level` | 274 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_elastic_agent_builder_version` | 282 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_elastic_agent_builder_endpoint` | 295 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_elastic_mcp_protocol_version` | 317 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_elastic_mcp_auth_header` | 327 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_elastic_mcp_authentication` | 338 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_elastic_namespaces` | 355 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_elastic_anomaly_job_service_map` | 363 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_jenkins_mcp_protocol_version` | 375 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_jenkins_basic_auth_header` | 383 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_prometheus_mcp_protocol_version` | 391 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_external_contracts` | 400 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_embedding_contract` | 424 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
-| `domain/contracts/config.py` | `Settings.validate_cognia_contract` | 454 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_app_env` | 216 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_vm_execution_backend` | 224 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_vm_agent_connection_mode` | 232 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_ssh_auth_mode` | 240 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.parse_optional_cognia_ids` | 248 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Settings |
+| `domain/contracts/config.py` | `Settings.validate_cognia_knowledge_base_ids` | 255 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_log_rotation_mode` | 267 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_log_level` | 275 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_elastic_agent_builder_version` | 283 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_elastic_agent_builder_endpoint` | 296 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_elastic_mcp_protocol_version` | 318 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_elastic_mcp_auth_header` | 328 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_elastic_mcp_authentication` | 339 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_elastic_namespaces` | 356 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_elastic_anomaly_job_service_map` | 364 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_jenkins_mcp_protocol_version` | 376 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_jenkins_basic_auth_header` | 384 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_prometheus_mcp_protocol_version` | 392 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_external_contracts` | 401 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_embedding_contract` | 425 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
+| `domain/contracts/config.py` | `Settings.validate_cognia_contract` | 455 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | Settings |
 | `domain/contracts/context.py` | `set_trace_id` | 15 | function | Set the request/correlation trace id for the current execution context. | module |
 | `domain/contracts/context.py` | `get_trace_id` | 20 | function | Return the request/correlation trace id for the current context. | module |
 | `domain/contracts/context.py` | `generate_trace_id` | 25 | function | Generate a compact request trace id. | module |
@@ -6036,6 +6036,19 @@
 | `tests/unit/test_vm_agent_ambiguous_apply.py` | `test_ambiguous_approved_apply_never_claims_no_write.Connector.config_validate` | 40 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_ambiguous_approved_apply_never_claims_no_write.Connector |
 | `tests/unit/test_vm_agent_ambiguous_apply.py` | `test_ambiguous_approved_apply_never_claims_no_write.Connector._run` | 46 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_ambiguous_approved_apply_never_claims_no_write.Connector |
 | `tests/unit/test_vm_agent_ambiguous_apply.py` | `test_ambiguous_approved_apply_never_claims_no_write.Connector._sudo` | 48 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_ambiguous_approved_apply_never_claims_no_write.Connector |
+| `tests/unit/test_vm_agent_audit_tls.py` | `test_agent_wss_tls_switch_is_explicit_without_disabling_encryption` | 18 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_agent_audit_tls.py` | `test_all_secret_and_candidate_bodies_omitted_from_agent_audit` | 32 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_agent_audit_tls.py` | `test_text_and_json_audit_logs_include_trace_timestamp_level_latency_and_errors` | 57 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_agent_audit_tls.py` | `test_vm_agent_configuration_explicit_dual_logs_and_tls_default` | 123 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_agent_audit_tls.py` | `test_real_agent_websocket_loop_audits_each_request_and_response` | 141 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_agent_audit_tls.py` | `test_real_agent_websocket_loop_audits_each_request_and_response.Socket` | 173 | class | کلاس | test_real_agent_websocket_loop_audits_each_request_and_response |
+| `tests/unit/test_vm_agent_audit_tls.py` | `test_real_agent_websocket_loop_audits_each_request_and_response.Socket.__aenter__` | 174 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_real_agent_websocket_loop_audits_each_request_and_response.Socket |
+| `tests/unit/test_vm_agent_audit_tls.py` | `test_real_agent_websocket_loop_audits_each_request_and_response.Socket.__aexit__` | 175 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_real_agent_websocket_loop_audits_each_request_and_response.Socket |
+| `tests/unit/test_vm_agent_audit_tls.py` | `test_real_agent_websocket_loop_audits_each_request_and_response.Socket.__aiter__` | 176 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_real_agent_websocket_loop_audits_each_request_and_response.Socket |
+| `tests/unit/test_vm_agent_audit_tls.py` | `test_real_agent_websocket_loop_audits_each_request_and_response.Socket.__aiter__.frames` | 177 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_real_agent_websocket_loop_audits_each_request_and_response.Socket.__aiter__ |
+| `tests/unit/test_vm_agent_audit_tls.py` | `test_real_agent_websocket_loop_audits_each_request_and_response.Socket.send` | 180 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_real_agent_websocket_loop_audits_each_request_and_response.Socket |
+| `tests/unit/test_vm_agent_audit_tls.py` | `test_real_agent_websocket_loop_audits_each_request_and_response.safe_audit` | 185 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_real_agent_websocket_loop_audits_each_request_and_response |
+| `tests/unit/test_vm_agent_audit_tls.py` | `test_real_agent_websocket_loop_audits_each_request_and_response.stop` | 189 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_real_agent_websocket_loop_audits_each_request_and_response |
 | `tests/unit/test_vm_agent_guarded_config.py` | `test_installed_agent_uses_signed_fixed_guard_and_not_root_shell` | 27 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_agent_guarded_config.py` | `test_installed_agent_uses_signed_fixed_guard_and_not_root_shell.Connector` | 40 | class | کلاس | test_installed_agent_uses_signed_fixed_guard_and_not_root_shell |
 | `tests/unit/test_vm_agent_guarded_config.py` | `test_installed_agent_uses_signed_fixed_guard_and_not_root_shell.Connector._validate_target` | 43 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_installed_agent_uses_signed_fixed_guard_and_not_root_shell.Connector |
@@ -6407,6 +6420,10 @@
 | `vmmcpagent/__main__.py` | `agent_directory` | 15 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `vmmcpagent/__main__.py` | `configure_agent_environment` | 20 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `vmmcpagent/__main__.py` | `main` | 44 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `vmmcpagent/audit.py` | `_safe_label` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `vmmcpagent/audit.py` | `_safe_keys` | 23 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `vmmcpagent/audit.py` | `safe_frame` | 29 | function | Only nonsecret metadata; never serialize raw wire contents. | module |
+| `vmmcpagent/audit.py` | `audit_frame` | 67 | function | Send one sanitized record through the configured text and JSON handlers. | module |
 | `vmmcpagent/connector.py` | `LocalVMConnector` | 23 | class | Run existing bounded VM diagnostics/repairs on this host, not over SSH. | module |
 | `vmmcpagent/connector.py` | `LocalVMConnector.execution_identity` | 34 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | LocalVMConnector |
 | `vmmcpagent/connector.py` | `LocalVMConnector.set_session_credentials` | 41 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | LocalVMConnector |
@@ -6417,6 +6434,7 @@
 | `vmmcpagent/connector.py` | `LocalVMConnector._validate_target` | 103 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | LocalVMConnector |
 | `vmmcpagent/connector.py` | `LocalVMConnector._validate_service` | 109 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | LocalVMConnector |
 | `vmmcpagent/connector.py` | `LocalVMConnector._run` | 115 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | LocalVMConnector |
-| `vmmcpagent/outbound.py` | `broker_url` | 26 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `vmmcpagent/outbound.py` | `_execution_failure` | 42 | function | A write may already have completed even if its response cannot be sent. | module |
-| `vmmcpagent/outbound.py` | `run_outbound_forever` | 55 | async function | Reconnect with bounded backoff, but NEVER resend an interrupted write. | module |
+| `vmmcpagent/outbound.py` | `broker_url` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `vmmcpagent/outbound.py` | `outbound_tls_context` | 43 | function | Explicitly configurable peer validation; never downgrade WSS to ws://. | module |
+| `vmmcpagent/outbound.py` | `_execution_failure` | 60 | function | A write may already have completed even if its response cannot be sent. | module |
+| `vmmcpagent/outbound.py` | `run_outbound_forever` | 73 | async function | Reconnect with bounded backoff, but NEVER resend an interrupted write. | module |
