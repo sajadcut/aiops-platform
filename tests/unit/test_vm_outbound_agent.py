@@ -136,7 +136,8 @@ async def test_disconnect_while_write_pending_is_unknown_without_retry(pull):
 async def test_missing_agent_write_unknown_and_read_fails_closed(pull):
     hub = OutboundAgentBroker()
     result = await hub.dispatch("vm-01", "start_service",
-                                {"target": "vm-01", "service": "nginx"})
+                                {"target": "vm-01", "service": "nginx",
+                                 "approval_id": "ap", "incident_id": "inc"})
     assert result["status"] == "agent_not_connected"
     assert result["execution_outcome"] == "NOT_STARTED"
     assert result["production_write_performed"] is False
@@ -301,3 +302,20 @@ def test_operator_connection_status_endpoint_requires_permission():
     # Route has a required permission dependency rather than leaking
     # registered VM identities or tokens anonymously.
     assert len(found[0].dependencies) > 0
+
+
+@pytest.mark.asyncio
+async def test_outbound_broker_rejects_unsigned_or_unscoped_write(pull):
+    hub = OutboundAgentBroker()
+    socket, task = await _connected(hub)
+    with pytest.raises(PermissionError, match="approval_context_required"):
+        await hub.dispatch("vm-01", "restart_service",
+                           {"target": "vm-01", "service": "nginx"})
+    with pytest.raises(PermissionError):
+        await hub.dispatch("vm-01", "config_change_apply", {
+            "target": "vm-01", "service": "nginx",
+            "claims": {"target": "vm-01"}, "signature": "forged",
+        })
+    assert socket.outbound.empty()
+    await socket.inbound.put(None)
+    await task
