@@ -71,6 +71,11 @@ class LocalVMConnector(SSHVMConnector):
             stdin=asyncio.subprocess.PIPE if stdin_data is not None else asyncio.subprocess.DEVNULL,
             stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
             start_new_session=True,
+            # The on-host worker holds API bearer, Ed25519 signing seed and
+            # possibly an LLM key. Diagnostic child processes (including
+            # privileged sudo commands) must never inherit those secrets.
+            env={"PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                 "LANG": "C", "LC_ALL": "C"},
         )
         try:
             stdout, stderr = await asyncio.wait_for(
