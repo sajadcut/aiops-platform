@@ -22,7 +22,17 @@ class VMEdgeMCPClient(MCPClient):
     WRITE_TOOLS = {"restart_service", "reload_service", "start_service", "config_change_apply"}
 
     def __init__(self, server_url: Optional[str] = None):
-        url = server_url or settings.VM_MCP_URL
+        self._backend = settings.VM_EXECUTION_BACKEND
+        # An explicit server_url is a pinned endpoint used by the agent router.
+        # The default client routes EACH operation based on its exact target.
+        self._endpoint_direct = server_url is not None
+        if self._backend == "agent":
+            if not settings.VM_AGENT_ENDPOINTS:
+                raise ValueError("vm_agent_endpoints_not_configured")
+            url = server_url or next(iter(settings.VM_AGENT_ENDPOINTS.values()))
+            self.EXPECTED_SERVER_NAME = "aiops-vm-agent-mcp"
+        else:
+            url = server_url or settings.VM_MCP_URL
         if not url:
             raise ValueError("vm_mcp_url_not_configured")
         self._identity_validated = False
@@ -68,6 +78,13 @@ class VMEdgeMCPClient(MCPClient):
         return init_result
 
     async def _invoke(self, name: str, target: str, **params: Any) -> Dict[str, Any]:
+        if self._backend == "agent" and not self._endpoint_direct:
+            # No target supplied by an alarm, chatbot or LLM can select its own
+            # URL. Only this operator-managed target-to-endpoint map can route.
+            endpoint = settings.VM_AGENT_ENDPOINTS.get(target)
+            if not endpoint:
+                raise PermissionError("vm_target_not_allowed")
+            return await VMEdgeMCPClient(server_url=endpoint)._invoke(name, target, **params)
         result = await self.call_tool(name, {"target": target, **params})
         if isinstance(result.get("content"), list) and result["content"]:
             first = result["content"][0]
