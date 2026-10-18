@@ -41,7 +41,7 @@ from integrations.elasticsearch.mcp_client import ElasticsearchMCPClient
 from integrations.llm.base import LLMAdapter
 from integrations.llm.openai_compatible import configured_llm_adapter
 from integrations.prometheus.mcp_client import PrometheusMCPClient
-from integrations.vm.mcp_client import VMEdgeMCPClient
+from integrations.vm.mcp_client import VMEdgeMCPClient, vm_transport_configured
 from integrations.zabbix.mcp_client import ZabbixMCPClient
 from integrations.zabbix.client import MockZabbixClient
 from integrations.kubernetes.mcp_client import KubernetesMCPClient
@@ -126,7 +126,7 @@ class E2EOrchestrator:
         # Local mock input is not an external system; every real operational
         # provider is reached through the governed MCP boundary.
         zabbix = MockZabbixClient() if settings.APP_ENV == "test" else ZabbixMCPClient()
-        vm_connector = VMEdgeMCPClient() if settings.VM_MCP_URL else None
+        vm_connector = VMEdgeMCPClient() if vm_transport_configured() else None
         kubernetes = KubernetesMCPClient() if settings.KUBERNETES_MCP_URL else None
         self.vm_connector = vm_connector
         self.evidence_collector = EvidenceCollector(
