@@ -11,6 +11,7 @@ from __future__ import annotations
 import asyncio
 import hmac
 import json
+import re
 import time
 from dataclasses import dataclass, field
 from typing import Any
@@ -27,6 +28,7 @@ MAX_FRAME = 1024 * 1024
 # approved write behind a slow read that may expire before it even starts.
 MAX_PENDING_PER_AGENT = 1
 MAX_RESULT_SECONDS = 190
+_EXEC_USERNAME = re.compile(r"[a-z_][a-z0-9_-]{0,31}\\Z")
 WRITE_TOOLS = frozenset({"start_service", "restart_service", "reload_service", "config_change_apply"})
 
 
@@ -39,6 +41,7 @@ class AgentSession:
     target: str
     socket: WebSocket
     connected_at: float = field(default_factory=time.monotonic)
+    ready: bool = False
     pending: dict[str, asyncio.Future] = field(default_factory=dict)
     sending: asyncio.Lock = field(default_factory=asyncio.Lock)
 
@@ -55,7 +58,8 @@ class OutboundAgentBroker:
         self.lock = asyncio.Lock()
 
     def is_connected(self, target: str) -> bool:
-        return target in self.sessions
+        session = self.sessions.get(target)
+        return session is not None and session.ready
 
     async def connect(self, socket: WebSocket, target: str) -> None:
         """Authenticate before accepting; reject duplicate host identities."""
@@ -77,8 +81,41 @@ class OutboundAgentBroker:
             await socket.accept()
             session = AgentSession(target, socket)
             self.sessions[target] = session
-        logger.info("vm_outbound_agent_connected", target=target)
         try:
+            # First authenticated WSS message provisions credentials for this
+            # exact registered VM. Neither sudo password nor identity is part
+            # of an MCP request, audit entry, response or URL.
+            credentials = settings.VM_AGENT_EXECUTION_CREDENTIALS.get(target)
+            if credentials is None and settings.APP_ENV == "production":
+                await socket.close(code=4403)
+                return
+            if credentials is not None:
+                username = credentials.get("username")
+                password = credentials.get("password")
+                if (not isinstance(username, str) or not _EXEC_USERNAME.fullmatch(username)
+                        or username == "root" or not isinstance(password, str)
+                        or not password or any(ch in password for ch in ("\\n", "\\r", "\\x00"))):
+                    await socket.close(code=4403)
+                    return
+                await socket.send_text(json.dumps({
+                    "type": "credentials", "version": 1, "target": target,
+                    "username": username, "password": password,
+                }, separators=(",", ":")))
+                try:
+                    reply = await asyncio.wait_for(socket.receive_text(), timeout=10)
+                    acknowledgment = json.loads(reply)
+                except (asyncio.TimeoutError, ValueError, TypeError, WebSocketDisconnect):
+                    await socket.close(code=4408)
+                    return
+                if (not isinstance(acknowledgment, dict)
+                        or acknowledgment.get("type") != "credentials_ack"
+                        or acknowledgment.get("target") != target
+                        or acknowledgment.get("username") != username
+                        or acknowledgment.get("ok") is not True):
+                    await socket.close(code=4403)
+                    return
+            session.ready = True
+            logger.info("vm_outbound_agent_connected", target=target)
             while True:
                 data = await socket.receive_text()
                 if len(data.encode("utf-8")) > MAX_FRAME:
@@ -137,7 +174,7 @@ class OutboundAgentBroker:
                          target=target, service=str(args.get("service") or ""))
         session = self.sessions.get(target)
         # No command has been sent if the agent was disconnected or busy.
-        if session is None:
+        if session is None or not session.ready:
             return self._not_dispatched(tool, "agent_not_connected")
         if len(session.pending) >= MAX_PENDING_PER_AGENT:
             return self._not_dispatched(tool, "agent_queue_full")
