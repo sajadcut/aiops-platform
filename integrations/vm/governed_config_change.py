@@ -12,7 +12,9 @@ import shlex
 import xml.etree.ElementTree as ET
 
 from domain.contracts.logging import logger
-from apps.config_change_authorization import verify_claim, sign_root_guard
+from apps.config_change_authorization import (
+    verify_claim, sign_root_guard, root_guard_apply_signing_status,
+)
 from integrations.vm.ephemeral_config_guard import build_ephemeral_guard
 from integrations.vm.config_candidate_vault import load_candidate, CandidateUnavailable
 from integrations.vm.general_config_review import checked_config_path, remote_config_read_command, _remove_trailing_json_commas
@@ -389,8 +391,17 @@ async def run_governed_change(connector, *, action: str, target: str, service: s
                 candidate_sha256=candidate_sha256, candidate=candidate,
                 approval_id=execution_claims["approval_id"] if action == "apply" else None,
             )
-    except (ValueError, PermissionError):
+    except (ValueError, PermissionError) as exc:
+        # Only allowlisted, non-secret failure codes cross the VM boundary.
+        reason = str(exc) if isinstance(exc, PermissionError) else ""
+        if reason not in {
+            "config_guard_private_key_missing", "config_guard_claim_field_invalid",
+        }:
+            reason = "config_guard_request_rejected"
+        logger.warning("vm_config_guard_request_rejected", target=target,
+                       service=name, action=action, reason=reason)
         return {"success": False, "status": "config_guard_request_rejected",
+                "failure_reason": reason,
                 "isolated_validation": False, "production_write_performed": False}
     logger.info(
         "vm_config_ephemeral_transaction_started",
@@ -413,9 +424,16 @@ async def run_governed_change(connector, *, action: str, target: str, service: s
             result=result_status, guard_exit_code=guard_exit_code,
             isolated_validation=success, production_write_performed=False,
         )
+        signer_ready, signer_status = (
+            root_guard_apply_signing_status()
+            if getattr(connector, "uses_root_owned_config_guard", False)
+            else (None, "not_on_host_agent")
+        )
         return {
             "success": success,
             "status": result_status,
+            "apply_signing_ready": signer_ready,
+            "apply_signing_status": signer_status,
             "guard_exit_code": guard_exit_code,
             "isolated_validation": success,
             "validation_scope": scope,
