@@ -16,6 +16,7 @@ from urllib.parse import quote, urlsplit
 
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
+from vmmcpagent.connector import LocalVMConnector as _SessionCredentials
 
 _MAX_FRAME = 1024 * 1024
 _MAX_REPLAY_ENTRIES = 4096
@@ -81,7 +82,7 @@ async def run_outbound_forever() -> None:
                 max_size=_MAX_FRAME, max_queue=8, close_timeout=5,
             ) as socket:
                 delay = 1
-                LocalVMConnector.clear_session_credentials()
+                _SessionCredentials.clear_session_credentials()
                 channel_provisioned = False
                 logger.info("vm_agent_outbound_channel_connected", target=settings.VM_AGENT_TARGET)
                 async for raw in socket:
@@ -99,7 +100,7 @@ async def run_outbound_forever() -> None:
                             await socket.close(code=1008)
                             break
                         try:
-                            LocalVMConnector.set_session_credentials(
+                            _SessionCredentials.set_session_credentials(
                                 request.get("username"), request.get("password"))
                         except (PermissionError, TypeError, ValueError):
                             await socket.close(code=1008)
@@ -175,7 +176,7 @@ async def run_outbound_forever() -> None:
                            target=settings.VM_AGENT_TARGET,
                            error_type=type(exc).__name__)
         finally:
-            LocalVMConnector.clear_session_credentials()
+            _SessionCredentials.clear_session_credentials()
         # Reconnect is for a fresh channel only. Never retransmit a write.
         await asyncio.sleep(delay)
         delay = min(delay * 2, 30)
