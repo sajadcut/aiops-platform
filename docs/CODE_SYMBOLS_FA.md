@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 568 | Dashboard JS files scanned: 8 | Symbols indexed: 6366**
+**Python files scanned: 569 | Dashboard JS files scanned: 8 | Symbols indexed: 6389**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -679,16 +679,16 @@
 | `apps/api/config_change_execution.py` | `validate_config` | 187 | async function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
 | `apps/api/config_change_execution.py` | `execute_config` | 192 | async function | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | module |
 | `apps/api/config_change_execution.py` | `reject_pending_config` | 378 | async function | transition مربوط به Approval/Governance را اعمال می‌کند | module |
-| `apps/api/config_change_review.py` | `ConfigReviewResponse` | 33 | class | کلاس | module |
-| `apps/api/config_change_review.py` | `_proposal` | 42 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/config_change_review.py` | `_hash` | 53 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/config_change_review.py` | `_matching_proposal` | 65 | function | Accept only evidence-backed deterministic transformations. | module |
-| `apps/api/config_change_review.py` | `_approval_for_proposal` | 112 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/config_change_review.py` | `_last_config_apply_result` | 122 | function | Durable, narrowly bound apply result for the Incident Room. | module |
-| `apps/api/config_change_review.py` | `_consumed_failure_reissuable` | 160 | function | Require a failed/nonverified terminal audit, never revive old authority. | module |
-| `apps/api/config_change_review.py` | `_review_progress` | 183 | function | Expose durable intent separately from executable Approval authority. | module |
-| `apps/api/config_change_review.py` | `get_config_review_response` | 259 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `apps/api/config_change_review.py` | `post_config_review_response` | 329 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/config_change_review.py` | `ConfigReviewResponse` | 34 | class | کلاس | module |
+| `apps/api/config_change_review.py` | `_proposal` | 43 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/config_change_review.py` | `_hash` | 54 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/config_change_review.py` | `_matching_proposal` | 66 | function | Accept only evidence-backed deterministic transformations. | module |
+| `apps/api/config_change_review.py` | `_approval_for_proposal` | 113 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/config_change_review.py` | `_last_config_apply_result` | 123 | function | Durable, narrowly bound apply result for the Incident Room. | module |
+| `apps/api/config_change_review.py` | `_consumed_failure_reissuable` | 161 | function | Require a failed/nonverified terminal audit, never revive old authority. | module |
+| `apps/api/config_change_review.py` | `_review_progress` | 184 | function | Expose durable intent separately from executable Approval authority. | module |
+| `apps/api/config_change_review.py` | `get_config_review_response` | 266 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `apps/api/config_change_review.py` | `post_config_review_response` | 336 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/dashboard.py` | `dashboard_summary` | 17 | async function | Return live PostgreSQL-backed KPIs. Database failures are never converted to fake zeroes. | module |
 | `apps/api/dashboard_incidents.py` | `dashboard_incidents` | 15 | async function | Operational incident list enriched from durable governance/audit state. | module |
 | `apps/api/dashboard_incidents.py` | `dashboard_services` | 115 | async function | Service-centric operational health derived only from durable incident/governance state. | module |
@@ -717,10 +717,10 @@
 | `apps/api/health.py` | `_probe_one` | 78 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/health.py` | `_probe_external` | 129 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/health.py` | `_external_required_ready` | 155 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/health.py` | `health_check` | 170 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/health.py` | `liveness` | 187 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/health.py` | `readiness` | 192 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/api/health.py` | `metrics` | 202 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/health.py` | `health_check` | 175 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/health.py` | `liveness` | 192 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/health.py` | `readiness` | 197 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/api/health.py` | `metrics` | 207 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/http_logging.py` | `_headers` | 36 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/http_logging.py` | `_safe_json_body` | 43 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/api/http_logging.py` | `_value` | 57 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -883,9 +883,9 @@
 | `apps/api/vm_agent_broker.py` | `OutboundAgentBroker.is_connected` | 57 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OutboundAgentBroker |
 | `apps/api/vm_agent_broker.py` | `OutboundAgentBroker.connect` | 60 | async method | Authenticate before accepting; reject duplicate host identities. | OutboundAgentBroker |
 | `apps/api/vm_agent_broker.py` | `OutboundAgentBroker.dispatch` | 116 | async method | Never retry an ambiguous write; surface UNKNOWN for reconciliation. | OutboundAgentBroker |
-| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker._not_dispatched` | 181 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OutboundAgentBroker |
-| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker.shutdown` | 190 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OutboundAgentBroker |
-| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker._unavailable` | 202 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OutboundAgentBroker |
+| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker._not_dispatched` | 188 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OutboundAgentBroker |
+| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker.shutdown` | 197 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OutboundAgentBroker |
+| `apps/api/vm_agent_broker.py` | `OutboundAgentBroker._unavailable` | 209 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OutboundAgentBroker |
 | `apps/api/workflow.py` | `WorkflowRequest` | 18 | class | کلاس | module |
 | `apps/api/workflow.py` | `WorkflowResponse` | 25 | class | کلاس | module |
 | `apps/api/workflow.py` | `run_workflow` | 39 | async function | Compatibility analysis endpoint backed by the canonical durable E2E runtime. | module |
@@ -1051,11 +1051,11 @@
 | `apps/config_change_authorization.py` | `_derive_mcp_key` | 21 | function | Derive a domain-separated 32-byte key from the existing MCP bearer. | module |
 | `apps/config_change_authorization.py` | `_key` | 51 | function | Approval HMAC signing key: stable and isolated from candidate encryption. | module |
 | `apps/config_change_authorization.py` | `candidate_encryption_key` | 56 | function | AES-256-GCM subkey for the VM MCP candidate vault; no new configuration. | module |
-| `apps/config_change_authorization.py` | `config_signing_ready` | 62 | function | Local readiness only. Never expose key bytes or report VM MCP readiness. | module |
-| `apps/config_change_authorization.py` | `_message` | 71 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/config_change_authorization.py` | `create_claim` | 75 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
-| `apps/config_change_authorization.py` | `verify_claim` | 93 | function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
-| `apps/config_change_authorization.py` | `sign_root_guard` | 117 | function | Ed25519 root guard signature; VM stores only its verification public key. | module |
+| `apps/config_change_authorization.py` | `config_signing_ready` | 62 | function | Verify the actual signing identities, not just the unrelated fleet key. | module |
+| `apps/config_change_authorization.py` | `_message` | 88 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/config_change_authorization.py` | `create_claim` | 92 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `apps/config_change_authorization.py` | `verify_claim` | 110 | function | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | module |
+| `apps/config_change_authorization.py` | `sign_root_guard` | 134 | function | Ed25519 root guard signature; VM stores only its verification public key. | module |
 | `apps/config_change_auto_queue.py` | `_verified_service_start_scope` | 26 | async function | Only a fresh read-only VM MCP check can extend a new ticket to Start. | module |
 | `apps/config_change_auto_queue.py` | `auto_queue_candidate` | 68 | function | Only existing, tightly validated hash-bound proposals can enter queue. | module |
 | `apps/config_change_auto_queue.py` | `auto_queue_prevalidation` | 88 | async function | Automatic *request*, never automatic Approval; record the exact blocker. | module |
@@ -6181,6 +6181,28 @@
 | `tests/unit/test_vm_outbound_agent.py` | `test_on_host_agent_executes_once_and_rejects_replay_after_reconnect.connect` | 363 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_on_host_agent_executes_once_and_rejects_replay_after_reconnect |
 | `tests/unit/test_vm_outbound_agent.py` | `test_on_host_agent_executes_once_and_rejects_replay_after_reconnect.terminate_after_reconnect` | 369 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_on_host_agent_executes_once_and_rejects_replay_after_reconnect |
 | `tests/unit/test_vm_outbound_agent.py` | `test_pull_mode_approval_signatures_are_per_target_and_host_verifiable` | 392 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_outbound_agent.py` | `test_cancelled_in_flight_write_never_requeues_and_clears_pending` | 413 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_pull_review.py` | `test_pull_agent_connection_cannot_deadlock_api_readiness` | 16 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_pull_review.py` | `test_write_failure_after_dispatch_never_claims_no_write` | 44 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_pull_review.py` | `test_write_expiry_before_dispatch_is_not_started` | 58 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_pull_review.py` | `test_agent_exception_during_restart_returns_unknown_to_control_plane` | 66 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_pull_review.py` | `test_agent_exception_during_restart_returns_unknown_to_control_plane.FakeConnection` | 91 | class | کلاس | test_agent_exception_during_restart_returns_unknown_to_control_plane |
+| `tests/unit/test_vm_pull_review.py` | `test_agent_exception_during_restart_returns_unknown_to_control_plane.FakeConnection.__aenter__` | 92 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_agent_exception_during_restart_returns_unknown_to_control_plane.FakeConnection |
+| `tests/unit/test_vm_pull_review.py` | `test_agent_exception_during_restart_returns_unknown_to_control_plane.FakeConnection.__aexit__` | 93 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_agent_exception_during_restart_returns_unknown_to_control_plane.FakeConnection |
+| `tests/unit/test_vm_pull_review.py` | `test_agent_exception_during_restart_returns_unknown_to_control_plane.FakeConnection.__aiter__` | 94 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_agent_exception_during_restart_returns_unknown_to_control_plane.FakeConnection |
+| `tests/unit/test_vm_pull_review.py` | `test_agent_exception_during_restart_returns_unknown_to_control_plane.FakeConnection.__aiter__.frames` | 95 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_agent_exception_during_restart_returns_unknown_to_control_plane.FakeConnection.__aiter__ |
+| `tests/unit/test_vm_pull_review.py` | `test_agent_exception_during_restart_returns_unknown_to_control_plane.FakeConnection.send` | 98 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_agent_exception_during_restart_returns_unknown_to_control_plane.FakeConnection |
+| `tests/unit/test_vm_pull_review.py` | `test_agent_exception_during_restart_returns_unknown_to_control_plane.end_loop` | 102 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_agent_exception_during_restart_returns_unknown_to_control_plane |
+| `tests/unit/test_vm_pull_review.py` | `test_agent_pull_signing_readiness_uses_per_host_keys_not_fleet_bearer` | 113 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_pull_review.py` | `test_replay_cache_never_evicts_unexpired_write_ids` | 153 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_pull_review.py` | `test_replay_cache_never_evicts_unexpired_write_ids.command` | 173 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_replay_cache_never_evicts_unexpired_write_ids |
+| `tests/unit/test_vm_pull_review.py` | `test_replay_cache_never_evicts_unexpired_write_ids.FakeConnection` | 183 | class | کلاس | test_replay_cache_never_evicts_unexpired_write_ids |
+| `tests/unit/test_vm_pull_review.py` | `test_replay_cache_never_evicts_unexpired_write_ids.FakeConnection.__aenter__` | 184 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_replay_cache_never_evicts_unexpired_write_ids.FakeConnection |
+| `tests/unit/test_vm_pull_review.py` | `test_replay_cache_never_evicts_unexpired_write_ids.FakeConnection.__aexit__` | 185 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_replay_cache_never_evicts_unexpired_write_ids.FakeConnection |
+| `tests/unit/test_vm_pull_review.py` | `test_replay_cache_never_evicts_unexpired_write_ids.FakeConnection.__aiter__` | 186 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_replay_cache_never_evicts_unexpired_write_ids.FakeConnection |
+| `tests/unit/test_vm_pull_review.py` | `test_replay_cache_never_evicts_unexpired_write_ids.FakeConnection.__aiter__.frames` | 187 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_replay_cache_never_evicts_unexpired_write_ids.FakeConnection.__aiter__ |
+| `tests/unit/test_vm_pull_review.py` | `test_replay_cache_never_evicts_unexpired_write_ids.FakeConnection.send` | 192 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_replay_cache_never_evicts_unexpired_write_ids.FakeConnection |
+| `tests/unit/test_vm_pull_review.py` | `test_replay_cache_never_evicts_unexpired_write_ids.end_loop` | 195 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_replay_cache_never_evicts_unexpired_write_ids |
 | `tests/unit/test_vm_recovery_advice.py` | `row` | 14 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_vm_recovery_advice.py` | `gfpapi_rows` | 25 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_vm_recovery_advice.py` | `trigger` | 37 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -6371,5 +6393,6 @@
 | `vmmcpagent/connector.py` | `LocalVMConnector._validate_target` | 53 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | LocalVMConnector |
 | `vmmcpagent/connector.py` | `LocalVMConnector._validate_service` | 59 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | LocalVMConnector |
 | `vmmcpagent/connector.py` | `LocalVMConnector._run` | 65 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | LocalVMConnector |
-| `vmmcpagent/outbound.py` | `broker_url` | 24 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `vmmcpagent/outbound.py` | `run_outbound_forever` | 37 | async function | Reconnect with bounded backoff, but NEVER resend an interrupted write. | module |
+| `vmmcpagent/outbound.py` | `broker_url` | 25 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `vmmcpagent/outbound.py` | `_execution_failure` | 41 | function | A write may already have completed even if its response cannot be sent. | module |
+| `vmmcpagent/outbound.py` | `run_outbound_forever` | 54 | async function | Reconnect with bounded backoff, but NEVER resend an interrupted write. | module |
