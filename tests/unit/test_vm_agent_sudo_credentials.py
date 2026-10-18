@@ -226,3 +226,16 @@ def test_package_has_safe_execution_username_and_dynamic_systemd_user():
     assert "10-execution-user.conf" in installer
     assert 'User=%s' in installer
     assert 'Group=%s' in installer
+
+
+def test_api_production_requires_one_username_password_for_each_target(provision, monkeypatch):
+    from apps.api.main import _validate_production_configuration
+    monkeypatch.setattr(settings, "VM_AGENT_EXECUTION_CREDENTIALS", {})
+    with pytest.raises(RuntimeError, match="VM_AGENT_EXECUTION_CREDENTIALS must match every agent_pull target"):
+        _validate_production_configuration()
+    monkeypatch.setattr(settings, "VM_AGENT_EXECUTION_CREDENTIALS", {
+        "vm-01": {"username": "root", "password": "unsafe"},
+        "vm-02": {"username": "operator2", "password": "valid"},
+    })
+    with pytest.raises(RuntimeError, match="contains invalid target account credentials"):
+        _validate_production_configuration()
