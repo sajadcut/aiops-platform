@@ -407,3 +407,27 @@ def test_pull_mode_approval_signatures_are_per_target_and_host_verifiable(pull, 
     monkeypatch.setattr(settings, "VM_AGENT_BEARER_TOKEN", "B" * 40)
     with pytest.raises(PermissionError):
         verify_claim(claims, signed, target="vm-01", service="nginx")
+
+
+@pytest.mark.asyncio
+async def test_cancelled_in_flight_write_never_requeues_and_clears_pending(pull):
+    hub = OutboundAgentBroker()
+    socket, agent_task = await _connected(hub)
+    task = asyncio.create_task(hub.dispatch(
+        "vm-01", "restart_service",
+        {"target": "vm-01", "service": "nginx",
+         "approval_id": "approval-123", "incident_id": "incident-123"},
+    ))
+    sent = await asyncio.wait_for(socket.outbound.get(), 1)
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await task
+    assert not hub.sessions["vm-01"].pending
+    assert socket.outbound.empty()
+    # The agent may still finish after the API task was cancelled. The
+    # late result cannot become an apparent successful retry.
+    await socket.result(sent, {"success": True})
+    await asyncio.sleep(0)
+    assert socket.outbound.empty()
+    await socket.inbound.put(None)
+    await agent_task
