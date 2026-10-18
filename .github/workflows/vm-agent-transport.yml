@@ -8,8 +8,11 @@ on:
       - 'integrations/http_transport.py'
       - 'apps/mcp_server/**'
       - 'apps/vm_agent_runner.py'
+      - 'vmmcpagent/**'
+      - 'scripts/build-vm-agent.sh'
       - 'domain/contracts/config.py'
       - 'tests/unit/test_vm_local_agent_transport.py'
+      - 'tests/unit/test_vm_agent_package_layout.py'
       - 'tests/unit/test_vm_agent_all_tools_parity.py'
       - 'tests/unit/test_vm_agent_ambiguous_apply.py'
       - 'tests/unit/test_vm_agent_guarded_config.py'
@@ -22,8 +25,11 @@ on:
       - 'integrations/http_transport.py'
       - 'apps/mcp_server/**'
       - 'apps/vm_agent_runner.py'
+      - 'vmmcpagent/**'
+      - 'scripts/build-vm-agent.sh'
       - 'domain/contracts/config.py'
       - 'tests/unit/test_vm_local_agent_transport.py'
+      - 'tests/unit/test_vm_agent_package_layout.py'
       - 'tests/unit/test_vm_agent_all_tools_parity.py'
       - 'tests/unit/test_vm_agent_ambiguous_apply.py'
       - 'tests/unit/test_vm_agent_guarded_config.py'
@@ -54,11 +60,12 @@ jobs:
           python -m pip install -r requirements.txt -r requirements-dev.txt
           python -m pip check
       - name: Compile implementation and tests
-        run: python -m compileall -q integrations/vm apps/mcp_server apps/vm_agent_runner.py tests/unit/test_vm_local_agent_transport.py
+        run: python -m compileall -q integrations/vm apps/mcp_server apps/vm_agent_runner.py vmmcpagent tests/unit/test_vm_local_agent_transport.py tests/unit/test_vm_agent_package_layout.py
       - name: Validate VM MCP SSH and local-agent parity
         run: |
           python -m pytest -q \
             tests/unit/test_vm_local_agent_transport.py \
+            tests/unit/test_vm_agent_package_layout.py \
             tests/unit/test_vm_agent_all_tools_parity.py \
             tests/unit/test_vm_agent_ambiguous_apply.py \
             tests/unit/test_vm_agent_guarded_config.py \
