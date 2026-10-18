@@ -23,7 +23,9 @@ from domain.contracts.config import settings
 from domain.contracts.logging import logger
 
 MAX_FRAME = 1024 * 1024
-MAX_PENDING_PER_AGENT = 16
+# One outstanding RPC per VM: agent executes sequentially. Do not queue an
+# approved write behind a slow read that may expire before it even starts.
+MAX_PENDING_PER_AGENT = 1
 MAX_RESULT_SECONDS = 190
 WRITE_TOOLS = frozenset({"start_service", "restart_service", "reload_service", "config_change_apply"})
 
