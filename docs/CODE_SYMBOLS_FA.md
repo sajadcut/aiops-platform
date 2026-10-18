@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 574 | Dashboard JS files scanned: 8 | Symbols indexed: 6549**
+**Python files scanned: 574 | Dashboard JS files scanned: 8 | Symbols indexed: 6552**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1057,8 +1057,9 @@
 | `apps/config_change_authorization.py` | `_check_claim` | 110 | function | Validate exact scope and signature; wall-clock check is mandatory by default. | module |
 | `apps/config_change_authorization.py` | `verify_claim` | 137 | function | For direct/legacy tools keep the original strict wall-clock expiry. | module |
 | `apps/config_change_authorization.py` | `rebase_authenticated_outbound_claim` | 142 | function | Bound an API-verified signed approval to the VM's *local* expiry. | module |
-| `apps/config_change_authorization.py` | `root_guard_apply_signing_status` | 178 | function | Safe, read-only verification of the local Ed25519 signing prerequisites. | module |
-| `apps/config_change_authorization.py` | `sign_root_guard` | 228 | function | Ed25519 root guard signature; VM stores only its verification public key. | module |
+| `apps/config_change_authorization.py` | `_root_guard_private_key` | 178 | function | Load the installer-managed systemd credential; support legacy env keys. | module |
+| `apps/config_change_authorization.py` | `root_guard_apply_signing_status` | 219 | function | Safe, read-only verification of the local Ed25519 signing prerequisites. | module |
+| `apps/config_change_authorization.py` | `sign_root_guard` | 260 | function | Ed25519 root guard signature; VM stores only its verification public key. | module |
 | `apps/config_change_auto_queue.py` | `_verified_service_start_scope` | 26 | async function | Only a fresh read-only VM MCP check can extend a new ticket to Start. | module |
 | `apps/config_change_auto_queue.py` | `auto_queue_candidate` | 68 | function | Only existing, tightly validated hash-bound proposals can enter queue. | module |
 | `apps/config_change_auto_queue.py` | `auto_queue_prevalidation` | 88 | async function | Automatic *request*, never automatic Approval; record the exact blocker. | module |
@@ -6119,6 +6120,7 @@
 | `tests/unit/test_vm_agent_guarded_config.py` | `test_api_blocks_unready_agent_signer_before_consuming_approval.Agent` | 165 | class | کلاس | test_api_blocks_unready_agent_signer_before_consuming_approval |
 | `tests/unit/test_vm_agent_guarded_config.py` | `test_api_blocks_unready_agent_signer_before_consuming_approval.Agent.config_change_validate` | 166 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_api_blocks_unready_agent_signer_before_consuming_approval.Agent |
 | `tests/unit/test_vm_agent_guarded_config.py` | `test_api_blocks_unready_agent_signer_before_consuming_approval.matching` | 180 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_api_blocks_unready_agent_signer_before_consuming_approval |
+| `tests/unit/test_vm_agent_guarded_config.py` | `test_managed_private_credential_signs_without_env_secret` | 196 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_agent_package_layout.py` | `test_vm_agent_entrypoint_and_every_deployment_asset_in_own_directory` | 16 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_agent_package_layout.py` | `test_agent_configuration_template_is_private_and_agent_specific` | 31 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_agent_package_layout.py` | `test_entrypoint_reads_0600_agent_env_alongside_it` | 48 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
@@ -6127,6 +6129,7 @@
 | `tests/unit/test_vm_agent_package_layout.py` | `test_service_and_build_target_exact_same_agent_directory` | 87 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_agent_package_layout.py` | `test_installer_reapplies_traversable_mode_after_archive_copy` | 117 | function | Regression: cp -a SOURCE/. TARGET/ can restore a 0700 build directory. | module |
 | `tests/unit/test_vm_agent_package_layout.py` | `test_installer_makes_private_pyinstaller_runtime_readable_without_widening_secrets` | 149 | function | A root/umask-077 build must work under the unprivileged systemd user. | module |
+| `tests/unit/test_vm_agent_package_layout.py` | `test_root_guard_credentials_are_managed_by_installer_and_systemd` | 184 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_agent_sudo_credentials.py` | `provision` | 18 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_vm_agent_sudo_credentials.py` | `test_authenticated_agent_gets_only_its_own_bootstrap_credentials` | 33 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_agent_sudo_credentials.py` | `test_agent_rejects_mismatched_bootstrap_ack_and_never_dispatches` | 74 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
