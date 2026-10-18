@@ -15,7 +15,7 @@ from integrations.elasticsearch.client import ElasticsearchClient
 from integrations.kubernetes.client import KubernetesEvidenceClient
 from integrations.prometheus.client import PrometheusClient
 from integrations.vm.ssh_connector import SSHVMConnector
-from integrations.vm.local_agent_connector import LocalVMConnector
+from vmmcpagent.connector import LocalVMConnector
 from integrations.vm.governed_config_change import run_governed_change
 from apps.config_change_authorization import verify_claim
 
