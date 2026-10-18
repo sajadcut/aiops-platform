@@ -81,6 +81,8 @@ async def run_outbound_forever() -> None:
                 max_size=_MAX_FRAME, max_queue=8, close_timeout=5,
             ) as socket:
                 delay = 1
+                LocalVMConnector.clear_session_credentials()
+                channel_provisioned = False
                 logger.info("vm_agent_outbound_channel_connected", target=settings.VM_AGENT_TARGET)
                 async for raw in socket:
                     if not isinstance(raw, str) or len(raw.encode("utf-8")) > _MAX_FRAME:
@@ -90,6 +92,28 @@ async def run_outbound_forever() -> None:
                         request = json.loads(raw)
                     except (ValueError, TypeError):
                         await socket.close(code=1003)
+                        break
+                    if isinstance(request, dict) and request.get("type") == "credentials":
+                        if (channel_provisioned or request.get("version") != 1
+                                or request.get("target") != settings.VM_AGENT_TARGET):
+                            await socket.close(code=1008)
+                            break
+                        try:
+                            LocalVMConnector.set_session_credentials(
+                                request.get("username"), request.get("password"))
+                        except (PermissionError, TypeError, ValueError):
+                            await socket.close(code=1008)
+                            break
+                        channel_provisioned = True
+                        await socket.send(json.dumps({
+                            "type": "credentials_ack", "ok": True,
+                            "target": settings.VM_AGENT_TARGET,
+                            "username": settings.VM_AGENT_EXEC_USERNAME,
+                        }, separators=(",", ":")))
+                        # Never include the password in command/result frames.
+                        continue
+                    if settings.APP_ENV == "production" and not channel_provisioned:
+                        await socket.close(code=1008)
                         break
                     if not isinstance(request, dict) or request.get("type") != "execute":
                         await socket.close(code=1008)
@@ -150,6 +174,8 @@ async def run_outbound_forever() -> None:
             logger.warning("vm_agent_outbound_disconnected",
                            target=settings.VM_AGENT_TARGET,
                            error_type=type(exc).__name__)
+        finally:
+            LocalVMConnector.clear_session_credentials()
         # Reconnect is for a fresh channel only. Never retransmit a write.
         await asyncio.sleep(delay)
         delay = min(delay * 2, 30)
