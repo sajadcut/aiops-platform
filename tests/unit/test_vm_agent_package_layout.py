@@ -97,7 +97,8 @@ def test_service_and_build_target_exact_same_agent_directory():
     assert "SRC/agent.env.example" in install
     assert 'DST="/data/aiopsvmagent"' in install
     assert '"$DST/config-candidates" "$DST/logs"' in install
-    assert "install -d -o aiops-agent -g aiops-agent -m 0700" in install
+    assert 'install -d -o "$ACTOR" -g "$ACTOR_GROUP" -m 0700' in install
+    assert "10-execution-user.conf" in install
     assert "! -name 'config-candidates' ! -name 'logs'" in install
     assert "chmod 0600" in install
     assert "systemctl daemon-reload" in install
