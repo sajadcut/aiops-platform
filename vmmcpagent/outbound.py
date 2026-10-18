@@ -111,6 +111,9 @@ async def run_outbound_forever() -> None:
                 async for raw in socket:
                     received_at = time.perf_counter()
                     if not isinstance(raw, str) or len(raw.encode("utf-8")) > _MAX_FRAME:
+                        audit_frame("vm_agent_ws_request_rejected",
+                                    {"type": "oversize_or_binary"}, error_type="frame_limit",
+                                    byte_count=len(raw) if isinstance(raw, (str, bytes)) else None)
                         await socket.close(code=1009)
                         break
                     try:
@@ -131,12 +134,16 @@ async def run_outbound_forever() -> None:
                     if isinstance(request, dict) and request.get("type") == "credentials":
                         if (channel_provisioned or request.get("version") != 1
                                 or request.get("target") != settings.VM_AGENT_TARGET):
+                            audit_frame("vm_agent_ws_request_rejected", request,
+                                        trace_id=trace, error_type="policy_rejected")
                             await socket.close(code=1008)
                             break
                         try:
                             _SessionCredentials.set_session_credentials(
                                 request.get("username"), request.get("password"))
                         except (PermissionError, TypeError, ValueError):
+                            audit_frame("vm_agent_ws_request_rejected", request,
+                                        trace_id=trace, error_type="policy_rejected")
                             await socket.close(code=1008)
                             break
                         channel_provisioned = True
@@ -153,9 +160,13 @@ async def run_outbound_forever() -> None:
                         # Never include the password in command/result frames.
                         continue
                     if settings.APP_ENV == "production" and not channel_provisioned:
+                        audit_frame("vm_agent_ws_request_rejected", request,
+                                    trace_id=trace, error_type="policy_rejected")
                         await socket.close(code=1008)
                         break
                     if not isinstance(request, dict) or request.get("type") != "execute":
+                        audit_frame("vm_agent_ws_request_rejected", request,
+                                    trace_id=trace, error_type="policy_rejected")
                         await socket.close(code=1008)
                         break
                     ident = request.get("id")
@@ -169,6 +180,8 @@ async def run_outbound_forever() -> None:
                             or not isinstance(args, dict)
                             or args.get("target") != settings.VM_AGENT_TARGET
                             or type(expires) is not int):
+                        audit_frame("vm_agent_ws_request_rejected", request,
+                                    trace_id=trace, error_type="policy_rejected")
                         await socket.close(code=1008)
                         break
                     # Retain every live ID until its execution deadline has
