@@ -404,6 +404,23 @@ def _validate_production_configuration() -> None:
 
 @app.on_event("startup")
 async def startup_event():
+    if settings.VM_AGENT_WS_TEST_MODE:
+        if settings.APP_ENV != "test" or settings.VM_EXECUTION_BACKEND != "agent_pull":
+            raise RuntimeError("vm_ws80_only_supported_with_test_env_agent_pull")
+        from integrations.vm.agent_ws_test_cipher import _key
+        if (not settings.VM_AGENT_TOKENS
+                or set(settings.VM_AGENT_WS_TEST_KEYS) != set(settings.VM_AGENT_TOKENS)
+                or set(settings.VM_AGENT_EXECUTION_CREDENTIALS) != set(settings.VM_AGENT_TOKENS)):
+            raise RuntimeError("vm_ws80_test_target_tokens_psks_and_credentials_must_match")
+        for target, psk in settings.VM_AGENT_WS_TEST_KEYS.items():
+            _key(psk)
+            item = settings.VM_AGENT_EXECUTION_CREDENTIALS[target]
+            if (not isinstance(item, dict)
+                    or not item.get("username") or not item.get("password")):
+                raise RuntimeError("vm_ws80_test_credentials_required_for_each_agent")
+        logger.warning("vm_ws80_test_only_transport_enabled",
+                       protection="mutual_psk_aes256gcm_no_tls",
+                       risk="HTTP_AND_BEARER_HEADERS_VISIBLE_ON_NETWORK")
     logger.info("application_starting", app=settings.APP_NAME, version=settings.APP_VERSION, environment=settings.APP_ENV)
     _validate_production_configuration()
 
