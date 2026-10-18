@@ -25,6 +25,7 @@ BUNDLE="$ROOT/dist/vmmcpagent"
 cp "$ROOT/.env.example" "$BUNDLE/.env.example"
 cp "$ROOT/vmmcpagent/agent.env.example" "$BUNDLE/agent.env.example"
 cp "$ROOT/vmmcpagent/vmmcpagent.service" "$BUNDLE/vmmcpagent.service"
+cp "$ROOT/vmmcpagent/sudoers.example" "$BUNDLE/sudoers.example"
 cp "$ROOT/vmmcpagent/aiops-config-guard" "$BUNDLE/aiops-config-guard"
 cp "$ROOT/vmmcpagent/README.md" "$BUNDLE/README.md"
 # An operator must provide agent.env explicitly after installation.
