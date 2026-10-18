@@ -219,8 +219,8 @@ class Settings(BaseSettings):
     @classmethod
     def validate_vm_execution_backend(cls, value: str) -> str:
         backend = str(value or "").strip().lower()
-        if backend not in {"ssh", "agent"}:
-            raise ValueError("VM_EXECUTION_BACKEND must be ssh or agent")
+        if backend not in {"ssh", "agent", "agent_pull"}:
+            raise ValueError("VM_EXECUTION_BACKEND must be ssh, agent or agent_pull")
         return backend
 
     @field_validator("VM_AGENT_CONNECTION_MODE")
