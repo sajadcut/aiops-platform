@@ -187,7 +187,7 @@ class SignalGateway:
         if len(candidates) != 1:
             return []
         candidate = candidates[0]
-        if not settings.VM_MCP_URL:
+        if not vm_transport_configured():
             candidate["verification_status"] = "vm_mcp_not_configured"
             return []
 
@@ -261,7 +261,7 @@ class SignalGateway:
             return []
         candidate["control_plane_target_allowed"] = True
         candidate["verification_target"] = target
-        from integrations.vm.mcp_client import VMEdgeMCPClient
+        from integrations.vm.mcp_client import VMEdgeMCPClient, vm_transport_configured
         client = None
         attempted: list[str] = []
         try:
