@@ -3,7 +3,7 @@
 > این فایل فهرست فایل‌به‌فایل repository است. توضیح معماری و flow در `CODEBASE_GUIDE_FA.md` آمده است.
 > این فایل با `scripts/generate_file_index_fa.py` ساخته و در CI کنترل می‌شود.
 
-**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 691**
+**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 711**
 
 | Path | Type | Purpose | Called By | Calls/Depends On | Runtime/Test/Docs | Notes |
 |---|---|---|---|---|---|---|
@@ -17,6 +17,7 @@
 | `.github/workflows/incident-sre-browser.yml` | CI | Workflow اتوماسیون GitHub Actions | GitHub Actions | repo/tests/deployment | CI | کیفیت، hygiene یا supply chain |
 | `.github/workflows/quality.yml` | CI | Workflow اتوماسیون GitHub Actions | GitHub Actions | repo/tests/deployment | CI | کیفیت، hygiene یا supply chain |
 | `.github/workflows/repository-hygiene.yml` | CI | Workflow اتوماسیون GitHub Actions | GitHub Actions | repo/tests/deployment | CI | کیفیت، hygiene یا supply chain |
+| `.github/workflows/vm-agent-transport.yml` | CI | Workflow اتوماسیون GitHub Actions | GitHub Actions | repo/tests/deployment | CI | کیفیت، hygiene یا supply chain |
 | `.gitignore` | Git | قواعد عدم track فایل‌های generated/local | Git | repository hygiene | Tooling | رفتار runtime ندارد |
 | `FINAL_ACCEPTANCE_REPORT.md` | Report | گزارش acceptance بر پایه evidence | تیم | MASTER و tests | Docs | جای MASTER را نمی‌گیرد |
 | `INCIDENT_COVERAGE_MATRIX.md` | File | فایل پروژه | — | — | Other |  |
@@ -206,6 +207,7 @@
 | `apps/signal_gateway/zabbix_lifecycle.py` | Python | Signal: ورود، normalization، correlation و dedupe سیگنال | API/webhooks | incident repository/context | Runtime | ابتدای Incident flow |
 | `apps/technical_investigation_report.py` | Python | ماژول service لایه application | Runtime | domain/integrations | Runtime | جزء Control Plane |
 | `apps/verification_service/__init__.py` | Python | Verify: Verification مستقل پس از remediation | Workflow/execution | live evidence/audit | Runtime | tool success برابر recovery نیست |
+| `apps/vm_agent_runner.py` | Python | ماژول service لایه application | Runtime | domain/integrations | Runtime | جزء Control Plane |
 | `dashboards/__init__.py` | Python | package marker dashboard | Python | — | Tooling | رفتار مستقل ندارد |
 | `dashboards/agents.html` | HTML | پوسته و layout داشبورد | FastAPI static route | CSS/JS/API | Runtime UI | صفحه اپراتوری |
 | `dashboards/approval-actions.css` | CSS | استایل Control Center و کنترل‌های عملیاتی | Browser | HTML classes | Runtime UI | بدون داده fake |
@@ -308,6 +310,7 @@
 | `docs/SERVICE_TOPOLOGY_KNOWLEDGE.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
 | `docs/UNIVERSAL_LLM_CONFIG_SYNTAX.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
 | `docs/UPSTREAM_MCP_PROVIDERS.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
+| `docs/VM_AGENT_TRANSPORT.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
 | `docs/VM_REMEDIATION.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
 | `docs/ZABBIX_SIGNAL_LIFECYCLE.md` | Docs | مستند معماری/عملیات/وضعیت پروژه | تیم | کد و MASTER | Docs | SSoT نیست مگر MASTER root |
 | `docs/__init__.py` | Python | package marker docs | Python | — | Docs | رفتار runtime ندارد |
@@ -379,6 +382,7 @@
 | `integrations/vm/iterative_json_repair.py` | Python | Adapter provider/read-only integration | MCP server/test helper | external API/.env | Runtime/Helper | Control Plane production ترجیحاً MCP |
 | `integrations/vm/json_syntax_candidate.py` | Python | Adapter provider/read-only integration | MCP server/test helper | external API/.env | Runtime/Helper | Control Plane production ترجیحاً MCP |
 | `integrations/vm/llm_syntax_projection.py` | Python | Adapter provider/read-only integration | MCP server/test helper | external API/.env | Runtime/Helper | Control Plane production ترجیحاً MCP |
+| `integrations/vm/local_agent_connector.py` | Python | Adapter provider/read-only integration | MCP server/test helper | external API/.env | Runtime/Helper | Control Plane production ترجیحاً MCP |
 | `integrations/vm/mcp_client.py` | Python | MCP client برای ارتباط governed با ابزار بیرونی | Evidence/Tool layer | MCP transport/.env | Runtime | canonical external-tool path |
 | `integrations/vm/nginx_config_inspection.py` | Python | Adapter provider/read-only integration | MCP server/test helper | external API/.env | Runtime/Helper | Control Plane production ترجیحاً MCP |
 | `integrations/vm/nginx_config_review.py` | Python | Adapter provider/read-only integration | MCP server/test helper | external API/.env | Runtime/Helper | Control Plane production ترجیحاً MCP |
@@ -409,6 +413,7 @@
 | `scripts/acceptance/incident_sre_browser.py` | Python | ابزار maintenance/validation/seed/build | Developer/CI | repo/database | Tooling | مسیر اپراتوری کمکی |
 | `scripts/add_memory.py` | Python | ابزار maintenance/validation/seed/build | Developer/CI | repo/database | Tooling | مسیر اپراتوری کمکی |
 | `scripts/backfill_memory_embeddings.py` | Python | ابزار maintenance/validation/seed/build | Developer/CI | repo/database | Tooling | مسیر اپراتوری کمکی |
+| `scripts/build-vm-agent.sh` | Python | ابزار maintenance/validation/seed/build | Developer/CI | repo/database | Tooling | مسیر اپراتوری کمکی |
 | `scripts/check-ui-fonts.ps1` | Python | ابزار maintenance/validation/seed/build | Developer/CI | repo/database | Tooling | مسیر اپراتوری کمکی |
 | `scripts/check_database_migrations.py` | Python | ابزار maintenance/validation/seed/build | Developer/CI | repo/database | Tooling | مسیر اپراتوری کمکی |
 | `scripts/check_elastic_integration.py` | Python | ابزار maintenance/validation/seed/build | Developer/CI | repo/database | Tooling | مسیر اپراتوری کمکی |
@@ -682,12 +687,17 @@
 | `tests/unit/test_verification_gate.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_verify_cognia_connection.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_verify_operational_memory.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
+| `tests/unit/test_vm_agent_all_tools_parity.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
+| `tests/unit/test_vm_agent_ambiguous_apply.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
+| `tests/unit/test_vm_agent_guarded_config.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
+| `tests/unit/test_vm_agent_package_layout.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_vm_config_validation.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_vm_current_cpu_metrics.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_vm_deep_diagnostics.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_vm_diagnostic_evidence.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_vm_execution_boundary.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_vm_guest_engine.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
+| `tests/unit/test_vm_local_agent_transport.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_vm_recovery_advice.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_vm_symptom_verification.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_vm_systemd_auto_diagnostics.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
@@ -698,3 +708,13 @@
 | `tests/unit/test_zabbix_team_guide_contract.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_zabbix_webhook_logging.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/windows_candidate_acl_smoke.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
+| `vmmcpagent/README.md` | File | فایل پروژه | — | — | Other |  |
+| `vmmcpagent/__init__.py` | File | فایل پروژه | — | — | Other |  |
+| `vmmcpagent/__main__.py` | File | فایل پروژه | — | — | Other |  |
+| `vmmcpagent/agent.env.example` | File | فایل پروژه | — | — | Other |  |
+| `vmmcpagent/aiops-config-guard` | File | فایل پروژه | — | — | Other |  |
+| `vmmcpagent/build.sh` | File | فایل پروژه | — | — | Other |  |
+| `vmmcpagent/connector.py` | File | فایل پروژه | — | — | Other |  |
+| `vmmcpagent/install.sh` | File | فایل پروژه | — | — | Other |  |
+| `vmmcpagent/sudoers.example` | File | فایل پروژه | — | — | Other |  |
+| `vmmcpagent/vmmcpagent.service` | File | فایل پروژه | — | — | Other |  |
