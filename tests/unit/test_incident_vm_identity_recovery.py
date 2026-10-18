@@ -305,8 +305,11 @@ async def test_click_recheck_calls_only_readonly_service_status_and_writes_audit
     class Audit:
         def __init__(self, db): pass
         async def append(self, event): calls.append(("audit", event))
+        async def list(self, incident_id, limit):
+            return [entry for kind, entry in calls if kind == "audit"]
     async def scope(db, incident_id):
-        return (SimpleNamespace(service="gfpapi"), [vm_fact()],
+        return (SimpleNamespace(service="gfpapi", source="zabbix",
+                                summary="", context={}, status="open"), [vm_fact()],
                 incident_context(),
                 {"candidate": "10.248.16.82"})
     async def read_status(service, evidence, context, *, force_live):
@@ -314,7 +317,8 @@ async def test_click_recheck_calls_only_readonly_service_status_and_writes_audit
         return {"target": "10.248.16.82", "service": "gfpapi"}, {
             "live_observation": {"success": True, "target": "10.248.16.82",
                                  "service": "gfpapi", "active_state": "active",
-                                 "sub_state": "running", "result": "success"}}
+                                 "load_state": "loaded", "sub_state": "running",
+                                 "result": "success"}}
     monkeypatch.setattr(api, "AsyncSessionLocal", Db)
     async def isolated_followup(*args, **kwargs):
         return {"status": "isolated_test_no_database", "reassessed": False}
@@ -322,9 +326,14 @@ async def test_click_recheck_calls_only_readonly_service_status_and_writes_audit
     monkeypatch.setattr(api, "_incident_status_scope", scope)
     monkeypatch.setattr(api, "resolve_vm_binding", read_status)
     monkeypatch.setattr(api, "PostgreSQLAuditStore", Audit)
+    from integrations.vm import mcp_client
+    class ReadOnlyClient:
+        async def service_status(self, target, service):
+            return {"success": False, "target": target, "service": service}
+    monkeypatch.setattr(mcp_client, "VMEdgeMCPClient", ReadOnlyClient)
     result = await api.recheck_incident_service_status(
         UUID("11111111-1111-4111-8111-111111111111"),
-        identity=SimpleNamespace(subject="sre-test"),
+        identity=SimpleNamespace(subject="sre-test", roles=["sre"]),
     )
     assert result["status"] == "running"
     assert result["source"] == "vm_mcp_recheck"
