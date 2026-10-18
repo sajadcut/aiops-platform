@@ -116,3 +116,42 @@ Run `tests/unit/test_vm_agent_all_tools_parity.py` and the dedicated
 and vendor config validation on a Linux VM remain **REAL ENV REQUIRED**.
 For the full security and acceptance guide, see
 `docs/VM_AGENT_TRANSPORT.md`.
+
+
+
+## Agent transport TLS and local audit
+
+The Agent keeps its **own** rotating text and JSON files, independently of the
+API server. Configure these in `/data/aiopsvmagent/agent.env`:
+
+```env
+VM_AGENT_CONTROL_PLANE_WS_URL=wss://10.248.41.67/api/v1/vm-agents/connect
+VM_AGENT_TLS_VERIFY=True
+VM_AGENT_CA_BUNDLE_PATH=/etc/ssl/certs/internal-ca.pem
+LOG_DIR=/data/aiopsvmagent/logs
+LOG_LEVEL=INFO
+LOG_TEXT_FILE_ENABLED=True
+LOG_JSON_FILE_ENABLED=True
+LOG_TEXT_FILE=aiopsvmagent.log
+LOG_JSON_FILE=aiopsvmagent.json.log
+LOG_ROTATION_MODE=size
+LOG_MAX_BYTES=10485760
+LOG_BACKUP_COUNT=10
+LOG_UTC=True
+```
+
+A self-signed/private IP lab without a trusted CA may set
+`VM_AGENT_TLS_VERIFY=False` explicitly. **Danger**: while the channel still
+uses encrypted WSS, the Agent cannot authenticate the API. An active
+man-in-the-middle could steal the API-provisioned Linux sudo password and
+send arbitrary authenticated-looking requests. Do not use that override with
+production sudo credentials; configure a trusted private CA and a certificate
+with the Backend IP/name in SAN instead.
+
+The Agent logs every application WebSocket request/response and rejection,
+connection and local-command outcome with ISO timestamp, severity,
+`trace_id`, `response_time_ms`, tool, service, status, output sizes and
+error type. **Raw request/response bodies are not stored** where they could
+contain bearer, sudo password, LLM-config repair contents, secrets or stdout.
+The safe record keeps message IDs, sanitized field names, non-sensitive
+metadata and byte counts. Log rotation prevents unbounded disk growth.

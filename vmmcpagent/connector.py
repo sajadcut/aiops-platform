@@ -119,6 +119,11 @@ class LocalVMConnector(SSHVMConnector):
         # allowlisted diagnostic and guarded-remediation methods. Never expose
         # this method as a network tool or pass user-authored shell text to it.
         started = time.perf_counter()
+        # Do not log command text: config-repair stdin and discovered service
+        # configuration may contain credentials or personal information.
+        logger.info("vm_agent_local_request", target=target,
+                    command_class=("privileged" if command.startswith("sudo ")
+                                   else "diagnostic"), stdin_supplied=stdin_data is not None)
         process = await asyncio.create_subprocess_exec(
             "/bin/sh", "-c", command,
             stdin=asyncio.subprocess.PIPE if stdin_data is not None else asyncio.subprocess.DEVNULL,
@@ -141,6 +146,9 @@ class LocalVMConnector(SSHVMConnector):
             except ProcessLookupError:
                 pass
             await process.wait()
+            logger.warning("vm_agent_local_response", target=target,
+                           success=False, error_type="local_command_timeout",
+                           response_time_ms=round((time.perf_counter() - started)*1000, 3))
             return {"success": False, "error": "local_command_timeout",
                     "execution_time": time.perf_counter() - started}
         except asyncio.CancelledError:
@@ -154,7 +162,8 @@ class LocalVMConnector(SSHVMConnector):
         # Never put command text, stdin, stdout or stderr in application logs.
         logger.info("vm_agent_operation_completed", target=target,
                     success=process.returncode == 0, exit_code=process.returncode,
-                    duration_ms=round(elapsed * 1000, 3))
+                    response_time_ms=round(elapsed * 1000, 3),
+                    stdout_bytes=len(stdout), stderr_bytes=len(stderr))
         # Bound response size; the existing config reviewers decode only their
         # expected subset of command output and fail closed on truncation.
         max_output = 8 * 1024 * 1024

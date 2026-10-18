@@ -171,6 +171,7 @@ class Settings(BaseSettings):
     VM_AGENT_EXECUTION_CREDENTIALS: Dict[str, Dict[str, str]] = Field(..., repr=False)
     VM_AGENT_BEARER_TOKEN: Optional[str] = Field(..., repr=False)
     VM_AGENT_CA_BUNDLE_PATH: Optional[str] = Field(...)
+    VM_AGENT_TLS_VERIFY: bool = Field(...)
     VM_AGENT_CONTROL_PLANE_WS_URL: Optional[str] = Field(...)
     VM_AGENT_CONNECTION_MODE: str = Field(...)
     # Settings used only by a VM MCP process running directly on the target.
