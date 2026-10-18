@@ -34,6 +34,22 @@ def broker_url() -> str:
     return base.rstrip("/") + "/" + quote(target, safe="")
 
 
+_WRITE_TOOLS = frozenset({"start_service", "restart_service", "reload_service", "config_change_apply"})
+
+
+def _execution_failure(tool: str, reason: str, *, sent_to_executor: bool) -> dict:
+    """A write may already have completed even if its response cannot be sent."""
+    if tool in _WRITE_TOOLS:
+        if sent_to_executor:
+            return {"success": False, "status": "execution_outcome_unknown",
+                    "execution_outcome": "UNKNOWN",
+                    "reason": reason, "requires_independent_reconciliation": True,
+                    "production_write_performed": None}
+        return {"success": False, "status": reason,
+                "execution_outcome": "NOT_STARTED", "production_write_performed": False}
+    return {"success": False, "status": reason}
+
+
 async def run_outbound_forever() -> None:
     """Reconnect with bounded backoff, but NEVER resend an interrupted write."""
     # websockets.asyncio is available in websockets >= 14.
@@ -91,9 +107,9 @@ async def run_outbound_forever() -> None:
                     # A duplicate ID is never executed again, even if its
                     # prior response was lost on this process.
                     if ident in known:
-                        result = {"success": False, "status": "duplicate_request_refused"}
+                        result = _execution_failure(tool, "duplicate_request_refused", sent_to_executor=True)
                     elif expires < int(time.time()) or expires > int(time.time()) + 191:
-                        result = {"success": False, "status": "request_expired"}
+                        result = _execution_failure(tool, "request_expired", sent_to_executor=False)
                     else:
                         known.add(ident)
                         if len(completed) == completed.maxlen:
@@ -107,13 +123,18 @@ async def run_outbound_forever() -> None:
                             logger.warning("vm_agent_outbound_operation_failed",
                                            target=settings.VM_AGENT_TARGET,
                                            tool=tool, error_type=type(exc).__name__)
-                            result = {"success": False, "status": "agent_execution_failed"}
+                            result = _execution_failure(tool, "agent_execution_failed", sent_to_executor=True)
                     payload = json.dumps({"type": "result", "id": ident, "result": result},
                                          separators=(",", ":"), default=str)
                     if len(payload.encode("utf-8")) > _MAX_FRAME:
+                        # The write may be fully committed even though its
+                        # response exceeded the transport cap. Never claim no
+                        # production change or invite a blind re-execution.
                         payload = json.dumps({
                             "type": "result", "id": ident,
-                            "result": {"success": False, "status": "agent_result_too_large"},
+                            "result": _execution_failure(
+                                tool, "agent_result_too_large",
+                                sent_to_executor=(ident in known)),
                         })
                     await socket.send(payload)
         except asyncio.CancelledError:
