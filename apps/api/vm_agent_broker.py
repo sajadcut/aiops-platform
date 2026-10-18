@@ -125,10 +125,11 @@ class OutboundAgentBroker:
         if args.get("target") != target:
             raise PermissionError("vm_agent_target_binding_invalid")
         session = self.sessions.get(target)
+        # No command has been sent if the agent was disconnected or busy.
         if session is None:
-            return self._unavailable(tool, "agent_not_connected")
+            return self._not_dispatched(tool, "agent_not_connected")
         if len(session.pending) >= MAX_PENDING_PER_AGENT:
-            return self._unavailable(tool, "agent_queue_full")
+            return self._not_dispatched(tool, "agent_queue_full")
         deadline_seconds = min(max(float(timeout), 1), MAX_RESULT_SECONDS)
         request_id = str(uuid4())
         future = asyncio.get_running_loop().create_future()
@@ -144,7 +145,7 @@ class OutboundAgentBroker:
                     raise AgentDisconnected("agent_session_replaced")
                 await session.socket.send_text(json.dumps(message, separators=(",", ":")))
             return await asyncio.wait_for(future, timeout=deadline_seconds)
-        except (asyncio.TimeoutError, AgentDisconnected, OSError, WebSocketDisconnect):
+        except (asyncio.TimeoutError, RuntimeError, OSError, WebSocketDisconnect):
             return self._unavailable(tool, "agent_result_unconfirmed")
         finally:
             session.pending.pop(request_id, None)
@@ -156,6 +157,27 @@ class OutboundAgentBroker:
                     pass
             elif not future.done():
                 future.cancel()
+
+    @staticmethod
+    def _not_dispatched(tool: str, cause: str) -> dict[str, Any]:
+        if tool in WRITE_TOOLS:
+            return {
+                "success": False, "status": cause,
+                "execution_outcome": "NOT_STARTED",
+                "reason": cause, "production_write_performed": False,
+            }
+        raise AgentDisconnected(cause)
+
+    async def shutdown(self) -> None:
+        async with self.lock:
+            sessions = list(self.sessions.values())
+            self.sessions.clear()
+        for session in sessions:
+            session.fail_pending()
+            try:
+                await session.socket.close(code=1001)
+            except (OSError, RuntimeError, WebSocketDisconnect):
+                pass
 
     @staticmethod
     def _unavailable(tool: str, cause: str) -> dict[str, Any]:
