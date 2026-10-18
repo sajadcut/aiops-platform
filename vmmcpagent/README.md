@@ -12,6 +12,7 @@ The existing VM MCP SSH backend is intentionally retained. The API selects
 | `__main__.py` | Agent entrypoint, reads colocated `agent.env`, serves MCP on loopback |
 | `agent.env.example` | Agent-specific configuration template; copy to `agent.env` |
 | `vmmcpagent.service` | systemd unit for the bundled Linux binary |
+| `sudoers.example` | Reviewed, narrow local sudoers policy example |
 | `aiops-config-guard` | Root-owned fixed command for signed configuration validation and APPLY |
 | `build.sh` | PyInstaller Linux bundle, no target-side Python installation |
 | `install.sh` | Installs bundle/config/service (does not auto-enable or configure sudoers) |
@@ -20,6 +21,13 @@ The built Linux directory `dist/vmmcpagent/` also contains the shared,
 **non-secret** `.env.example` baseline needed by the existing AIOps
 configuration schema. Operator-owned secrets live **only** in `agent.env`,
 next to the agent executable. Do not commit that file.
+
+## Run directly from a source checkout
+
+Copy `vmmcpagent/agent.env.example` to `vmmcpagent/agent.env`, edit the
+target, bearer token and allowlist, restrict its mode to 0600, then run
+`python -m vmmcpagent` from the repository virtual environment. The built
+standalone bundle is recommended for production installations.
 
 ## Build on Linux
 
@@ -39,7 +47,7 @@ enable the service. Before starting, provide `VM_AGENT_TARGET`, per-host
 verification key at `/etc/aiops/config-change-verify.pem`, and a **distinct**
 Ed25519 private signing key for this VM, before enabling approved config APPLY.
 
-Next, configure **narrow** sudoers only for approved `systemctl` actions and
+Next, review `sudoers.example` and configure **narrow** sudoers only for approved `systemctl` actions and
 `/usr/local/sbin/aiops-config-guard`. The root guard validates arguments,
 hashes and signed claims; never grant `sudo /bin/sh` or `NOPASSWD: ALL`.
 Root guard validation can require `jq`, `xmllint` or `nginx` and
