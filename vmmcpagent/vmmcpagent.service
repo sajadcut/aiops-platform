@@ -10,6 +10,8 @@ Group=aiops-agent
 WorkingDirectory=/data/aiopsvmagent
 # Root-owned 0600. systemd reads and injects this file before dropping privileges.
 EnvironmentFile=/data/aiopsvmagent/agent.env
+# Automatically provisioned by install.sh; never place a private key in agent.env.
+LoadCredential=config-change-sign.pem:/etc/aiops/config-change-sign.pem
 ExecStart=/data/aiopsvmagent/vmmcpagent
 Restart=on-failure
 RestartSec=5
