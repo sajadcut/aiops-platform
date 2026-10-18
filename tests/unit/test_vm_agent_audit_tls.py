@@ -135,3 +135,69 @@ def test_vm_agent_configuration_explicit_dual_logs_and_tls_default():
     )
     for line in expected:
         assert line in template
+
+
+@pytest.mark.asyncio
+async def test_real_agent_websocket_loop_audits_each_request_and_response(monkeypatch):
+    import asyncio
+    import time
+    import uuid
+    import websockets.asyncio.client as ws_client
+    from unittest.mock import AsyncMock
+    from apps.mcp_server import main as mcp
+    from vmmcpagent import connector, outbound
+
+    monkeypatch.setattr(settings, "APP_ENV", "test")
+    monkeypatch.setattr(settings, "VM_AGENT_TARGET", "vm-01")
+    monkeypatch.setattr(settings, "VM_AGENT_CONTROL_PLANE_WS_URL",
+                        "wss://aiops.example.internal/api/v1/vm-agents/connect")
+    monkeypatch.setattr(settings, "VM_AGENT_BEARER_TOKEN", "A" * 40)
+    monkeypatch.setattr(settings, "SSH_ENABLED", False)
+    monkeypatch.setattr(settings, "MCP_SERVER_REQUIRE_AUTH", True)
+    monkeypatch.setattr(settings, "VM_AGENT_TLS_VERIFY", True)
+    monkeypatch.setattr(settings, "VM_AGENT_CA_BUNDLE_PATH", None)
+    monkeypatch.setattr(connector, "LocalVMConnector", lambda: object())
+    invoked = AsyncMock(return_value={
+        "success": True, "stdout": "db_password=topsecret",
+        "active_state": "active"})
+    monkeypatch.setattr(mcp, "_call", invoked)
+    call_id = str(uuid.uuid4())
+    frame = json.dumps({
+        "type": "execute", "id": call_id, "target": "vm-01",
+        "tool": "service_status",
+        "arguments": {"target": "vm-01", "service": "gfpapi", "secret": "topsecret"},
+        "expires_at": int(time.time()) + 60,
+    })
+    events, response_frames = [], []
+
+    class Socket:
+        async def __aenter__(self): return self
+        async def __aexit__(self, *args): return None
+        def __aiter__(self):
+            async def frames():
+                yield frame
+            return frames()
+        async def send(self, payload):
+            response_frames.append(json.loads(payload))
+
+    monkeypatch.setattr(ws_client, "connect", lambda *a, **k: Socket())
+
+    def safe_audit(event, data, **kwargs):
+        events.append({"event": event, "safe": safe_frame(data), **kwargs})
+
+    monkeypatch.setattr(outbound, "audit_frame", safe_audit)
+    async def stop(_delay):
+        raise asyncio.CancelledError()
+    monkeypatch.setattr(outbound.asyncio, "sleep", stop)
+    with pytest.raises(asyncio.CancelledError):
+        await outbound.run_outbound_forever()
+    invoked.assert_awaited_once()
+    assert response_frames[0]["result"]["active_state"] == "active"
+    req = next(x for x in events if x["event"] == "vm_agent_ws_request_received")
+    resp = next(x for x in events if x["event"] == "vm_agent_ws_response_sent")
+    assert req["trace_id"] == call_id
+    assert resp["trace_id"] == call_id
+    assert resp["duration_ms"] >= 0
+    assert req["safe"]["service"] == "gfpapi"
+    assert req["safe"]["argument_fields"] == ["secret", "service", "target"]
+    assert "topsecret" not in json.dumps(events)
