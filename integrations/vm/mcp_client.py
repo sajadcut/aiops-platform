@@ -91,7 +91,11 @@ class VMEdgeMCPClient(MCPClient):
             endpoint = settings.VM_AGENT_ENDPOINTS.get(target)
             if not endpoint:
                 raise PermissionError("vm_target_not_allowed")
-            return await VMEdgeMCPClient(server_url=endpoint)._invoke(name, target, **params)
+            worker = VMEdgeMCPClient(server_url=endpoint)
+            try:
+                return await worker._invoke(name, target, **params)
+            finally:
+                await worker.close()
         result = await self.call_tool(name, {"target": target, **params})
         if isinstance(result.get("content"), list) and result["content"]:
             first = result["content"][0]
