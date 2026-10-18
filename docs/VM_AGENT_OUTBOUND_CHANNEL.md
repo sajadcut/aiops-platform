@@ -281,3 +281,65 @@ User must own its `logs` directory (the installer provisions it).
 Use `journalctl -u vmmcpagent -f` for console diagnostics. A TCP
 handshake or accepted WSS connection is not proof of a valid sudo credential;
 test a pre-approved bounded action and independently verify host state.
+
+
+## TEST ONLY: direct ws://10.248.41.67:80 without TLS or reverse proxy
+
+Unlike WSS/HTTPS, plain WebSocket upgrades disclose HTTP headers, paths and
+network metadata. This optional **lab-only** variant uses an independent
+32-byte per-target pre-shared key to authenticate both peers and encrypt every
+application frame (including the API-delivered Linux sudo password and all
+subsequent command/results) with authenticated AES-256-GCM. The initial Bearer
+header is visible on the network, but **Bearer possession alone is insufficient
+to complete the PSK proof exchange**. Each session derives fresh directional
+keys from independent server/client nonces; replayed or tampered frames fail
+closed. This custom protocol is not a substitute for standard TLS in production.
+Set **APP_ENV=test on both processes** and explicitly enable this mode on both.
+Production startup and agent URL validation refuse it.
+
+API .env additions (preserve all other existing AIOps configuration):
+```env
+APP_ENV=test
+VM_EXECUTION_BACKEND=agent_pull
+SSH_ENABLED=False
+VM_AGENT_ENDPOINTS={}
+VM_AGENT_WS_TEST_MODE=True
+VM_AGENT_TOKENS='{"10.248.16.82":"REPLACE_WITH_48_RANDOM_OR_LONGER_BEARER"}'
+VM_AGENT_WS_TEST_KEYS='{"10.248.16.82":"REPLACE_WITH_EXACTLY_64_RANDOM_HEX_CHARACTERS"}'
+VM_AGENT_EXECUTION_CREDENTIALS='{"10.248.16.82":{"username":"szendehnam","password":"REPLACE_WITH_TEST_VM_SUDO_PASSWORD"}}'
+```
+
+Agent /data/aiopsvmagent/agent.env additions (keep service allowlist/logging):
+```env
+APP_ENV=test
+MCP_SERVER_PROVIDER=vm_agent
+SSH_ENABLED=False
+VM_AGENT_CONNECTION_MODE=outbound
+VM_AGENT_TARGET=10.248.16.82
+VM_AGENT_EXEC_USERNAME=szendehnam
+VM_AGENT_CONTROL_PLANE_WS_URL=ws://10.248.41.67:80/api/v1/vm-agents/connect
+VM_AGENT_WS_TEST_MODE=True
+VM_AGENT_WS_TEST_KEY=REPLACE_WITH_SAME_64_RANDOM_HEX_FROM_API
+VM_AGENT_BEARER_TOKEN=REPLACE_WITH_SAME_TARGET_BEARER_FROM_API
+VM_AGENT_CA_BUNDLE_PATH=
+```
+
+Create secrets separately per target using Python `secrets.token_hex(32)`.
+Never put real keys/passwords into Git, sample templates or debug logs. Run
+one API worker with Uvicorn **directly** on the Backend test IP:
+```powershell
+python -m uvicorn apps.api.main:app --host 10.248.41.67 --port 80 --workers 1
+```
+The WebSocket route is built directly into FastAPI/Uvicorn, so Nginx/reverse
+proxy is **not required** in this simple test layout. The API and all its other
+endpoints are also reachable via unauthenticated HTTP transport on port 80;
+use strict lab VLAN firewall restrictions and never use production passwords
+or public-network exposure. Ensure nothing else binds port 80. Production
+must use HTTPS/WSS with verified certificates; disable
+`VM_AGENT_WS_TEST_MODE` and change the Agent URL to `wss://`.
+
+The Broker is in-process and requires one Uvicorn worker/API replica.
+After the service connects, check the authenticated endpoint
+`GET http://10.248.41.67:80/api/v1/vm-agents/status` and perform a
+read-only `service_status` test. A successful TCP connection alone is
+not proof of matching shared keys or provisioned sudo credentials.

@@ -28,7 +28,12 @@ _TARGET = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.:-]{0,253}\Z")
 def broker_url() -> str:
     base = str(settings.VM_AGENT_CONTROL_PLANE_WS_URL or "").strip()
     parsed = urlsplit(base)
-    if (parsed.scheme != "wss" or not parsed.hostname or parsed.username
+    lab_plain_ws = (
+        parsed.scheme == "ws" and settings.VM_AGENT_WS_TEST_MODE
+        and settings.APP_ENV == "test"
+    )
+    if (not (parsed.scheme == "wss" or lab_plain_ws)
+            or not parsed.hostname or parsed.username
             or parsed.password or parsed.query or parsed.fragment
             or parsed.path.rstrip("/") != "/api/v1/vm-agents/connect"):
         raise RuntimeError("vm_agent_control_plane_wss_url_invalid")
@@ -85,10 +90,19 @@ async def run_outbound_forever() -> None:
     if settings.SSH_ENABLED:
         raise RuntimeError("vm_agent_outbound_forbids_ssh")
     url = broker_url()
-    context = outbound_tls_context()
+    lab_plain_ws = url.startswith("ws://")
+    if lab_plain_ws:
+        from integrations.vm.agent_ws_test_cipher import _key
+        _key(settings.VM_AGENT_WS_TEST_KEY)  # fail closed before any connection
+        logger.warning("vm_agent_lab_ws80_no_tls",
+                       target=settings.VM_AGENT_TARGET,
+                       protection="mutual_psk_aes256gcm",
+                       risk="HTTP_UPGRADE_AND_BEARER_HEADERS_VISIBLE")
+    context = None if lab_plain_ws else outbound_tls_context()
     delay = 1
     logger.info("vm_agent_connection_configured", target=settings.VM_AGENT_TARGET,
-                tls_verify=settings.VM_AGENT_TLS_VERIFY, transport="wss")
+                tls_verify=settings.VM_AGENT_TLS_VERIFY and not lab_plain_ws,
+                transport="ws+psk_aead_test_only" if lab_plain_ws else "wss")
     # Retain all unexpired IDs. Never silently evict a still-valid command:
     # doing so would permit replay of a completed write within its TTL.
     completed: deque[tuple[str, int]] = deque()
@@ -100,7 +114,12 @@ async def run_outbound_forever() -> None:
                 additional_headers={"Authorization": "Bearer " + secret},
                 open_timeout=10, ping_interval=20, ping_timeout=20,
                 max_size=_MAX_FRAME, max_queue=8, close_timeout=5,
-            ) as socket:
+            ) as raw_socket:
+                socket = raw_socket
+                if lab_plain_ws:
+                    from integrations.vm.agent_ws_test_cipher import secure_agent
+                    socket = await secure_agent(raw_socket, settings.VM_AGENT_TARGET,
+                                                settings.VM_AGENT_WS_TEST_KEY)
                 delay = 1
                 _SessionCredentials.clear_session_credentials()
                 channel_provisioned = False

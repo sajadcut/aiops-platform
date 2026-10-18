@@ -82,6 +82,14 @@ class OutboundAgentBroker:
             session = AgentSession(target, socket)
             self.sessions[target] = session
         try:
+            if settings.VM_AGENT_WS_TEST_MODE:
+                if settings.APP_ENV != "test":
+                    raise PermissionError("vm_ws_test_mode_requires_app_env_test")
+                from integrations.vm.agent_ws_test_cipher import secure_server
+                psk = settings.VM_AGENT_WS_TEST_KEYS.get(target)
+                session.socket = await secure_server(socket, target, psk)
+                logger.warning("vm_agent_lab_ws_session_authenticated",
+                               target=target, protection="mutual_psk_aes256gcm_no_tls")
             # First authenticated WSS message provisions credentials for this
             # exact registered VM. Neither sudo password nor identity is part
             # of an MCP request, audit entry, response or URL.
@@ -97,12 +105,12 @@ class OutboundAgentBroker:
                         or not password or any(ch in password for ch in ("\n", "\r", "\x00"))):
                     await socket.close(code=4403)
                     return
-                await socket.send_text(json.dumps({
+                await session.socket.send_text(json.dumps({
                     "type": "credentials", "version": 1, "target": target,
                     "username": username, "password": password,
                 }, separators=(",", ":")))
                 try:
-                    reply = await asyncio.wait_for(socket.receive_text(), timeout=10)
+                    reply = await asyncio.wait_for(session.socket.receive_text(), timeout=10)
                     acknowledgment = json.loads(reply)
                 except (asyncio.TimeoutError, ValueError, TypeError, WebSocketDisconnect):
                     await socket.close(code=4408)
@@ -117,7 +125,7 @@ class OutboundAgentBroker:
             session.ready = True
             logger.info("vm_outbound_agent_connected", target=target)
             while True:
-                data = await socket.receive_text()
+                data = await session.socket.receive_text()
                 if len(data.encode("utf-8")) > MAX_FRAME:
                     await socket.close(code=1009)
                     break
@@ -141,8 +149,14 @@ class OutboundAgentBroker:
                 future = session.pending.pop(ident)
                 if not future.done():
                     future.set_result(result)
-        except (WebSocketDisconnect, RuntimeError):
-            pass
+        except (WebSocketDisconnect, RuntimeError, ValueError, asyncio.TimeoutError) as exc:
+            # Never send secret material or raw exception messages to the peer.
+            logger.warning("vm_outbound_agent_protocol_closed",
+                           target=target, error_type=type(exc).__name__)
+            try:
+                await socket.close(code=1008)
+            except (WebSocketDisconnect, RuntimeError, OSError):
+                pass
         finally:
             async with self.lock:
                 if self.sessions.get(target) is session:
