@@ -28,8 +28,11 @@ def configure_agent_environment() -> Path:
             raise RuntimeError("vm_agent_config_must_be_regular_file")
         if meta.st_mode & (stat.S_IRWXG | stat.S_IRWXO):
             raise RuntimeError("vm_agent_config_permissions_must_be_0600")
-        from dotenv import load_dotenv
-        load_dotenv(dotenv_path=configuration, override=False)
+        # systemd can inject an owner=root mode 0600 EnvironmentFile;
+        # only read the file here when the unprivileged agent can access it.
+        if os.access(configuration, os.R_OK):
+            from dotenv import load_dotenv
+            load_dotenv(dotenv_path=configuration, override=False)
 
     # Pydantic Settings' non-secret defaults originate from the repository
     # .env.example in a source checkout, or the copied .env.example in the
