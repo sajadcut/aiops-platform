@@ -90,7 +90,7 @@ if full-file repair needs the LLM gateway; agent-host network reachability to
 that gateway is then required. Candidate vaults live **on their worker** and
 must not be shared across SSH/agent transport switches mid-approval.
 
-Example systemd service:
+Example systemd service (checkout + virtualenv):
 
 ```ini
 [Unit]
@@ -106,8 +106,10 @@ WorkingDirectory=/opt/aiops
 EnvironmentFile=/etc/aiops/agent.env
 # Option 1, checkout + virtualenv:
 ExecStart=/opt/aiops/.venv/bin/python -m apps.vm_agent_runner
-# Option 2, packaged runtime: replace ExecStart above with:
+# Packaged runtime alternative: also set
+# WorkingDirectory=/opt/aiops-agent
 # ExecStart=/opt/aiops-agent/aiops-vm-agent
+# Place the non-secret .env.example alongside the packaged binary.
 Restart=on-failure
 RestartSec=5
 NoNewPrivileges=no
@@ -117,6 +119,52 @@ ProtectHome=true
 [Install]
 WantedBy=multi-user.target
 ```
+
+### Required privileges and protected configuration APPLY
+
+The **installed-agent** implementation uses the existing, root-owned
+`scripts/vm/aiops-config-guard` for `config_change_validate` and
+`config_change_apply`. Install it as `/usr/local/sbin/aiops-config-guard`
+owned by root and not writable by the agent account. It validates allowed
+paths/extensions, source/candidate hashes, vendor syntax and rollback; an
+approved APPLY additionally verifies an Ed25519 signature using the root-owned
+public verification key at `/etc/aiops/config-change-verify.pem`.
+
+The private signing seed, `AIOPS_CONFIG_GUARD_ED25519_PRIVATE_KEY`, is injected
+into the **specific agent worker** by the administrator/secret manager, never
+the host root guard. Each VM needs a distinct signing keypair. Without that
+seed and the matching public certificate file, configuration APPLY fails closed.
+The source/candidate bytes are transported locally over stdin to the fixed
+guard, not passed as shell arguments or sent to the Control Plane.
+
+Example installation commands (run only after checking the contents):
+
+```sh
+sudo install -o root -g root -m 0750 scripts/vm/aiops-config-guard /usr/local/sbin/aiops-config-guard
+sudo install -d -o root -g root -m 0755 /etc/aiops
+sudo install -o root -g root -m 0644 /secure/staged/config-change-verify.pem /etc/aiops/config-change-verify.pem
+```
+
+Set narrow sudoers permissions for the fixed helper (which validates every
+argument internally), plus explicit `systemctl start/restart/reload <service>`
+entries for the approved services. For example, nginx-only operations:
+
+```text
+aiops-agent ALL=(root) NOPASSWD: /usr/local/sbin/aiops-config-guard *
+aiops-agent ALL=(root) NOPASSWD: /usr/bin/systemctl start nginx, /usr/bin/systemctl restart nginx, /usr/bin/systemctl reload nginx
+```
+
+Verify the absolute path of `systemctl` on the destination before configuring
+sudoers. The agent may need membership in the host's `systemd-journal`
+group to read protected logs. Some vendor `config_validate` fallbacks use
+a root-run validator when the service account lacks permission; explicitly
+allow the required read-only validator in host policy or report the capability
+as unavailable. **Never enable unrestricted `sudo /bin/sh` or
+`NOPASSWD: ALL`** for the installed agent.
+
+A root-owned guard is REQUIRED for secure production config APPLY. The
+legacy SSH worker retains its existing ephemeral guard behavior; it is not
+changed or silently replaced.
 
 The agent HTTP listener is deliberately bound to loopback. Publish it through
 a trusted HTTPS reverse proxy with certificate verification (ideally mTLS),
@@ -156,3 +204,36 @@ hash/approval-bound apply and approved start/restart/reload. The agent offers
 Repository unit tests validate basic routing and contract behavior. These
 are **not** evidence of operational parity or production readiness until
 the real-environment checks above pass.
+
+
+## Exact VM MCP surface coverage
+
+All **29 operations** exist on both MCP providers. The on-host agent inherits
+the same bounded diagnostic/parsing logic and the same production-facing result
+contract, while replacing SSH transport and the privileged APPLY mechanism.
+This is contract/code parity, not proof that any private host has all needed
+Linux binaries, permissions or vendor validators installed.
+
+| Area | MCP tools | Agent dependency |
+| --- | --- | --- |
+| Host and network (13) | `collect_vm_metrics`, `memory_diagnostics`, `host_info`, `disk_status`, `disk_forensics`, `network_status`, `process_snapshot`, `process_status`, `tcp_check`, `port_listener_status`, `dns_check`, `route_check`, `firewall_status` | Linux procfs, coreutils, iproute2, procps and validated target |
+| Service evidence (3) | `service_status`, `service_logs`, `system_logs` | systemd/journald and permissions |
+| Config and discovery (9) | `config_validate`, `nginx_config_review`, `nginx_config_inspect`, `service_runtime_discovery`, `service_config_discovery`, `service_config_review`, `service_config_llm_repair`, `dotnet_config_syntax`, `config_change_validate` | allowlisted service, vendor validators, locally stored candidate, optional trusted LLM access, root-owned guard for staged validation |
+| Governed writes (4) | `start_service`, `restart_service`, `reload_service`, `config_change_apply` | signed/approved intent, per-agent authorization, scoped systemctl sudoers; root guard and Ed25519 public key for config APPLY |
+
+`config_change_apply` supports bounded Nginx/JSON/XML remediation as in the
+original worker, **not generic replacement of every arbitrary configuration
+file format**. HAProxy or Java-specific configurations may be inspected and
+validated when an adapter exists but are not automatically write-capable.
+Do not expand the existing APPLY scope merely to make SSH and Agent appear
+equivalent. When an LLM proposes a full-file candidate, candidate generation,
+validation and APPLY must stay on the same selected worker; changes of backend
+during an approval must require rebuilding and reapproval.
+
+Tests: `tests/unit/test_vm_agent_all_tools_parity.py`,
+`tests/unit/test_vm_agent_guarded_config.py`,
+`tests/unit/test_vm_agent_ambiguous_apply.py`,
+`tests/unit/test_vm_local_agent_transport.py`.
+
+Operational results must still be marked **REAL ENV REQUIRED** until real
+SSH-disabled VM runs demonstrate all 29 operations with the intended permissions.
