@@ -31,7 +31,7 @@ async def redis_unauthenticated_ping(
         "exec 3<>/dev/tcp/" + host + "/" + str(checked_port)
         + " || exit 1; "
         + "printf '*1\\r\\n$4\\r\\nPING\\r\\n' >&3; "
-        + "IFS= read -r -t 2 answer <&3; printf '%s' \\"$answer\\""
+        + "IFS= read -r -t 2 answer <&3; printf '%s' \"$answer\""
     )
     cmd = (
         "if ! command -v timeout >/dev/null 2>&1; "
