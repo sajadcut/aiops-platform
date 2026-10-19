@@ -138,3 +138,45 @@ def test_exact_tcp_success_never_becomes_verified_app_health():
     assert "سلامت کامل" in output["text"]
     assert output["evidence_refs"] == ["ev-redis"]
     assert output["authorizes_execution"] is False
+
+
+@pytest.mark.asyncio
+async def test_central_llm_database_alert_excludes_unrelated_redis_and_marks_missing_elk(monkeypatch):
+    brief = _brief()
+    brief["alert_focused_report"] = {
+        "reported_service": "GFP_Backend",
+        "alert_message": "GFP_Backend database connection errors reached at least 10 events",
+        "alert_source": "Zabbix", "family": "database",
+        "next_check_fa": "خطاهای دیتابیس در ELK و اتصال واقعی کانفیگ برنامه بررسی شود.",
+        "related_checks": [],
+        "dependency_extraction_diagnostics": [{
+            "matching_endpoint_count": 0,
+            "other_dependency_kinds": ["redis", "https"],
+            "binding_status": "central_llm_unavailable",
+            "config_files_checked": 4,
+        }],
+        "root_cause_confirmed": False,
+    }
+    seen = []
+    class Provider:
+        async def generate_with_messages(self, messages, **kwargs):
+            seen.append((messages, kwargs))
+            return SimpleNamespace(content=(
+                "هشدار مربوط به اتصال دیتابیس GFP_Backend است، اما "
+                "نتیجه آزمایش مقصد دیتابیس یا لاگ خطای مرتبط تأیید نشده است. "
+                "برای تشخیص علت باید ابتدا کانفیگ دیتابیس و لاگ برنامه در "
+                "بازه وقوع آلارم بررسی شود."
+            ), finish_reason="stop")
+    monkeypatch.setattr(focused, "configured_llm_adapter", lambda: Provider())
+    out = await focused.explain_alert(brief)
+    assert out["status"] == "available"
+    user_data = json.loads(seen[0][0][1]["content"])
+    assert user_data["reported_service"] == "GFP_Backend"
+    assert user_data["family"] == "database"
+    assert user_data["log_evidence_status"] == "no_alert_matching_database_log_evidence"
+    assert user_data["alert_dependency_coverage"][0]["matching_endpoint_count"] == 0
+    assert user_data["alert_dependency_coverage"][0]["other_dependency_kinds"] == ["redis", "https"]
+    assert user_data["alert_dependency_coverage"][0]["binding_status"] == "central_llm_unavailable"
+    assert user_data["endpoints"] == []
+    assert "گمان" not in out["text"]
+    assert out["authorizes_execution"] is False
