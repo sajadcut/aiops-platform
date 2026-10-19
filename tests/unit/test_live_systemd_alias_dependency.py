@@ -27,7 +27,8 @@ async def test_exact_gfp_backend_alert_only_follows_live_systemd_alias(monkeypat
         async def close(self):
             pass
 
-    monkeypatch.setattr(gateway, "VMEdgeMCPClient", Client)
+    import integrations.vm.mcp_client as vmclient
+    monkeypatch.setattr(vmclient, "VMEdgeMCPClient", Client)
     discovery = {"status": "candidates_found", "candidates": [{
         "hostname": "GFP_Backend-vm",
         "ip_addresses": ["10.248.16.82"],
@@ -78,7 +79,8 @@ async def test_canonical_unit_mismatch_without_live_names_stays_unverified(monke
                     "active_state": "active", "unit_aliases": ["gfpapi.service"]}
         async def close(self):
             pass
-    monkeypatch.setattr(gateway, "VMEdgeMCPClient", Client)
+    import integrations.vm.mcp_client as vmclient
+    monkeypatch.setattr(vmclient, "VMEdgeMCPClient", Client)
     discovery = {"candidates": [{"hostname": "GFP_Backend-vm",
                                  "ip_addresses": ["10.248.16.82"]}]}
     rows = await SignalGateway._verify_elastic_host_candidate(
