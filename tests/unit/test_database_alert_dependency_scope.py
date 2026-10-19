@@ -124,3 +124,52 @@ def test_database_alert_reports_redis_probes_as_irrelevant():
     assert diag["binding_status"] == "trusted_llm_not_configured"
     assert diag["files"][0]["host_fields"] == 6
     assert report["root_cause_confirmed"] is False
+
+
+@pytest.mark.asyncio
+async def test_mixed_application_config_does_not_starve_database_after_six_redis_peers(monkeypatch):
+    config = {
+        "Redis": {"Endpoints": [
+            f"redis-{i}.internal:{6380+i}" for i in range(6)
+        ]},
+        "ConnectionStrings": {
+            "Primary": "postgresql://user:secret@pg.internal:6543/main",
+        },
+    }
+    encoded = base64.b64encode(json.dumps(config).encode()).decode()
+    probed = []
+
+    async def no_llm(config):
+        return {
+            "status": "trusted_llm_not_configured", "endpoints": [],
+            "candidate_host_count": 0, "candidate_port_count": 0,
+            "candidate_inline_endpoint_count": 0,
+        }
+    monkeypatch.setattr(dependency_investigation, "resolve_llm_bindings", no_llm)
+
+    class Worker:
+        def _validate_target(self, target):
+            assert target == "vm"
+        def _validate_service(self, service):
+            assert service == "gfpapi"
+        async def service_config_discovery(self, target, service):
+            return {"success": True, "files": [{
+                "path": "/srv/prod/appsettings.json", "verified_exists": True,
+            }]}
+        async def _run(self, target, command):
+            return {"success": True, "stdout": encoded}
+        async def tcp_check(self, target, host, port):
+            probed.append((host, port))
+            return {"success": True, "supported": True, "reachable": False}
+        async def dns_check(self, *args):
+            return {"success": True, "resolved": False}
+
+    result = await dependency_investigation.investigate(Worker(), "vm", "gfpapi")
+    assert len(result["dependencies"]) == 6
+    assert ("pg.internal", 6543) in probed
+    assert any(x["kind"] == "postgresql" and x["port_inferred"] is False
+               and x["tcp_reachable"] is False
+               for x in result["dependencies"])
+    assert all(x["config_file"] == "/srv/prod/appsettings.json"
+               for x in result["dependencies"])
+    assert "secret" not in str(result)
