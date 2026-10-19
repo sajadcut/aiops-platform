@@ -111,3 +111,93 @@ async def test_model_cannot_invent_rows_or_execution():
         "tool": "redis_dependency_check", "why": "بررسی Endpoint", "executed": False,
     }]
     assert result["execution_authority"] is False
+
+
+@pytest.mark.asyncio
+async def test_transport_failure_cannot_become_reachable_tcp():
+    payload = base64.b64encode(json.dumps({
+        "Redis": {"Host": "redis.internal", "Port": 6380}
+    }).encode()).decode()
+
+    class Stub:
+        def _validate_service(self, service): pass
+        async def service_config_discovery(self, target, service):
+            return {"success": True, "runtime": "dotnet", "files": [
+                {"path": "/srv/prod/appsettings.json", "verified_exists": True}
+            ]}
+        async def _run(self, target, command):
+            return {"success": True, "stdout": payload}
+        async def tcp_check(self, target, host, port):
+            return {"success": False, "supported": True, "reachable": True}
+
+    result = await check_redis_config(Stub(), "test-vm", "gfpapi")
+    assert result["status"] == "tcp_unverified"
+    assert result["endpoints"][0]["tcp_reachable"] is None
+    assert result["application_health_verified"] is False
+
+
+@pytest.mark.asyncio
+async def test_systemd_dotnet_publish_directory_is_just_a_readonly_verified_path():
+    from integrations.vm.ssh_connector import SSHVMConnector
+
+    class Stub:
+        def _validate_service(self, service):
+            assert service == "gfpapi"
+        async def service_runtime_discovery(self, target, service):
+            return {"success": True, "runtime": "dotnet", "config_candidates": [],
+                    "unit_file": "/etc/systemd/system/gfpapi.service",
+                    "publish_directory": "/data/app/gfpapi",
+                    "working_directory": None}
+        async def _run(self, target, command):
+            assert target == "test-vm"
+            assert "/data/app/gfpapi/appsettings.json" in command
+            assert "cat " not in command and "base64" not in command
+            return {"success": True}
+
+    result = await SSHVMConnector.service_config_discovery(Stub(), "test-vm", "gfpapi")
+    assert result["success"] is True
+    assert result["files"] == [{
+        "path": "/data/app/gfpapi/appsettings.json",
+        "source": "systemd_dotnet_publish",
+        "status": "exists_readable", "verified_exists": True,
+        "content_validated": False
+    }]
+    assert result["config_contents_exposed"] is False
+
+
+@pytest.mark.asyncio
+async def test_redis_alert_gets_bounded_dependency_check_without_model():
+    from apps.orchestrator.dynamic_investigation import DynamicInvestigationPlanner
+
+    state = {"service_name": "gfpapi", "context": {"evidence": [{
+        "source": "elasticsearch",
+        "raw_data": {"message": "Redis timeout while connecting"},
+        "type": "log",
+    }]}}
+    result = await DynamicInvestigationPlanner.propose(state, adapter=None)
+    assert result["execution_authority"] is False
+    assert result["checks"] == ["redis_dependency_check"]
+    requests = DynamicInvestigationPlanner.evidence_requests(
+        result, has_service=True, has_port=False
+    )
+    assert len(requests) == 1
+    assert requests[0]["evidence_type"] == "telemetry"
+    assert "redis" in requests[0]["reason"]
+    assert DynamicInvestigationPlanner.evidence_requests(
+        result, has_service=False, has_port=False
+    ) == []
+
+
+def test_incident_chat_explicit_redis_uses_read_only_intent():
+    from apps.incident_copilot import fallback_intent, redis_dependency_answer
+
+    assert fallback_intent("اتصال ردیس سرویس gfpapi رو بررسی زنده کن") == "redis_dependency_check"
+    assert fallback_intent("بررسی زنده Redis سرویس") == "redis_dependency_check"
+    response = redis_dependency_answer({
+        "success": True, "status": "tcp_checked",
+        "endpoints": [{"host": "redis.internal", "port": 6380,
+                       "tcp_reachable": True}]
+    })
+    assert "redis.internal:6380" in response
+    assert "سلامت Redis" in response
+    assert "تأیید نشده" in response
