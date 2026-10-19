@@ -145,10 +145,12 @@ def validate_vm_observation(tool: str, target: str, payload: Any) -> dict[str, A
             raise ValueError("vm_mcp_dependency_llm_metadata_invalid")
         from integrations.vm.general_config_review import checked_config_path
         for entry in metadata:
-            if not isinstance(entry, dict) or set(entry) != {
+            if not isinstance(entry, dict) or not set(entry) <= {
                 "config_file", "status", "candidate_host_count",
-                "candidate_port_count", "verified_pair_count",
-            }:
+                "candidate_port_count", "candidate_inline_endpoint_count",
+                "verified_pair_count",
+            } or not {"config_file", "status", "candidate_host_count",
+                      "candidate_port_count", "verified_pair_count"} <= set(entry):
                 raise ValueError("vm_mcp_dependency_llm_metadata_invalid")
             try:
                 if checked_config_path(entry["config_file"]) != entry["config_file"]:
@@ -159,6 +161,10 @@ def validate_vm_observation(tool: str, target: str, payload: Any) -> dict[str, A
                 type(entry.get(k)) is not int or not 0 <= entry[k] <= 16
                 for k in ("candidate_host_count", "candidate_port_count",
                           "verified_pair_count")
+            ) or (
+                entry.get("candidate_inline_endpoint_count") is not None
+                and (type(entry["candidate_inline_endpoint_count"]) is not int
+                     or not 0 <= entry["candidate_inline_endpoint_count"] <= 8)
             ):
                 raise ValueError("vm_mcp_dependency_llm_metadata_invalid")
         if any(payload.get(k) is not False for k in (
