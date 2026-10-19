@@ -554,7 +554,20 @@ class EvidenceCollector:
                     evidence.append(self._observation("vm_mcp", f"vm-skipped:{vm_target}:{action}:{since.isoformat()}", status="skipped", service=effective_service, detail="diagnostic_not_supported"))
                     continue
                 try:
-                    if action in {"service_status", "service_logs", "config_validate", "nginx_config_review", "nginx_config_inspect", "service_runtime_discovery", "service_config_discovery", "redis_dependency_check", "dependency_investigation", "service_config_review", "dotnet_config_syntax"}:
+                    if action == "dependency_investigation":
+                        from integrations.vm.central_dependency import investigate_from_aiops
+                        signal_classes = dependency_signals(evidence)
+                        priority = next((
+                            match for match in (
+                                "database", "message_broker", "cache",
+                                "http_dependency",
+                            ) if match in signal_classes
+                        ), "")
+                        result = await investigate_from_aiops(
+                            self.vm, vm_target, effective_service,
+                            priority_family=priority,
+                        )
+                    elif action in {"service_status", "service_logs", "config_validate", "nginx_config_review", "nginx_config_inspect", "service_runtime_discovery", "service_config_discovery", "redis_dependency_check", "service_config_review", "dotnet_config_syntax"}:
                         result = await method(vm_target, effective_service)
                     elif action == "process_status":
                         result = await method(vm_target, effective_service)
