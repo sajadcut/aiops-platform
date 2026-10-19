@@ -460,6 +460,25 @@ def _mcp(rows: Iterable[dict], now: datetime) -> tuple[list[dict], list[dict]]:
                              "tls_verified"):
                     check[flag] = dep.get(flag) if type(dep.get(flag)) is bool else None
                 checks.append(check)
+            binding_rows = observed.get("llm_field_binding_files")
+            config_checked = observed.get("config_files_checked")
+            version_mismatch = (
+                type(config_checked) is int and config_checked > 0
+                and (not isinstance(binding_rows, list) or not binding_rows)
+                and not observed.get("llm_field_binding_status")
+            ) or any(
+                isinstance(dep, dict)
+                and dep.get("port_inferred") is True
+                and (dep.get("tcp_reachable") is not None
+                     or dep.get("probe_status") not in {"port_unverified", "not_executed"})
+                for dep in arr(observed.get("dependencies"))[:6]
+            )
+            evidence_item["dependency_agent_contract_status"] = (
+                "upgrade_required" if version_mismatch else
+                "current" if isinstance(binding_rows, list)
+                and isinstance(observed.get("llm_field_binding_status"), str) else
+                "unverified"
+            )
             evidence_item["llm_field_binding_status"] = safe(
                 observed.get("llm_field_binding_status"), 80,
             )
