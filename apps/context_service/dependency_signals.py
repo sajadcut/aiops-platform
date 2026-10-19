@@ -17,6 +17,14 @@ _PATTERNS = (
         r"\bactivemq\b|\bartemis\b|\brabbitmq\b|\bamqp\b|\bkafka\b|"
         r"(?:message broker|message queue).{0,60}"
         r"(?:timeout|failed|refused|unavailable|error)", re.I)),
+    # Vendor-neutral transport failures still warrant bounded config discovery.
+    # They are hints, not evidence that a specific dependency is unhealthy.
+    ("unknown_dependency", re.compile(
+        r"\b(?:ECONNREFUSED|ETIMEDOUT|EHOSTUNREACH|ENETUNREACH|"
+        r"ENOTFOUND|EAI_AGAIN|SocketException|SSLHandshakeException|"
+        r"NameResolutionFailure|DeadlineExceeded|grpc-status[:=]14)\b|"
+        r"(?:TLS|SSL) handshake (?:failed|timeout)|"
+        r"getaddrinfo (?:failed|error)", re.I)),
     ("http_dependency", re.compile(
         r"(?:http|https|rest|soap|upstream|downstream|api client|external service)"
         r".{0,90}(?:timeout|refused|unavailable|502|503|504|connect(?:ion)? failed|error)"
