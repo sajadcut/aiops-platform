@@ -147,6 +147,20 @@ async def investigate(connector: Any, target: str, service: str) -> dict:
     for dependency in known:
         record = dict(dependency)
         try:
+            if record.get("port_inferred") is True:
+                # A TCP handshake with a vendor's default port says nothing
+                # about an application's effective configured destination.
+                # Never probe a guessed port or classify it as healthy.
+                record["probe_scope"] = "not_executed_inferred_port"
+                record["probe_supported"] = False
+                record["tcp_reachable"] = None
+                record["probe_status"] = "port_unverified"
+                record["protocol_status"] = "not_executed"
+                record["protocol_health_verified"] = False
+                if "verify_effective_dependency_port" not in followups:
+                    followups.append("verify_effective_dependency_port")
+                base["dependencies"].append(record)
+                continue
             if record["probe"] == "http_head":
                 # Only the configured origin is probed. We do not send tokens,
                 # URI paths or parameters to the destination or the LLM.
@@ -243,7 +257,9 @@ async def investigate(connector: Any, target: str, service: str) -> dict:
     base["investigation_status"] = (
         "transport_failure_observed" if saw_unreachable else
         "redis_protocol_responded" if saw_protocol_response else
-        "dependency_endpoint_checked"
+        "port_unverified" if any(
+            row.get("probe_status") == "port_unverified" for row in base["dependencies"]
+        ) else "dependency_endpoint_checked"
     )
     base["protocol_health_verified"] = any(
         row.get("protocol_health_verified") is True
