@@ -87,7 +87,35 @@ _TOOL_SCHEMAS: Dict[str, Dict[str, Dict[str, Any]]] = {
         "nginx_config_review": {"description": "Read-only Nginx config inspection and deterministic in-memory correction preview on MCP worker; no remote Python, no candidate validation or apply", "inputSchema": {"type": "object", "additionalProperties": False, "required": ["target", "service"], "properties": {**_TARGET, **_SERVICE}}},
         "nginx_config_inspect": {"description": "Inspect read-only Nginx config file inventory and redacted directive structure including sites-enabled; no raw values, shell commands, or remote Python", "inputSchema": {"type": "object", "additionalProperties": False, "required": ["target", "service"], "properties": {**_TARGET, **_SERVICE}}},
         "service_runtime_discovery": {"description": "Read non-secret systemd properties and identify service runtime/entrypoint", "inputSchema": {"type": "object", "additionalProperties": False, "required": ["target", "service"], "properties": {**_TARGET, **_SERVICE}}},
-        "dependency_investigation": {"description": "Read-only, bounded discovery from systemd-verified JSON/YAML/properties and network probes for databases, brokers, caches and HTTP. No credentials, file text or write authority.", "inputSchema": {"type": "object", "additionalProperties": False, "required": ["target", "service"], "properties": {**_TARGET, **_SERVICE}}},
+        "dependency_investigation": {"description": "Two-phase read-only config projection and independently verified central-LLM field binding; priority affects order only, never network destinations.", "inputSchema": {
+            "type": "object", "additionalProperties": False,
+            "required": ["target", "service"],
+            "properties": {**_TARGET, **_SERVICE,
+                "mode": {"type": "string", "enum": ["discover", "probe"]},
+                "priority_family": {"type": "string", "enum": [
+                    "", "database", "messaging", "message_broker", "redis",
+                    "cache", "http", "http_dependency",
+                ]},
+                "selections": {"type": "array", "maxItems": 4, "items": {
+                    "type": "object", "additionalProperties": False,
+                    "required": ["file_index", "sha256", "pairs", "endpoint_ids"],
+                    "properties": {
+                        "file_index": {"type": "integer", "minimum": 0, "maximum": 3},
+                        "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+                        "pairs": {"type": "array", "maxItems": 6, "items": {
+                            "type": "object", "additionalProperties": False,
+                            "required": ["host_id", "port_id"],
+                            "properties": {
+                                "host_id": {"type": "string", "pattern": "^h[0-9]{1,2}$"},
+                                "port_id": {"type": "string", "pattern": "^p[0-9]{1,2}$"},
+                            },
+                        }},
+                        "endpoint_ids": {"type": "array", "maxItems": 6,
+                                         "items": {"type": "string", "pattern": "^e[0-9]{1,2}$"}},
+                    },
+                }},
+            },
+        }},
         "redis_dependency_check": {"description": "Read-only discovery of static Redis endpoints exclusively from verified systemd-bound appsettings; bounded TCP checks, never returns config values or credentials", "inputSchema": {"type": "object", "additionalProperties": False, "required": ["target", "service"], "properties": {**_TARGET, **_SERVICE}}},
         "service_config_discovery": {"description": "Read-only verification of safe config path candidates from systemd, without content/secret disclosure", "inputSchema": {"type": "object", "additionalProperties": False, "required": ["target", "service"], "properties": {**_TARGET, **_SERVICE}}},
         "service_config_review": {"description": "Secret-safe read-only review of vendor-validated or verified systemd config; worker-only XML/JSON format checks and deterministic JSON candidate", "inputSchema": {"type": "object", "additionalProperties": False, "required": ["target", "service"], "properties": {**_TARGET, **_SERVICE}}},
@@ -252,7 +280,12 @@ async def _call(provider: str, tool: str, args: Dict[str, Any]) -> Any:
     if tool == "nginx_config_inspect": return await connector.nginx_config_inspect(target, service)
     if tool == "service_runtime_discovery": return await connector.service_runtime_discovery(target, service)
     if tool == "service_config_discovery": return await connector.service_config_discovery(target, service)
-    if tool == "dependency_investigation": return await connector.dependency_investigation(target, service)
+    if tool == "dependency_investigation":
+        return await connector.dependency_investigation(
+            target, service, mode=args.get("mode", "probe"),
+            selections=args.get("selections"),
+            priority_family=args.get("priority_family", ""),
+        )
     if tool == "redis_dependency_check": return await connector.redis_dependency_check(target, service)
     if tool == "service_config_review": return await connector.service_config_review(target, service)
     if tool == "service_config_llm_repair": return await connector.service_config_llm_repair(target, service)
