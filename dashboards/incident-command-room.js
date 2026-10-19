@@ -1780,6 +1780,43 @@
       .filter(x=>typeof x.text==='string'&&x.text.trim())
       .slice(0,11).map(x=>'<strong>'+txt(x.heading)+'</strong><p>'+
         txt(x.text)+'</p>'+refs(x.citations)):[];
+    // Mandatory alarm-scoped answer is deterministic and does not depend on
+    // optional LLM prose. systemd observations are supplementary unless the
+    // original alarm was itself about service health.
+    const alert=r.alert_focused_report||{};
+    const alertObserved=arr(alert.related_checks);
+    const alertName=String(alert.alert_message||i.summary||'').trim();
+    const alertPrimary=alert.source_basis==='received_signal';
+    const alertHeadline=alertName
+      ?(fa?'بررسی آلارم دریافتی: ':'Analysis of received alert: ')+alertName.slice(0,155)
+      :title;
+    const alertChecks=alertObserved.map(row=>
+      '<li><strong>'+txt(row.tool||'MCP')+'</strong> — '+txt(row.result)+
+      ' <small>('+txt(row.status||'unknown')+')</small>'+
+      refs([row.evidence_ref].filter(Boolean))+'</li>');
+    const alertSection='<div class="ic-ir-alert-focus" data-alert-focus="mandatory">'+
+      '<p><strong>'+esc(fa?'متن هشدار مورد بررسی: ':'Alert being investigated: ')+
+      '</strong>'+txt(alertName|| (fa?'متن آلارم ثبت نشده':'No alert message recorded'))+'</p>'+
+      '<p><strong>'+esc(fa?'منبع پیام: ':'Source: ')+
+      '</strong>'+txt(alert.alert_source||'unknown')+
+      ' · '+esc(alertPrimary?
+        (fa?'مستقیماً از سیگنال ذخیره‌شده':'From persisted received signal'):
+        (fa?'از خلاصه رخداد؛ متن اصلی سیگنال موجود نیست':'Incident summary fallback; original alert unavailable'))+
+      '</p>'+refs([alert.alert_evidence_ref].filter(Boolean))+
+      '<p class="ic-ir-caution"><strong>'+esc(fa?'پاسخ تحلیل به همین آلارم: ':'Assessment of this alert: ')+
+      '</strong>'+txt(alert.assessment_fa||
+        (fa?'تست مرتبط با متن آلارم هنوز تأیید نشده است.':'No alert-specific check is verified yet.'))+'</p>'+
+      '<h4>'+esc(fa?'بررسی‌های مرتبط با موضوع آلارم':'Checks relevant to this alert')+'</h4>'+
+      (alertChecks.length?list(alertChecks):
+        '<p class="ic-ir-caution">'+esc(fa?
+        'هیچ تست مستقیمی برای موضوع این هشدار ثبت نشده است؛ بررسی‌های عمومی سرور جایگزین آن نیستند.':
+        'No direct check of this alarm is recorded; generic VM health does not replace it.')+'</p>')+
+      '<p><strong>'+esc(fa?'بررسی بعدی پیشنهادی (اجرا نشده): ':'Suggested next check (not executed): ')+
+      '</strong>'+txt(alert.next_check_fa||
+        (fa?'با توجه به موضوع آلارم شواهد مستقیم جمع‌آوری شود.':'Collect direct evidence for the alert.'))+'</p>'+
+      '<small>'+esc(fa?
+      'هم‌زمانی خطاها یا موفقیت TCP به‌تنهایی علت ریشه‌ای را تأیید نمی‌کند.':
+      'Coincidence or TCP success alone cannot confirm root cause.')+'</small></div>';
     const legacyNote=fa?'متن تخصصی و گزارش کامل Agentها در جزئیات پایین قابل مشاهده است.':
       'Detailed findings and agent reports are available below.';
     const section=(title,body,extra='')=>'<section class="ic-ir-section '+extra+'"><h3>'+
@@ -1787,12 +1824,14 @@
     node.innerHTML='<article class="ic-ir" data-report-version="evidence-narrative-v1">'+
       '<header class="ic-ir-head"><span class="ic-ir-eyebrow">'+esc(fa?
         'گزارش هوشمندِ مبتنی بر شواهد':'Evidence-first incident intelligence')+
-        '</span><h2>'+txt(title)+'</h2><p>'+esc(snapshotNote)+'</p>'+
+        '</span><h2>'+txt(alertHeadline)+'</h2><p>'+esc(snapshotNote)+'</p>'+
         '<div class="ic-ir-meta"><span>'+esc(fa?'سرویس: ':'Service: ')+
         txt(i.service||t.service)+'</span><span>'+esc(fa?'میزبان: ':'Host: ')+
         txt(t.host||i.host||i.target)+'</span><span>'+esc(fa?'نسخه شواهد: ':'Snapshot: ')+
         '<code dir="ltr">'+txt(r.snapshot_id)+'</code></span></div></header>'+
-      section(fa?'۱. چه اتفاقی افتاده است؟':'1. What happened',
+      section(fa?'۱. آلارم چه می‌گوید و بررسی‌ها چه پاسخی داده‌اند؟':'1. Alert-specific findings',
+        alertSection,'ic-ir-alert-priority')+
+      section(fa?'۲. وضعیت مکمل سرویس و میزبان':'2. Supporting service and host state',
         '<p>'+txt(op.headline_fa||i.summary||title)+'</p>'+
         (hasDirect?'<p>'+esc(fa?'Systemd ثبت کرده: ':'Systemd recorded: ')+
           '<code dir="ltr">'+esc('ActiveState='+String(facts.active_state??'?')+
@@ -1800,32 +1839,32 @@
           '</code>'+refs([statusEvidence.id].filter(Boolean))+'</p>':'')+
         (r.state_correlation?.conclusion_kind==='source_discrepancy'?
           '<p class="ic-ir-caution">'+txt(r.state_correlation.headline_fa)+'</p>':''))+
-      section(fa?'۲. چه شواهدی واقعاً تأیید شده‌اند؟':'2. Confirmed observations',factsHtml)+
-      section(fa?'۳. ابزارهای MCP دقیقاً چه نتیجه‌ای داده‌اند؟':'3. MCP result quality',
+      section(fa?'۳. چه شواهدی واقعاً تأیید شده‌اند؟':'3. Confirmed observations',factsHtml)+
+      section(fa?'۴. ابزارهای MCP دقیقاً چه نتیجه‌ای داده‌اند؟':'4. MCP result quality',
         '<div class="ic-ir-sources">'+statuses+'</div>')+
-      (diagnosis?section(fa?'۴. دقیقاً کدام فایل تنظیمات بررسی شد؟':'4. Configuration check',
+      (diagnosis?section(fa?'۵. دقیقاً کدام فایل تنظیمات بررسی شد؟':'5. Configuration check',
         '<p>'+esc(diagnosis)+'</p>'+list(validated)):'')+
-      section(fa?'۵. علت قطعی است یا فرضیه؟':'5. RCA certainty',
+      section(fa?'۶. علت قطعی است یا فرضیه؟':'6. RCA certainty',
         '<p class="ic-ir-caution">'+esc(decision)+'</p>'+
         followupMarkup+
         stopExplanation+
         (hypotheses.length?list(hypotheses):'<p>'+esc(fa?'فرضیهٔ مستند مستقلی ثبت نشده است.':'No supported independent hypothesis recorded.')+'</p>'))+
-      section(fa?'۶. چه شواهدی کم داریم؟':'6. Missing evidence',
+      section(fa?'۷. چه شواهدی کم داریم؟':'7. Missing evidence',
         list(unknowns.map(x=>txt(x.text))))+
-      section(fa?'۷. اقدام بعدی اپراتور':'7. Next operator checks',
+      section(fa?'۸. اقدام بعدی اپراتور':'8. Next operator checks',
         recoveryMarkup+list(steps.map(x=>txt(x.text)))+
         '<p class="ic-ir-guard">'+esc(fa?
         'این گزارش Read-only است. هیچ Restart، حذف فایل یا تغییر کانفیگ بدون Approval و Verification مجاز نیست.':
         'Read-only: restart, file deletion and config changes require governed approval and verification.')+'</p>')+
-      section(fa?'۸. دانش سازمانی و میزان اتکا':'8. Knowledge provenance',
+      section(fa?'۹. دانش سازمانی و میزان اتکا':'9. Knowledge provenance',
         '<p>'+esc(knowledgeLine)+'</p>')+
-      (interpretation.length?section(fa?'۹. تحلیل تکمیلی مدل با ارجاع':'9. Grounded AI explanation',
+      (interpretation.length?section(fa?'۱۰. تحلیل تکمیلی مدل با ارجاع':'10. Grounded AI explanation',
         '<p class="ic-ir-caution">'+esc(fa?
         'این بخش تفسیر مدل از شواهد است، نه تأیید مستقل علت؛ نتایج مستقیم MCP اولویت دارند.':
         'Model interpretation is not independent RCA confirmation; direct MCP evidence takes precedence.')+
         '</p>'+list(interpretation)):
         (state.narrative&&!state.historic?
-          section(fa?'۹. وضعیت تحلیل مدل':'9. AI analysis status',
+          section(fa?'۱۰. وضعیت تحلیل مدل':'10. AI analysis status',
             '<p>'+esc(fa?
             'مدلِ تحلیل علت ریشه‌ای (RCA) در این Snapshot خروجی ساخت‌یافته و قابل‌استناد تولید نکرده است. این وضعیت به معنی شکست LLM در درخواست مستقل اصلاح فایل کانفیگ نیست؛ نتیجهٔ آن در بخش «اصلاح کانفیگ» نمایش داده می‌شود.':
             'The RCA analysis model did not return validated structured analysis in this snapshot. This does not mean the separate full-config repair LLM call failed; see the configuration repair section.')+
