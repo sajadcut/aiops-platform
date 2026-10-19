@@ -66,7 +66,7 @@ def _looks_like_nonterminal_tool_preamble(response: LLMResponse, *, tools_availa
 _LIVE_OPERATIONAL_QUERY_RE = re.compile(
     r"(?:"
     r"وضعیت|وضعیته|چقدره|چنده|مصرف|فعال|غیرفعال|خاموش|روشن|"
-    r"لاگ|لاگ‌ها|متریک|cpu|memory|ram|"
+    r"لاگ|لاگ‌ها|متریک|cpu|memory|ram|دیسک|فضای\s*خالی|پارتیشن|\bdisk\b|"
     r"\bstatus\b|\bhealth\b|\bmetrics?\b|\blogs?\b|\bpods?\b|"
     r"\brunning\b|\bactive\b|\binactive\b"
     r")",
