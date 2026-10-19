@@ -97,6 +97,36 @@ def build_rows(brief: dict) -> list[dict]:
                 int(knowledge.get("rejected_count") or 0)),
             "evidence_refs": [],
         })
+    orientation = (knowledge.get("early_service_orientation") or {}
+                   if isinstance(knowledge, dict) else {})
+    if isinstance(orientation, dict):
+        hints = [
+            item for item in (orientation.get("hints") or [])[:12]
+            if isinstance(item, dict) and item.get("kind") in {
+                "runtime", "technology", "framework", "platform",
+                "dependency", "config_path",
+            }
+        ]
+        if hints:
+            sources = list(dict.fromkeys(
+                _safe(item.get("source_ref"), 130) for item in hints
+                if item.get("source_ref")
+            ))
+            facts = [
+                _safe(item.get("kind"), 25) + "=" + _safe(item.get("value"), 130)
+                for item in hints[:4]
+            ]
+            rows.append({
+                "id": "cognia-orientation",
+                "component": "Cognia",
+                "check": "شناخت اولیه فناوری، وابستگی و کانفیگ سرویس",
+                "tool": "cognia_service_orientation",
+                "status": "advisory",
+                "count": len(hints),
+                "result": "; ".join(facts) +
+                          "؛ راهنمای دانش است، نه مسیر فایل یا وضعیت تأییدشده در میزبان.",
+                "evidence_refs": sources[:5],
+            })
     memory = brief.get("operational_memory") or {}
     if isinstance(memory, dict):
         rows.append({

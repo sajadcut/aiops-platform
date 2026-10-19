@@ -626,6 +626,26 @@ class BaseAgent(ABC):
 
     @classmethod
     def auxiliary_context(cls, input_data: AgentInput) -> Dict[str, Any]:
+        knowledge = cls.knowledge_items(input_data)
+        accepted_refs = {
+            str(doc.get("source_id") or doc.get("id") or "")
+            for doc in knowledge if isinstance(doc, dict)
+        }
+        orientation = (input_data.context or {}).get("knowledge_orientation") or {}
+        orientation = orientation if isinstance(orientation, dict) else {}
+        profile_hints = [
+            {"kind": hint["kind"], "value": hint["value"],
+             "source_ref": hint["source_ref"], "verified": False}
+            for hint in (orientation.get("hints") or [])[:12]
+            if isinstance(hint, dict)
+            and hint.get("kind") in {
+                "runtime", "technology", "framework", "platform",
+                "dependency", "config_path",
+            }
+            and isinstance(hint.get("value"), str)
+            and len(hint["value"]) <= 240
+            and str(hint.get("source_ref") or "") in accepted_refs
+        ]
         memory = cls.memory_items(input_data)
         _CURRENT_ALLOWED_HISTORICAL_MEMORY_IDS.set(
             tuple(
@@ -635,7 +655,13 @@ class BaseAgent(ABC):
             )
         )
         return {
-            "knowledge_rag": cls.knowledge_items(input_data),
+            "knowledge_rag": knowledge,
+            "cognia_service_orientation": {
+                "hints": profile_hints,
+                "counts_as_live_evidence": False,
+                "requires_live_verification": True,
+                "policy": "advisory_only_never_use_as_tool_paths_or_targets",
+            },
             "knowledge_status": (
                 input_data.context.get("knowledge_status", {"status": "unknown"})
                 if input_data.context else {"status": "unknown"}

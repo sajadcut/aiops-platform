@@ -477,7 +477,7 @@ def _knowledge(state: dict, agents: list[dict], incident_service: str | None = N
             "decision_impact": "not_traced",
         })
     status = str(retrieval.get("status") or "not_queried").lower()
-    if status not in {"available", "empty", "not_queried", "filtered_empty"}:
+    if status not in {"available", "empty", "not_queried", "filtered_empty", "partial"}:
         status = "failed"
     # The final state can already be filtered by ContextBuilder/SignalAware.
     # Preserve that provenance: zero accepted is not the same as zero returned.
@@ -504,6 +504,28 @@ def _knowledge(state: dict, agents: list[dict], incident_service: str | None = N
         ],
         "use_status": "cited_by_agent" if any(d["use_status"] == "cited_by_agent" for d in entries) else "not_verified",
         "items": entries,
+        "early_service_orientation": {
+            "hints": [
+                {"kind": safe(hint.get("kind"), 30),
+                 "value": safe(hint.get("value"), 240),
+                 "source_ref": safe(hint.get("source_ref"), 160),
+                 "verified": False}
+                for hint in arr(
+                    obj(obj(state.get("context")).get("knowledge_orientation")).get("hints")
+                )[:12]
+                if isinstance(hint, dict)
+                and str(hint.get("source_ref") or "") in {
+                    x["source_id"] for x in entries
+                }
+                and hint.get("kind") in {
+                    "runtime", "technology", "framework", "platform",
+                    "dependency", "config_path",
+                }
+            ],
+            "counts_as_live_evidence": False,
+            "execution_authority": False,
+            "requires_live_verification": True,
+        },
         "error_code": safe(retrieval.get("code"), 100),
     }
 

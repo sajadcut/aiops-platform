@@ -22,6 +22,37 @@ references. Filtering never changes active Cognia revisions or deletes
 historical incident evidence. Previously created incident knowledge snapshots
 should be reviewed separately; do not rewrite Audit/Approval data.
 
+## Early service orientation for every incoming alert
+
+Before correlation and specialist routing, `SignalGateway` queries Cognia for
+topology (all alerts) and, when an explicit service identity is available,
+separately searches for that service's architecture, runtime, framework,
+configuration file locations, upstream dependencies and troubleshooting context.
+The two result sets are interleaved, deduplicated by source reference, and
+admitted through the same relevance gate. An unknown-service alert does not
+inherit arbitrary service-owned runbooks. A partial Cognia failure remains
+visible as `partial` and does not prevent normal live-evidence collection.
+
+The E2E context phase rechecks relevance and retains service-scoped ingress
+knowledge when possible instead of replacing it with a new search result.
+**Incident subject scopes are stronger than ingress searches**: unscoped
+ingress documents cannot be reused under a tenant/subject-specific scope.
+
+Explicitly service-owned documents may supply **advisory-only** structural
+hints such as `Runtime: dotnet`, `Dependency: SQLServer`, or
+`Config File: /data/gfpapi/appsettings.json`. Only bounded allowlisted
+hint shapes and source references are projected into the triage LLM prompt.
+The `early_service_orientation` field in the Decision Brief and incident
+investigation ledger shows these hints with `verified=false`. Their paths,
+runtime claims and endpoints can **never** become SSH targets, command
+arguments or verified config files; independent MCP observation is required.
+
+The LLM combines this auxiliary context with live Zabbix/Elastic/Prometheus,
+VM MCP, and other available evidence to route specialists and request registered
+read-only checks. Cognia is not a required-availability dependency for incident
+ingestion, and a successful knowledge hit is not a root-cause, health or
+configuration validation result.
+
 ## Migration of existing knowledge
 
 Curate Cognia documents to include an explicit owner service or validated
