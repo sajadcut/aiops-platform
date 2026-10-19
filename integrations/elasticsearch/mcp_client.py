@@ -133,22 +133,40 @@ class ElasticsearchMCPClient(MCPClient):
 
     @staticmethod
     def _esql_empty_table(payload: Any, depth: int = 0) -> bool:
-        """Differentiate a recognized empty table from an unparseable reply."""
-        if depth > 5 or not isinstance(payload, dict):
+        """Recognize an ES|QL *empty table*, including JSON-text MCP envelopes.
+
+        Do not conflate a metadata-only success response with an empty query.
+        Only explicit rows=[] or values=[] establish a recognized empty table.
+        """
+        if depth > 6:
             return False
-        if (isinstance(payload.get("columns"), list)
-                and ((payload.get("rows") == []) or (payload.get("values") == []))):
-            return True
+        if isinstance(payload, str):
+            candidate = payload.strip()
+            if len(candidate) > 500_000 or not candidate.startswith(("{", "[")):
+                return False
+            try:
+                import json
+                return ElasticsearchMCPClient._esql_empty_table(
+                    json.loads(candidate), depth + 1,
+                )
+            except (ValueError, TypeError):
+                return False
+        if isinstance(payload, list):
+            # A nonempty list of MCP content blocks can all encode empty tables.
+            return bool(payload) and all(
+                ElasticsearchMCPClient._esql_empty_table(item, depth + 1)
+                for item in payload[:20]
+            )
+        if not isinstance(payload, dict):
+            return False
         if payload.get("rows") == [] or payload.get("values") == []:
             return True
-        for key in ("result", "data", "results", "structuredContent"):
-            item = payload.get(key)
-            if isinstance(item, dict) and ElasticsearchMCPClient._esql_empty_table(item, depth + 1):
-                return True
-            if isinstance(item, list) and item and all(
-                    isinstance(value, dict) and
-                    ElasticsearchMCPClient._esql_empty_table(value, depth + 1)
-                    for value in item):
+        for key in ("result", "data", "results", "structuredContent",
+                    "content", "text", "json", "output", "response"):
+            value = payload.get(key)
+            if value is not None and ElasticsearchMCPClient._esql_empty_table(
+                value, depth + 1,
+            ):
                 return True
         return False
 
@@ -167,7 +185,9 @@ class ElasticsearchMCPClient(MCPClient):
         parts = result.get("content")
         if isinstance(parts, list):
             for part in parts[:10]:
-                if isinstance(part, dict) and self._rows_from_payload(part):
+                if isinstance(part, dict) and (
+                    self._rows_from_payload(part) or self._esql_empty_table(part)
+                ):
                     return [part]
         return primary
 
