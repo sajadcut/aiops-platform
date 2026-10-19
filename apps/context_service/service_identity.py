@@ -95,8 +95,6 @@ class ServiceIdentityResolver:
                 and any(str(value).casefold() == reported for value in values))
             for key, values in aliases.items()
         )
-        if not configured:
-            return False
         for item in evidence:
             if not isinstance(item, Mapping) or item.get("source") != "vm_mcp":
                 continue
@@ -111,7 +109,19 @@ class ServiceIdentityResolver:
                          str(raw.get("unit_id")).strip().casefold().removesuffix(".service") == runtime)
                     and str(raw.get("source_service_label") or "").strip().casefold().removesuffix(".service") == reported
                     and str(raw.get("load_state") or "").lower() == "loaded"):
-                return True
+                # A configured label mapping AND this live read, OR a live
+                # systemd Names inventory containing both the original label
+                # and canonical unit, is required. No LLM/RAG/textual claim
+                # can establish a runtime alias by itself.
+                names = raw.get("unit_aliases")
+                observed_names = {
+                    str(name).strip().casefold().removesuffix(".service")
+                    for name in names[:12]
+                    if isinstance(name, str)
+                } if isinstance(names, list) else set()
+                live_alias = reported in observed_names and runtime in observed_names
+                if configured or live_alias:
+                    return True
         return False
 
     @staticmethod
