@@ -565,7 +565,13 @@ class ChatbotService:
                     self._llm, question=request.message, answer=answer,
                     context=recent_operator_context, stage="chatbot_answer_review",
                 )
-                if verdict == "mismatch":
+                if verdict == "mismatch" and not (
+                    len(results) == 1
+                    and results[0]["intent"].tool_name == "vm_telemetry"
+                    and results[0]["intent"].action == "disk_status"
+                ):
+                    # A review model cannot override deterministic, source-backed
+                    # disk values (or replace every numeric mount with a vague note).
                     answer = mismatched_answer_message(
                         request.message, persian=bool(re.search(r"[\u0600-\u06ff]", request.message))
                     ) + (" اطلاعات ساختاریافتهٔ ابزار در جزئیات پاسخ قابل بررسی است."
