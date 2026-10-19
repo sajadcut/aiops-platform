@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 592 | Dashboard JS files scanned: 8 | Symbols indexed: 6718**
+**Python files scanned: 594 | Dashboard JS files scanned: 8 | Symbols indexed: 6741**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -505,14 +505,14 @@
 | `agents/shared/base.py` | `BaseAgent.memory_items.bounded_text` | 468 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent.memory_items |
 | `agents/shared/base.py` | `BaseAgent.memory_items.bounded_joined` | 480 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent.memory_items |
 | `agents/shared/base.py` | `BaseAgent.auxiliary_context` | 628 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.evidence_ids` | 651 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.evidence_coverage` | 660 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.safe_confidence` | 665 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.normalize_list` | 681 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.missing_evidence_for` | 698 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.human_review_required` | 706 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.action_appears_mutating` | 710 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
-| `agents/shared/base.py` | `BaseAgent.analysis_only_actions` | 714 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.evidence_ids` | 677 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.evidence_coverage` | 686 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.safe_confidence` | 691 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.normalize_list` | 707 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.missing_evidence_for` | 724 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.human_review_required` | 732 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.action_appears_mutating` | 736 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
+| `agents/shared/base.py` | `BaseAgent.analysis_only_actions` | 740 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
 | `agents/shared/coordinator.py` | `IncidentCoordinator` | 8 | class | Deterministic coordinator for routing and multi-agent synthesis. | module |
 | `agents/shared/coordinator.py` | `IncidentCoordinator.select_agents` | 33 | method | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | IncidentCoordinator |
 | `agents/shared/coordinator.py` | `IncidentCoordinator.select_agents.add` | 43 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentCoordinator.select_agents |
@@ -1117,6 +1117,10 @@
 | `apps/context_service/evidence_collector.py` | `EvidenceCollector._analyze_config_syntax_without_persisting_grammar` | 231 | async method | Use VM MCP source, call LLM twice and persist only findings. | EvidenceCollector |
 | `apps/context_service/evidence_collector.py` | `EvidenceCollector._vm_evidence` | 282 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
 | `apps/context_service/evidence_collector.py` | `EvidenceCollector._collect` | 314 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
+| `apps/context_service/knowledge_orientation.py` | `service_profile_query` | 25 | function | Ask for stack/config/dependency knowledge, not an LLM-generated command. | module |
+| `apps/context_service/knowledge_orientation.py` | `_hint` | 42 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/context_service/knowledge_orientation.py` | `_config_path` | 47 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/context_service/knowledge_orientation.py` | `build_orientation` | 58 | function | Extract structural hints only from explicitly service-owned documents. | module |
 | `apps/context_service/knowledge_relevance.py` | `_service` | 18 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/context_service/knowledge_relevance.py` | `_metadata` | 22 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/context_service/knowledge_relevance.py` | `_declared_services` | 27 | function | Read explicit ownership only; never guess from free-text mentions. | module |
@@ -1170,8 +1174,8 @@
 | `apps/decision_brief.py` | `tool_observation_summary` | 272 | function | Only bounded, whitelisted scalar facts: never dump journals or tool JSON. | module |
 | `apps/decision_brief.py` | `_mcp` | 355 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/decision_brief.py` | `_knowledge` | 418 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/decision_brief.py` | `_memory` | 511 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/decision_brief.py` | `build_decision_brief` | 536 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `apps/decision_brief.py` | `_memory` | 533 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/decision_brief.py` | `build_decision_brief` | 558 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
 | `apps/decision_brief_history.py` | `archive_decision_brief` | 22 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/decision_brief_history.py` | `list_decision_brief_history` | 62 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/decision_brief_history.py` | `read_decision_brief_snapshot` | 83 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
@@ -1311,7 +1315,7 @@
 | `apps/incident_followup.py` | `persist_and_reassess.emit_status` | 299 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | persist_and_reassess |
 | `apps/incident_investigation_report.py` | `_safe` | 30 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_investigation_report.py` | `build_rows` | 34 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
-| `apps/incident_investigation_report.py` | `explain` | 125 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/incident_investigation_report.py` | `explain` | 155 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_memory_forensics.py` | `obj` | 15 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_memory_forensics.py` | `stamp` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_memory_forensics.py` | `metric` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -1477,37 +1481,37 @@
 | `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.enrich_knowledge` | 327 | async method | Query Cognia again with a verified error, preserving access scope. | DynamicInvestigationPlanner |
 | `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.propose` | 400 | async method | LLM chooses from read-only capabilities, never arbitrary code. | DynamicInvestigationPlanner |
 | `apps/orchestrator/dynamic_investigation.py` | `DynamicInvestigationPlanner.evidence_requests` | 873 | method | Convert validated enum members, never LLM text, to connector requests. | DynamicInvestigationPlanner |
-| `apps/orchestrator/e2e_graph.py` | `E2EState` | 50 | class | کلاس | module |
-| `apps/orchestrator/e2e_graph.py` | `retain_incident_evidence_for_followup` | 81 | function | Bound agent context without losing freshly collected config proof. | module |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator` | 118 | class | کلاس | module |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator.__init__` | 119 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._build_graph` | 142 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._build_graph.observed_node` | 147 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator._build_graph |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._build_graph.observed_node.observed` | 148 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator._build_graph.observed_node |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator.run` | 180 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._audit` | 187 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._knowledge_failure_status` | 198 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._operational_memory_query` | 228 | method | Build a bounded symptom query without copying raw logs or credentials. | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._context_node` | 288 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._triage_node` | 478 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._agent_input` | 519 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._run_specialists` | 527 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._run_specialists.observed_agent` | 532 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator._run_specialists |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._additional_evidence_round` | 601 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._parallel_agents_node` | 642 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._rca_node` | 704 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._live_evidence_ids` | 739 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._evaluator_node` | 762 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._route_after_evaluation` | 780 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._decision_node` | 788 | async method | Evaluate the concrete execution binding, never RCA prose alone. | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._route_after_decision` | 828 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._approval_node` | 841 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._route_after_approval` | 854 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._execution_node` | 861 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._verification_node` | 870 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._memory_node` | 977 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._end_node` | 1067 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
-| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._average_confidence` | 1074 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EState` | 51 | class | کلاس | module |
+| `apps/orchestrator/e2e_graph.py` | `retain_incident_evidence_for_followup` | 82 | function | Bound agent context without losing freshly collected config proof. | module |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator` | 119 | class | کلاس | module |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator.__init__` | 120 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._build_graph` | 143 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._build_graph.observed_node` | 148 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator._build_graph |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._build_graph.observed_node.observed` | 149 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator._build_graph.observed_node |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator.run` | 181 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._audit` | 188 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._knowledge_failure_status` | 199 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._operational_memory_query` | 229 | method | Build a bounded symptom query without copying raw logs or credentials. | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._context_node` | 289 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._triage_node` | 525 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._agent_input` | 566 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._run_specialists` | 574 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._run_specialists.observed_agent` | 579 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator._run_specialists |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._additional_evidence_round` | 648 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._parallel_agents_node` | 689 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._rca_node` | 751 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._live_evidence_ids` | 786 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._evaluator_node` | 809 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._route_after_evaluation` | 827 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._decision_node` | 835 | async method | Evaluate the concrete execution binding, never RCA prose alone. | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._route_after_decision` | 875 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._approval_node` | 888 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._route_after_approval` | 901 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._execution_node` | 908 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._verification_node` | 917 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._memory_node` | 1024 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._end_node` | 1114 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
+| `apps/orchestrator/e2e_graph.py` | `E2EOrchestrator._average_confidence` | 1121 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | E2EOrchestrator |
 | `apps/orchestrator/graph.py` | `WorkflowOrchestrator` | 16 | class | Backward-compatible facade; not a second orchestration implementation. | module |
 | `apps/orchestrator/graph.py` | `WorkflowOrchestrator.__init__` | 19 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | WorkflowOrchestrator |
 | `apps/orchestrator/graph.py` | `WorkflowOrchestrator.run` | 23 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | WorkflowOrchestrator |
@@ -1621,22 +1625,22 @@
 | `apps/security/token_validator.py` | `OIDCTokenValidator.__init__` | 18 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OIDCTokenValidator |
 | `apps/security/token_validator.py` | `OIDCTokenValidator.validate` | 24 | method | شرط/قرارداد را بررسی و نتیجه validation برمی‌گرداند | OIDCTokenValidator |
 | `apps/security/token_validator.py` | `discover_jwks` | 57 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/__init__.py` | `OperationalSignal` | 31 | class | کلاس | module |
-| `apps/signal_gateway/__init__.py` | `OperationalSignal.normalize_source` | 44 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | OperationalSignal |
-| `apps/signal_gateway/__init__.py` | `OperationalSignal.normalize_severity` | 51 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | OperationalSignal |
-| `apps/signal_gateway/__init__.py` | `OperationalSignal.to_evidence` | 56 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalSignal |
-| `apps/signal_gateway/__init__.py` | `SignalGateway` | 85 | class | Source-agnostic, race-safe entry point for operational signals. | module |
-| `apps/signal_gateway/__init__.py` | `SignalGateway._append_trigger_to_checkpoint` | 94 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
-| `apps/signal_gateway/__init__.py` | `SignalGateway._existing_state` | 106 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
-| `apps/signal_gateway/__init__.py` | `SignalGateway._elastic_discovery_window` | 113 | method | Allow a bounded future-clock offset without unbounded historical scans. | SignalGateway |
-| `apps/signal_gateway/__init__.py` | `SignalGateway._runtime_service_candidates` | 140 | method | Only operator-configured aliases may be tested as real systemd units. | SignalGateway |
-| `apps/signal_gateway/__init__.py` | `SignalGateway._verify_elastic_host_candidate` | 180 | async method | Verify one log host with a read-only service_status on an *allowlisted* VM. | SignalGateway |
-| `apps/signal_gateway/__init__.py` | `SignalGateway._knowledge_assisted_asset` | 366 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
-| `apps/signal_gateway/__init__.py` | `SignalGateway.ingest` | 587 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
-| `apps/signal_gateway/__init__.py` | `signal_from_elasticsearch` | 739 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/__init__.py` | `signal_from_prometheus` | 773 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/__init__.py` | `_zabbix_service_from_tags` | 788 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/__init__.py` | `signal_from_zabbix` | 799 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/__init__.py` | `OperationalSignal` | 32 | class | کلاس | module |
+| `apps/signal_gateway/__init__.py` | `OperationalSignal.normalize_source` | 45 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | OperationalSignal |
+| `apps/signal_gateway/__init__.py` | `OperationalSignal.normalize_severity` | 52 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | OperationalSignal |
+| `apps/signal_gateway/__init__.py` | `OperationalSignal.to_evidence` | 57 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalSignal |
+| `apps/signal_gateway/__init__.py` | `SignalGateway` | 86 | class | Source-agnostic, race-safe entry point for operational signals. | module |
+| `apps/signal_gateway/__init__.py` | `SignalGateway._append_trigger_to_checkpoint` | 95 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
+| `apps/signal_gateway/__init__.py` | `SignalGateway._existing_state` | 107 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
+| `apps/signal_gateway/__init__.py` | `SignalGateway._elastic_discovery_window` | 114 | method | Allow a bounded future-clock offset without unbounded historical scans. | SignalGateway |
+| `apps/signal_gateway/__init__.py` | `SignalGateway._runtime_service_candidates` | 141 | method | Only operator-configured aliases may be tested as real systemd units. | SignalGateway |
+| `apps/signal_gateway/__init__.py` | `SignalGateway._verify_elastic_host_candidate` | 181 | async method | Verify one log host with a read-only service_status on an *allowlisted* VM. | SignalGateway |
+| `apps/signal_gateway/__init__.py` | `SignalGateway._knowledge_assisted_asset` | 367 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
+| `apps/signal_gateway/__init__.py` | `SignalGateway.ingest` | 630 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
+| `apps/signal_gateway/__init__.py` | `signal_from_elasticsearch` | 783 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/__init__.py` | `signal_from_prometheus` | 817 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/__init__.py` | `_zabbix_service_from_tags` | 832 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/__init__.py` | `signal_from_zabbix` | 843 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/signal_gateway/correlation.py` | `CorrelationIdentity` | 20 | class | خروجی canonical correlation شامل fingerprint و scope قابل audit. | module |
 | `apps/signal_gateway/correlation.py` | `_token` | 30 | function | مقادیر vendor-specific را به token پایدار و قابل hash تبدیل می‌کند. | module |
 | `apps/signal_gateway/correlation.py` | `signal_family` | 36 | function | نام‌های alert مختلف را محافظه‌کارانه به symptom family مشترک نگاشت می‌کند. | module |
@@ -3679,6 +3683,25 @@
 | `tests/unit/test_cognia_client.py` | `test_cognia_readiness_rejects_non_200_and_does_not_follow_redirects.handler` | 484 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_cognia_readiness_rejects_non_200_and_does_not_follow_redirects |
 | `tests/unit/test_cognia_client.py` | `test_cognia_readiness_timeout_is_not_falsely_reported_as_healthy` | 503 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_cognia_client.py` | `test_cognia_readiness_timeout_is_not_falsely_reported_as_healthy.handler` | 504 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_cognia_readiness_timeout_is_not_falsely_reported_as_healthy |
+| `tests/unit/test_cognia_first_orientation.py` | `test_service_profile_query_is_technology_agnostic_and_unknown_safe` | 37 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_first_orientation.py` | `test_only_owned_relevant_knowledge_can_supply_stack_and_path_hints` | 47 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_first_orientation.py` | `test_bad_paths_credentials_and_instructions_not_promoted` | 64 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_first_orientation.py` | `test_agent_orientation_cannot_bypass_rag_relevance_gate` | 81 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_first_orientation.py` | `test_ingest_queries_topology_and_profile_before_routing` | 104 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_first_orientation.py` | `test_ingest_queries_topology_and_profile_before_routing.search` | 110 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | test_ingest_queries_topology_and_profile_before_routing |
+| `tests/unit/test_cognia_first_orientation.py` | `test_partial_cognia_error_keeps_successful_scoped_profile` | 133 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_first_orientation.py` | `test_partial_cognia_error_keeps_successful_scoped_profile.search` | 137 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | test_partial_cognia_error_keeps_successful_scoped_profile |
+| `tests/unit/test_cognia_first_orientation.py` | `test_context_preserves_ingest_knowledge_for_llm_even_if_new_query_is_empty` | 156 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_first_orientation.py` | `test_context_preserves_ingest_knowledge_for_llm_even_if_new_query_is_empty.Collector` | 160 | class | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | test_context_preserves_ingest_knowledge_for_llm_even_if_new_query_is_empty |
+| `tests/unit/test_cognia_first_orientation.py` | `test_context_preserves_ingest_knowledge_for_llm_even_if_new_query_is_empty.Collector.collect` | 161 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | test_context_preserves_ingest_knowledge_for_llm_even_if_new_query_is_empty.Collector |
+| `tests/unit/test_cognia_first_orientation.py` | `test_context_preserves_ingest_knowledge_for_llm_even_if_new_query_is_empty.search` | 165 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | test_context_preserves_ingest_knowledge_for_llm_even_if_new_query_is_empty |
+| `tests/unit/test_cognia_first_orientation.py` | `test_incident_ledger_labels_cognia_runtime_as_advisory` | 184 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_first_orientation.py` | `test_context_subject_scope_does_not_reuse_unscoped_ingest_docs` | 204 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_first_orientation.py` | `test_context_subject_scope_does_not_reuse_unscoped_ingest_docs.Collector` | 209 | class | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | test_context_subject_scope_does_not_reuse_unscoped_ingest_docs |
+| `tests/unit/test_cognia_first_orientation.py` | `test_context_subject_scope_does_not_reuse_unscoped_ingest_docs.Collector.collect` | 210 | async method | Evidence/داده موردنیاز را از منبع مربوط جمع می‌کند | test_context_subject_scope_does_not_reuse_unscoped_ingest_docs.Collector |
+| `tests/unit/test_cognia_first_orientation.py` | `test_context_subject_scope_does_not_reuse_unscoped_ingest_docs.search` | 213 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | test_context_subject_scope_does_not_reuse_unscoped_ingest_docs |
+| `tests/unit/test_cognia_first_orientation.py` | `test_unknown_service_alert_still_queries_topology_without_wrong_owner` | 240 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_cognia_first_orientation.py` | `test_unknown_service_alert_still_queries_topology_without_wrong_owner.search` | 246 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | test_unknown_service_alert_still_queries_topology_without_wrong_owner |
 | `tests/unit/test_cognia_gfpapi_identity_conflict.py` | `identity_with_cognia_conflict` | 37 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_cognia_gfpapi_identity_conflict.py` | `old_evidence` | 46 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_cognia_gfpapi_identity_conflict.py` | `test_oct_13_repro_keeps_nginx_cognia_disagreement_but_identity_is_verified` | 60 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |

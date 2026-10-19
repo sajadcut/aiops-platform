@@ -3,7 +3,7 @@
 > این فایل فهرست فایل‌به‌فایل repository است. توضیح معماری و flow در `CODEBASE_GUIDE_FA.md` آمده است.
 > این فایل با `scripts/generate_file_index_fa.py` ساخته و در CI کنترل می‌شود.
 
-**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 741**
+**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 743**
 
 | Path | Type | Purpose | Called By | Calls/Depends On | Runtime/Test/Docs | Notes |
 |---|---|---|---|---|---|---|
@@ -131,6 +131,7 @@
 | `apps/context_service/builder.py` | Python | Context: Asset Resolution، Context و Evidence collection | Orchestrator/signal flow | MCP integrations/domain | Runtime | live evidence مرجع عملیات است |
 | `apps/context_service/dependency_signals.py` | Python | Context: Asset Resolution، Context و Evidence collection | Orchestrator/signal flow | MCP integrations/domain | Runtime | live evidence مرجع عملیات است |
 | `apps/context_service/evidence_collector.py` | Python | Context: Asset Resolution، Context و Evidence collection | Orchestrator/signal flow | MCP integrations/domain | Runtime | live evidence مرجع عملیات است |
+| `apps/context_service/knowledge_orientation.py` | Python | Context: Asset Resolution، Context و Evidence collection | Orchestrator/signal flow | MCP integrations/domain | Runtime | live evidence مرجع عملیات است |
 | `apps/context_service/knowledge_relevance.py` | Python | Context: Asset Resolution، Context و Evidence collection | Orchestrator/signal flow | MCP integrations/domain | Runtime | live evidence مرجع عملیات است |
 | `apps/context_service/knowledge_topology.py` | Python | Context: Asset Resolution، Context و Evidence collection | Orchestrator/signal flow | MCP integrations/domain | Runtime | live evidence مرجع عملیات است |
 | `apps/context_service/llm_identity.py` | Python | Context: Asset Resolution، Context و Evidence collection | Orchestrator/signal flow | MCP integrations/domain | Runtime | live evidence مرجع عملیات است |
@@ -534,6 +535,7 @@
 | `tests/unit/test_check_elastic_integration.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_check_elastic_mcp.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_cognia_client.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
+| `tests/unit/test_cognia_first_orientation.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_cognia_gfpapi_identity_conflict.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_cognia_incident_relevance.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_cognia_only_rag_architecture.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
