@@ -75,6 +75,34 @@ def test_redis_alarm_is_primary_even_when_unrelated_systemd_is_active():
     assert "Redis" in str(projection(brief)["received_alert_focus"])
 
 
+def test_stale_vm_agent_cannot_disguise_guessed_redis_port_as_verified():
+    message = "GFP API Redis errors reached 10 events in the last 2 minutes"
+    evidence = [
+        _record("trigger", "zabbix", {
+            "signal_type": message, "signal_summary": message,
+            "name": message, "service": "gfpapi",
+        }),
+        _record("old-agent", "vm_mcp", {
+            "mcp_server": "vm_mcp",
+            "tool_name": "dependency_investigation",
+            "success": True, "service": "gfpapi", "status": "checks_completed",
+            "config_files_read": 4, "config_files_checked": 4,
+            "config_files_parse_failed": 0, "checks_executed": 1,
+            "dependencies": [{
+                "kind": "redis", "host": "10.248.34.221", "port": 6379,
+                "port_inferred": True, "probe_status": "tcp_reachable",
+                "tcp_reachable": True, "config_verified": True,
+            }],
+        }),
+    ]
+    report = _brief(evidence, message)["alert_focused_report"]
+    assert report["dependency_extraction_diagnostics"][0]["agent_contract_status"] == "upgrade_required"
+    assert report["dependency_extraction_diagnostics"][0]["binding_status"] == ""
+    assert "پورت برنامه تأیید نشده" in report["related_checks"][0]["result"]
+    assert report["related_checks"][0]["status"] == "port_unverified"
+    assert report["root_cause_confirmed"] is False
+
+
 def test_no_port_discovery_is_explained_even_without_any_tcp_probe():
     message = "GFP API Redis errors reached 10 events in the last 2 minutes"
     evidence = [
