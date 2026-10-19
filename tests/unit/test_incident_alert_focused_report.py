@@ -171,7 +171,11 @@ def test_custom_dependency_is_supported_by_keyword_grounded_check():
         }),
         _record("diagnostic", "vm_mcp", {
             "mcp_server": "vm_mcp", "tool_name": "dependency_investigation",
-            "success": True, "detail": "Hazelcast cluster unreachable",
+            "success": True, "checks_executed": 1,
+            "dependencies": [{
+                "kind": "hazelcast", "host": "hazelcast.internal", "port": 5701,
+                "probe_status": "tcp_unreachable", "tcp_reachable": False,
+            }],
         }),
     ]
     report = _brief(evidence, message)["alert_focused_report"]
