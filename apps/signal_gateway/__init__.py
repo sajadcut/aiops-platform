@@ -314,6 +314,14 @@ class SignalGateway:
                 unit_id = str(result.get("unit_id") or "").strip().casefold().removesuffix(".service")
                 if unit_id and unit_id != runtime_service.casefold().removesuffix(".service"):
                     candidate["verification_status"] = "vm_canonical_unit_mismatch"
+                    # Expose ONLY unit names to the operator for a safe,
+                    # explicit mapping correction; never bypass verification.
+                    if (re.fullmatch(r"[a-z0-9@_.:-]{2,128}", unit_id)
+                            and re.fullmatch(r"[a-z0-9@_.:-]{2,128}",
+                                             runtime_service.casefold().removesuffix(".service"))):
+                        candidate["observed_canonical_unit"] = unit_id
+                        candidate["requested_runtime_unit"] = (
+                            runtime_service.casefold().removesuffix(".service"))
                     continue
                 if (result.get("success") is not True
                         or returned_service != runtime_service.casefold().removesuffix(".service")

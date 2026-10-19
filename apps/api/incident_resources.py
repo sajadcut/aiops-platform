@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 
 from fastapi import Request
 from fastapi.responses import StreamingResponse
@@ -106,6 +107,18 @@ async def get_host_discovery(incident_id: UUID):
             "record_count": max(0, min(int(item.get("record_count") or 0), 40)),
             "status": "candidate",
             "verification_status": str(item.get("verification_status") or "unverified")[:60],
+            "requested_runtime_unit": (
+                str(item.get("requested_runtime_unit"))[:128]
+                if item.get("verification_status") == "vm_canonical_unit_mismatch"
+                and isinstance(item.get("requested_runtime_unit"), str)
+                and re.fullmatch(r"[a-z0-9@_.:-]{2,128}", item["requested_runtime_unit"])
+                else None),
+            "observed_canonical_unit": (
+                str(item.get("observed_canonical_unit"))[:128]
+                if item.get("verification_status") == "vm_canonical_unit_mismatch"
+                and isinstance(item.get("observed_canonical_unit"), str)
+                and re.fullmatch(r"[a-z0-9@_.:-]{2,128}", item["observed_canonical_unit"])
+                else None),
             "verification_method": (str(item.get("verification_method") or "")[:16]
                                     if item.get("verification_method") in {"hostname", "ip"} else None),
             "control_plane_allowlist_count": max(0, min(10000, int(item.get("control_plane_allowlist_count") or 0))),
@@ -140,6 +153,8 @@ async def get_host_discovery(incident_id: UUID):
             failed_stage = "vm_mcp_configuration"
         elif "vm_read_failed" in failures:
             failed_stage = "vm_read_connection"
+        elif "vm_canonical_unit_mismatch" in failures:
+            failed_stage = "vm_canonical_unit_mismatch"
         elif "vm_service_identity_not_confirmed" in failures:
             failed_stage = "vm_service_identity"
         elif "vm_result_malformed" in failures:
