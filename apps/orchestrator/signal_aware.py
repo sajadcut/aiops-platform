@@ -108,8 +108,21 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
                     "error_type": type(exc).__name__,
                 }
 
+        # Ingest may already have completed read-only dependency checks using
+        # the independently verified Elastic -> VM runtime binding. The generic
+        # collector does not inherit arbitrary log-host VM credentials; retain
+        # the exact source-bound MCP rows instead of discarding them here.
+        verified_dependency = [
+            item for item in initial_context.get("verified_dependency_evidence", [])
+            if isinstance(item, dict) and item.get("source") == "vm_mcp"
+            and isinstance(item.get("raw_data"), dict)
+            and item["raw_data"].get("diagnostic") == "dependency_investigation"
+            and item["raw_data"].get("success") is True
+            and item["raw_data"].get("binding") == "independent_vm_mcp_service_status"
+        ]
+
         merged: Dict[str, Dict[str, Any]] = {}
-        for item in trigger_evidence + collected:
+        for item in trigger_evidence + verified_dependency + collected:
             if not isinstance(item, dict):
                 continue
             key = str(
