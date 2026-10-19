@@ -400,6 +400,20 @@ class DynamicInvestigationPlanner:
         """LLM chooses from read-only capabilities, never arbitrary code."""
         context = state.get("context") or {}
         evidence = [e for e in context.get("evidence", []) if isinstance(e, dict)]
+        # Dependency problems may exist while the application's unit is active.
+        redis_signalled = any(
+            "redis" in str(row.get("raw_data") or {})[:1400].lower()
+            for row in evidence if isinstance(row, dict)
+            and str(row.get("source") or "").lower() in {
+                "zabbix", "prometheus", "elasticsearch", "vm_mcp"
+            }
+        )
+        redis_checked = any(
+            isinstance(row.get("raw_data"), dict) and
+            row["raw_data"].get("diagnostic") == "redis_dependency_check"
+            for row in evidence if isinstance(row, dict)
+        )
+        redis_needs_check = redis_signalled and not redis_checked
         failure = cls.confirmed_config_failure(evidence)
         review = cls.config_review_evidence(evidence, failure)
         runtime = cls.runtime_evidence(evidence)
