@@ -788,7 +788,7 @@ class DynamicInvestigationPlanner:
                 "reason": "Evidence gap was identified by the specialists; it is not proof of a fault.",
                 "evidence_refs": [],
             })
-        if not missing and not failure and unit.get("runtime") != "dotnet":
+        if not missing and not failure and unit.get("runtime") != "dotnet" and not redis_needs_check:
             return result
         safe_knowledge, _ = filter_service_knowledge(
             state.get("knowledge_results") or [],
@@ -800,6 +800,8 @@ class DynamicInvestigationPlanner:
             "confirmed_config_failure": failure,
             "runtime_discovery": result.get("runtime_discovery"),
             "missing_evidence": missing,
+            "redis_alert_recorded": redis_signalled,
+            "redis_dependency_not_checked": redis_needs_check,
             "available_read_only_checks": sorted(READ_ONLY_CHECKS),
             "knowledge": [
                 {
@@ -852,7 +854,9 @@ class DynamicInvestigationPlanner:
                 for action in checks[:4]:
                     if isinstance(action, str) and action in READ_ONLY_CHECKS and action not in unique:
                         unique.append(action)
-                result["checks"] = unique[:2]
+                result["checks"] = (["redis_dependency_check"] + [
+                    x for x in unique if x != "redis_dependency_check"
+                ])[:2] if redis_needs_check else unique[:2]
                 available_refs = {
                     str(row["source_ref"]) for row in context_data["knowledge"]
                 }
