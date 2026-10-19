@@ -418,6 +418,10 @@ def _mcp(rows: Iterable[dict], now: datetime) -> tuple[list[dict], list[dict]]:
             "freshness": age,
             "phase": safe(raw.get("phase") or raw.get("collection_phase"), 70) or "unknown",
             "finding": tool_observation_summary(raw),
+            # Provenance labels only; they do not establish identity without
+            # independent verification but prevent cross-service attribution.
+            "observed_service": safe(raw.get("service") or inner.get("service"), 120),
+            "observed_target": safe(raw.get("target") or inner.get("target"), 160),
         }
         # Preserve bounded, redacted probe *facts* for the operator. A prose
         # finding is truncated and cannot serve as a complete test report.
@@ -1099,6 +1103,12 @@ def build_decision_brief(
         }),
         "checkpoint_version": checkpoint.get("version"),
     }
+    # An alert-scoped interpretation is mandatory, even with no LLM or
+    # zero matching MCP checks. It cannot change the approval policy.
+    from apps.incident_alert_focused_report import build_alert_focused_report
+    recorded["alert_focused_report"] = build_alert_focused_report(
+        incident=incident, evidence=evidence, brief=recorded,
+    )
     from apps.incident_remediation_opportunities import build_remediation_opportunities
     recorded["remediation_opportunities"] = build_remediation_opportunities(
         incident=incident, evidence=evidence, report=recorded,
