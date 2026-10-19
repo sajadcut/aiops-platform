@@ -12,9 +12,7 @@ import json
 import re
 from typing import Any
 
-from domain.contracts.config import settings
 from integrations.vm.dependency_discovery import KINDS, discover, safe_config_key, safe_host, safe_port
-from integrations.vm.full_config_llm_repair import _trusted_gateway
 
 MAX_HOSTS = 16
 MAX_PORTS = 16
@@ -130,7 +128,19 @@ def _same_dependency(host_row: tuple, port_row: tuple, ports: list[dict]) -> boo
     return len(scoped) == 1
 
 
-async def resolve_llm_bindings(config: object, *, adapter: Any = None) -> dict:
+def safe_candidate_fields(config: object) -> dict:
+    """Non-secret, bounded structural fields for AIOps central LLM only."""
+    hosts, ports, _ = _projection(config)
+    return {
+        "host_fields": hosts,
+        "port_fields": ports,
+        "inline_endpoint_fields": _inline_candidates(config),
+    }
+
+
+async def resolve_llm_bindings(
+    config: object, *, adapter: Any = None, selection: dict | None = None,
+) -> dict:
     hosts, ports, values = _projection(config)
     inline = _inline_candidates(config)
     base = {"status": "not_requested", "endpoints": [],
@@ -139,14 +149,11 @@ async def resolve_llm_bindings(config: object, *, adapter: Any = None) -> dict:
             "model_received_raw_config": False, "llm_can_authorize_probe": False}
     if (not hosts or not ports) and not inline:
         return {**base, "status": "no_safe_host_port_candidates"}
-    if adapter is None:
-        if (not settings.LLM_BASE_URL or not settings.LLM_MODEL or not _trusted_gateway()):
-            return {**base, "status": "trusted_llm_not_configured"}
-        try:
-            from integrations.llm.openai_compatible import configured_llm_adapter
-            adapter = configured_llm_adapter()
-        except Exception:
-            return {**base, "status": "llm_binding_unavailable"}
+    # The on-target VM worker NEVER calls an LLM. An authenticated AIOps API
+    # process performs reasoning on the bounded projection and sends back
+    # existing field IDs; these are independently rechecked below.
+    if selection is None and adapter is None:
+        return {**base, "status": "central_llm_required"}
 
     message = {
         "host_fields": hosts, "port_fields": ports,
@@ -166,17 +173,20 @@ async def resolve_llm_bindings(config: object, *, adapter: Any = None) -> dict:
         "Select only listed IDs."
     )
     try:
-        response = await asyncio.wait_for(
-            adapter.generate_with_messages(
-                [{"role": "system", "content": instruction},
-                 {"role": "user", "content": json.dumps(message, ensure_ascii=False)}],
-                stage="dependency_config_field_binding",
-                temperature=0.0, max_tokens=260,
-            ), timeout=7.0,
-        )
-        if str(getattr(response, "finish_reason", "") or "").lower() in {"length", "max_tokens"}:
-            return {**base, "status": "llm_response_incomplete"}
-        parsed = json.loads(str(getattr(response, "content", "") or "").strip())
+        if selection is not None:
+            parsed = selection
+        else:
+            response = await asyncio.wait_for(
+                adapter.generate_with_messages(
+                    [{"role": "system", "content": instruction},
+                     {"role": "user", "content": json.dumps(message, ensure_ascii=False)}],
+                    stage="dependency_config_field_binding",
+                    temperature=0.0, max_tokens=260,
+                ), timeout=7.0,
+            )
+            if str(getattr(response, "finish_reason", "") or "").lower() in {"length", "max_tokens"}:
+                return {**base, "status": "llm_response_incomplete"}
+            parsed = json.loads(str(getattr(response, "content", "") or "").strip())
         if (not isinstance(parsed, dict)
                 or not isinstance(parsed.get("pairs", []), list)
                 or not isinstance(parsed.get("endpoint_ids", []), list)):
