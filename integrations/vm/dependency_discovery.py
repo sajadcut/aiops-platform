@@ -24,6 +24,10 @@ KINDS = {
     "kafka": ("kafka", 9092), "bootstrapservers": ("kafka", 9092),
     "elasticsearch": ("elasticsearch", 9200), "opensearch": ("elasticsearch", 9200),
     "https": ("https", 443), "http": ("http", 80),
+    "memcached": ("memcached", 11211), "cassandra": ("cassandra", 9042),
+    "zookeeper": ("zookeeper", 2181), "nats": ("nats", 4222),
+    "mqtt": ("mqtt", 1883), "neo4j": ("neo4j", 7687),
+    "etcd": ("etcd", 2379), "consul": ("consul", 8500),
 }
 SCHEMES = {
     "redis": "redis", "rediss": "redis", "postgres": "postgresql",
@@ -31,6 +35,8 @@ SCHEMES = {
     "mongodb": "mongodb", "mongodb+srv": "mongodb",
     "amqp": "amqp", "amqps": "amqp", "tcp": "activemq",
     "ssl": "activemq", "http": "http", "https": "https",
+    "nats": "nats", "mqtt": "mqtt", "bolt": "neo4j",
+    "cassandra": "cassandra",
 }
 ENDPOINT_FIELDS = {"host", "hostname", "server", "endpoint", "endpoints",
                    "address", "nodes", "url", "uri", "baseurl", "brokerurl",
@@ -201,16 +207,18 @@ def discover(config: object, limit: int = MAX_ENDPOINTS) -> list[dict]:
                         next_hint = "http"
                     elif item.startswith("jdbc:"):
                         next_hint = "database"
+                    elif "://" in item and item.split("://", 1)[0].lower() in SCHEMES:
+                        next_hint = "custom_tcp"
                 if next_hint is None and name in {"datasource", "jdbcsource"}:
                     next_hint = "database"
                 if next_hint is None and name in {"connectionstring", "connectionstrings"}:
                     next_hint = "database"
                 if isinstance(item, dict):
-                    if next_hint not in (None, "database"):
+                    if next_hint != "database":
                         host = item.get("Host", item.get("host", item.get("hostname")))
                         port = item.get("Port", item.get("port"))
                         if host and port:
-                            put(next_hint, host, port)
+                            put(next_hint or "custom_tcp", host, port)
                             # The same host key must not produce a spurious
                             # additional probe on the default vendor port.
                             reduced = {k: v for k, v in item.items()
