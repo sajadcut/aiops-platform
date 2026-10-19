@@ -29,6 +29,10 @@ KINDS = {
     "zookeeper": ("zookeeper", 2181), "nats": ("nats", 4222),
     "mqtt": ("mqtt", 1883), "neo4j": ("neo4j", 7687),
     "etcd": ("etcd", 2379), "consul": ("consul", 8500),
+    # Technology-neutral database config; never guess the server protocol.
+    "datasource": ("database_tcp", None), "r2dbc": ("database_tcp", None),
+    "jdbc": ("database_tcp", None), "dbconnection": ("database_tcp", None),
+    "database": ("database_tcp", None),
 }
 SCHEMES = {
     "redis": "redis", "rediss": "redis", "postgres": "postgresql",
@@ -45,7 +49,7 @@ SCHEMES = {
 ENDPOINT_FIELDS = {"host", "hostname", "server", "endpoint", "endpoints",
                    "address", "nodes", "url", "uri", "baseurl", "brokerurl",
                    "connection", "connectionstring", "configuration",
-                   "bootstrapservers", "servers", "brokers", "primary", "secondary",
+                   "bootstrapservers", "contactpoints", "seednodes", "servers", "brokers", "primary", "secondary",
                    "master", "replica", "connectionstring"}
 
 
@@ -168,15 +172,43 @@ def discover(config: object, limit: int = MAX_ENDPOINTS) -> list[dict]:
             output.append(record)
 
     def parse(value, hint, source_key=None, explicit_port=None):
-        if not isinstance(value, str) or len(value) > 1900 or (
-            "$" in value or "%" in value
-        ):
+        if not isinstance(value, str) or len(value) > 1900:
             return
+        # Reject unresolved placeholders in the destination itself below.
+        # Credential punctuation is allowed; no credential value is returned.
         value = value.strip().strip('"').strip("'")
         # StackExchange.Redis option ssl=true is a hint, not proof of TLS.
         redis_tls = bool(re.search(r"(?:^|,)\s*ssl\s*=\s*true(?:,|$)", value, re.I))
         if value.lower().startswith("jdbc:"):
             value = value[5:]
+        # ActiveMQ/OpenWire supports failover:(tcp://a:61616,tcp://b:61617).
+        # A single urlsplit() on the outer failover scheme loses all brokers.
+        if value.lower().startswith("failover:("):
+            inner, sep, _ = value[len("failover:("):].partition(")")
+            if not sep:
+                return
+            for target in inner.split(",")[:8]:
+                parse(target.strip(), hint or "activemq", source_key)
+            return
+        # MongoDB replica sets use comma-separated hosts in one URI.
+        # Extract authority only, never the username, password or database.
+        if value.lower().startswith(("mongodb://", "mongodb+srv://")):
+            scheme, tail = value.split("://", 1)
+            authority = tail.split("/", 1)[0].split("?", 1)[0].rsplit("@", 1)[-1]
+            for peer in authority.split(",")[:8]:
+                peer = peer.strip()
+                try:
+                    parsed_peer = urlsplit("mongodb://" + peer)
+                    explicit = parsed_peer.port
+                    if scheme.lower() == "mongodb+srv":
+                        # SRV records are DNS-discovered, not configured TCP
+                        # ports. No default port may be verified by TCP here.
+                        continue
+                    put("mongodb", parsed_peer.hostname, explicit or 27017,
+                        inferred=explicit is None, source_key=source_key)
+                except ValueError:
+                    continue
+            return
         # Oracle JDBC Thin has a vendor-specific prefix rather than a URI.
         if value.lower().startswith("oracle:thin:@//"):
             value = "oracle://" + value[len("oracle:thin:@//"):]
@@ -194,8 +226,11 @@ def discover(config: object, limit: int = MAX_ENDPOINTS) -> list[dict]:
                     "custom_tcp" if ("port" in parts or port) else "database")
             explicit = safe_port(parts.get("port") or port)
             default = next((p for k, p in KINDS.values() if k == kind), None)
-            put(kind, server, explicit or default, inferred=explicit is None,
-                source_key=source_key)
+            # Server/Port can be separate connection-string properties.
+            # A missing explicit value remains *inferred*, never tested.
+            if explicit is not None or default is not None:
+                put(kind, server, explicit if explicit is not None else default,
+                    inferred=explicit is None, source_key=source_key)
             return
         if "://" in value:
             try:
@@ -254,6 +289,8 @@ def discover(config: object, limit: int = MAX_ENDPOINTS) -> list[dict]:
                 source_key = safe_config_key(source_path)
                 next_hint = next((kind for part, (kind, _) in KINDS.items()
                                   if part in name), hint)
+                if name in {"db", "dbserver", "dbsettings", "dbconfig"}:
+                    next_hint = "database_tcp"
                 if next_hint is None and name in {
                     "baseurl", "apiurl", "serviceurl", "webhookurl", "httpurl"
                 }:
@@ -299,7 +336,7 @@ def discover(config: object, limit: int = MAX_ENDPOINTS) -> list[dict]:
                 ):
                     parse(item, next_hint or "database", source_key, explicit_port)
         elif isinstance(node, str) and hint:
-            parse(node, hint, safe_config_key(keypath))
+            parse(node, hint, safe_config_key(keypath), inherited_port)
 
     walk(config)
     return output

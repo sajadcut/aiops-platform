@@ -1834,6 +1834,8 @@
         txt(f.status||'unknown')+
         ' · Host='+txt(String(f.host_fields??'?'))+
         ' · Port='+txt(String(f.port_fields??'?'))+
+        ' · '+esc(fa?'مقاصد صریح در URL/Connection String: ':'Literal URI/DSN endpoints: ')+
+        txt(String(f.inline_endpoint_fields??'?'))+
         ' · matched='+txt(String(f.verified_pairs??'?'))+'</li>');
       return [compatibility+'<p>'+txt(head)+'</p>'+(rows.length?list(rows):
         '<p>'+esc(fa?'نتیجهٔ تطبیق فیلدهای فایل ثبت نشده است.':
