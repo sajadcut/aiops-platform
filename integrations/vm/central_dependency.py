@@ -69,9 +69,19 @@ async def investigate_from_aiops(
     A missing provider is not an error requiring on-host LLM configuration.
     Deterministic, explicit connection strings can still be probed safely.
     """
-    initial = await client.dependency_investigation(
-        target, service, mode="discover", priority_family=priority_family,
-    )
+    try:
+        initial = await client.dependency_investigation(
+            target, service, mode="discover", priority_family=priority_family,
+        )
+    except TypeError:
+        # Backward-compatible local adapter with the old Python signature.
+        # The result remains explicitly unverified by a central LLM.
+        # A production VM agent with the new method but an old MCP tool
+        # contract does NOT take this branch; it must be upgraded.
+        old = await client.dependency_investigation(target, service)
+        if isinstance(old, dict):
+            old["llm_field_binding_status"] = "central_llm_unavailable"
+        return old
     if not isinstance(initial, dict) or initial.get("success") is not True:
         return initial
     candidates = initial.get("binding_candidates")
