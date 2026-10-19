@@ -404,7 +404,7 @@ class SignalGateway:
         responses = await asyncio.gather(*(
             rag.search(phrase, limit=limit) for _, phrase in lookup_queries
         ), return_exceptions=True)
-        raw_results: list[dict] = []
+        query_groups: list[list[dict]] = []
         query_statuses = []
         failure = None
         for (purpose, _phrase), response in zip(lookup_queries, responses):
@@ -419,7 +419,16 @@ class SignalGateway:
                 continue
             query_statuses.append({"purpose": purpose, "status": "queried",
                                    "returned_count": len(response)})
-            raw_results.extend(row for row in response[:limit] if isinstance(row, dict))
+            query_groups.append([
+                row for row in response[:limit] if isinstance(row, dict)
+            ])
+        # Interleave topology and stack results to prevent the first search
+        # from consuming the entire RAG budget and starving service profiles.
+        raw_results = []
+        for offset in range(limit):
+            for group in query_groups:
+                if offset < len(group):
+                    raw_results.append(group[offset])
         # Deduplicate by document reference BEFORE applying the same service
         # ownership gate. Do not count the same hit twice.
         distinct: dict[str, dict] = {}
