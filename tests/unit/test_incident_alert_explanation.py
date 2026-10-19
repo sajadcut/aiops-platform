@@ -28,6 +28,7 @@ def _brief():
                 "evidence_ref": "ev-redis", "evidence_refs": ["ev-redis"],
                 "endpoints": [{
                     "kind": "redis", "host": "10.248.34.221", "port": 6379,
+                    "port_inferred": False,
                     "tcp_reachable": True, "protocol_status": "client_not_installed",
                     "protocol_health_verified": False,
                     "config_file": "/data/gfp/gfpapi/appsettings.json",
