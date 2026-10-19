@@ -23,7 +23,7 @@ KINDS = {
     "artemis": ("activemq", 61616), "amqp": ("amqp", 5672),
     "kafka": ("kafka", 9092), "bootstrapservers": ("kafka", 9092),
     "elasticsearch": ("elasticsearch", 9200), "opensearch": ("elasticsearch", 9200),
-    "http": ("http", 80), "https": ("https", 443),
+    "https": ("https", 443), "http": ("http", 80),
 }
 SCHEMES = {
     "redis": "redis", "rediss": "redis", "postgres": "postgresql",
@@ -72,7 +72,16 @@ def load_config(text: str, filename: str):
             if not sep:
                 key, sep, value = line.partition(":")
             if sep and len(key) <= 160 and len(value) <= 1800:
-                result[key.strip()] = value.strip()
+                names = [part.strip() for part in key.split(".") if part.strip()]
+                if not names or len(names) > 10:
+                    continue
+                current = result
+                for part in names[:-1]:
+                    current = current.setdefault(part, {})
+                    if not isinstance(current, dict):
+                        break
+                if isinstance(current, dict):
+                    current[names[-1]] = value.strip()
         return result
     raise ValueError("unsupported_dependency_config")
 
@@ -153,7 +162,9 @@ def discover(config: object, limit: int = MAX_ENDPOINTS) -> list[dict]:
                     "baseurl", "apiurl", "serviceurl", "webhookurl", "httpurl"
                 }:
                     next_hint = "http"
-                if next_hint is None and name in {"connectionstrings"}:
+                if next_hint is None and name in {"datasource", "jdbcsource"}:
+                    next_hint = "database"
+                if next_hint is None and name in {"connectionstring", "connectionstrings"}:
                     next_hint = "database"
                 if isinstance(item, dict):
                     if next_hint not in (None, "database"):
@@ -161,17 +172,25 @@ def discover(config: object, limit: int = MAX_ENDPOINTS) -> list[dict]:
                         port = item.get("Port", item.get("port"))
                         if host and port:
                             put(next_hint, host, port)
+                            # The same host key must not produce a spurious
+                            # additional probe on the default vendor port.
+                            reduced = {k: v for k, v in item.items()
+                                       if k.lower() not in {"host", "hostname"}}
+                            walk(reduced, next_hint, depth + 1)
+                            continue
                     walk(item, next_hint, depth + 1)
                 elif isinstance(item, list):
                     for child in item[:8]:
                         walk(child, next_hint, depth + 1)
                 elif isinstance(item, str) and (
-                    next_hint and (
-                        next_hint != hint or name in ENDPOINT_FIELDS or
-                        name.startswith(("spring", "quarkus", "micronaut"))
-                    )
+                    (next_hint and (next_hint != hint or name in ENDPOINT_FIELDS))
+                    or (hint == "database" and (
+                        "://" in item or item.lower().startswith(
+                            ("server=", "host=", "data source=")
+                        )
+                    ))
                 ):
-                    parse(item, next_hint)
+                    parse(item, next_hint or "database")
         elif isinstance(node, str) and hint:
             parse(node, hint)
 
