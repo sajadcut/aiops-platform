@@ -177,3 +177,63 @@ async def test_signal_aware_merges_ingress_dependency_into_specialist_evidence(m
     ]
     assert len(dependency) == 1
     assert dependency[0]["raw_data"]["dependencies"][0]["kind"] == "redis"
+
+
+@pytest.mark.asyncio
+async def test_duplicate_redis_alert_persists_fresh_probe_without_restarting_workflow(monkeypatch):
+    import apps.signal_gateway as gateway
+    from unittest.mock import AsyncMock
+
+    sig = signal()
+    evidence = {
+        "type": "telemetry", "source": "vm_mcp",
+        "reference": "verified-dependency:elasticsearch:redis-incident-111",
+        "raw_data": {
+            "diagnostic": "dependency_investigation", "success": True,
+            "binding": "independent_vm_mcp_service_status",
+            "service": SERVICE, "target": TARGET,
+            "dependencies": [{"kind": "redis", "port": 6379,
+                              "tcp_reachable": False}],
+        },
+    }
+    class Repository:
+        def __init__(self, session): pass
+        async def find_incident_by_evidence_reference(self, **kw):
+            assert kw == {"source": "elasticsearch", "reference": sig.source_id}
+            return "existing-incident"
+    class Checkpoints:
+        saved = []
+        def __init__(self, session): pass
+        async def load(self, incident_id):
+            return {"status": "completed", "state": {
+                "incident_id": incident_id,
+                "context": {"evidence": [sig.to_evidence()]},
+                "live_evidence": {"evidence": []},
+            }}
+        async def save(self, incident_id, state, status="paused"):
+            Checkpoints.saved.append((incident_id, state, status))
+    async def discover(sig, trigger):
+        return {
+            "asset_context": {"service": "gfpapi"},
+            "service_identity": {"service": "gfpapi"},
+            "dependency_evidence": [evidence],
+            "dependency_followup": {"status": "checks_completed"},
+            "host_discovery": HOST_DISCOVERY,
+            "verified_runtime_mapping": None,
+        }
+    monkeypatch.setattr(gateway, "IncidentRepository", Repository)
+    monkeypatch.setattr(gateway, "WorkflowCheckpointStore", Checkpoints)
+    monkeypatch.setattr(gateway.SignalGateway, "_knowledge_assisted_asset", staticmethod(discover))
+    monkeypatch.setattr(
+        gateway.LearningDurableWorkflowRuntime, "start",
+        AsyncMock(side_effect=AssertionError("Never start a second workflow")),
+    )
+    result = await gateway.SignalGateway.ingest(object(), sig)
+    assert result["deduplicated"] is True
+    assert len(Checkpoints.saved) == 1
+    incident_id, saved, status = Checkpoints.saved[0]
+    assert incident_id == "existing-incident"
+    assert status == "completed"
+    assert saved["context"]["verified_dependency_evidence"] == [evidence]
+    assert saved["live_evidence"]["evidence"] == [evidence]
+    assert saved["context"]["evidence"][-1] == evidence
