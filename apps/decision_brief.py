@@ -446,6 +446,8 @@ def _mcp(rows: Iterable[dict], now: datetime) -> tuple[list[dict], list[dict]]:
                                       if type(dep.get("port_inferred")) is bool else None),
                     "config_file": safe(dep.get("config_file"), 180),
                     "config_key": safe(dep.get("config_key"), 120),
+                    "config_port_key": safe(dep.get("config_port_key"), 120),
+                    "endpoint_source": safe(dep.get("endpoint_source"), 80),
                     "probe_scope": safe(dep.get("probe_scope"), 50),
                     "probe_status": safe(dep.get("probe_status"), 50),
                     "protocol_status": safe(dep.get("protocol_status"), 60),
