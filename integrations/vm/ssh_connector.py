@@ -1100,7 +1100,7 @@ class SSHVMConnector:
         # If systemd has no explicit config flags, inspect ONLY the
         # unit-owned working directory, never a path suggested by an LLM.
         # Inventory returns filenames, not file contents or environment.
-        if not any(item["verified_exists"] for item in base["files"]):
+        if len(base["files"]) < 12:
             from integrations.vm.runtime_discovery import safe_absolute_path, _candidate_path
             working = safe_absolute_path(unit.get("working_directory"))
             if (working and len(working) <= 210
@@ -1153,6 +1153,10 @@ class SSHVMConnector:
             item["verified_exists"] for item in base["files"]) else
             "candidates_not_verified" if base["files"] else "no_systemd_config_candidates")
         return base
+
+    async def dependency_investigation(self, target: str, service: str) -> Dict[str, Any]:
+        from integrations.vm.dependency_investigation import investigate
+        return await investigate(self, target, service)
 
     async def redis_dependency_check(self, target: str, service: str) -> Dict[str, Any]:
         """Read-only Redis endpoint verification from a trusted systemd appsettings file."""

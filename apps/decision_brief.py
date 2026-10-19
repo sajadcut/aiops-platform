@@ -298,6 +298,17 @@ def tool_observation_summary(raw: dict) -> str | None:
             location = (f" line={line} column={column}" if line is not None else "")
             files.append(f"{name}: {status}{location}" + (f" ({code})" if code else ""))
         return safe("; ".join(files), 380) if files else "No .NET config JSON syntax results"
+    if diagnostic == "dependency_investigation":
+        observed = []
+        for row in arr(raw.get("dependencies"))[:6]:
+            if not isinstance(row, dict):
+                continue
+            observed.append(f"{safe(row.get('kind'), 30)}:{safe(row.get('host'), 100)}:"
+                            f"{row.get('port')}={safe(row.get('probe_status'), 35)}"
+                            + (f"(HTTP {row.get('http_status')})" if type(row.get("http_status")) is int else ""))
+        return safe(f"config_files_checked={raw.get('config_files_checked', 0)}; "
+                    f"checks_executed={raw.get('checks_executed', 0)}; "
+                    + ("; ".join(observed) if observed else "no_verified_dependency"), 380)
     if diagnostic == "redis_dependency_check":
         endpoints = [
             f"{safe(x.get('host'), 100)}:{x.get('port')}="

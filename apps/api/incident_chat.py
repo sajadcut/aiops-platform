@@ -975,6 +975,11 @@ async def incident_chat_message(
                         {"result": observation},
                         persian=bool(re.search(r"[\u0600-\u06ff]", payload.message)),
                     ) or "بررسی چندمرحله‌ای قابل تفسیر نبود؛ شواهد کافی نیست."
+                if intent == "dependency_investigation":
+                    from apps.incident_copilot import dependency_investigation_answer
+                    answer = dependency_investigation_answer(
+                        observation, persian=bool(re.search(r"[\u0600-\u06ff]", payload.message)),
+                    )
                 if intent == "redis_dependency_check":
                     from apps.incident_copilot import redis_dependency_answer
                     answer = redis_dependency_answer(

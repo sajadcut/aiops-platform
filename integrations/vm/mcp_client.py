@@ -24,7 +24,7 @@ class VMEdgeMCPClient(MCPClient):
         "service_status", "service_logs", "list_services", "search_services", "system_logs", "process_snapshot",
         "process_status", "tcp_check", "port_listener_status", "dns_check",
         "route_check", "firewall_status", "config_validate", "nginx_config_review", "nginx_config_inspect",
-        "redis_dependency_check",
+        "redis_dependency_check", "dependency_investigation",
         "service_runtime_discovery", "service_config_discovery", "service_config_review", "service_config_llm_repair", "dotnet_config_syntax",
         "config_change_validate",
     }
@@ -202,6 +202,7 @@ class VMEdgeMCPClient(MCPClient):
     async def nginx_config_inspect(self, target: str, service: str) -> Dict[str, Any]: return await self._invoke("nginx_config_inspect", target, service=service)
     async def service_runtime_discovery(self, target: str, service: str) -> Dict[str, Any]: return await self._invoke("service_runtime_discovery", target, service=service)
     async def service_config_discovery(self, target: str, service: str) -> Dict[str, Any]: return await self._invoke("service_config_discovery", target, service=service)
+    async def dependency_investigation(self, target: str, service: str) -> Dict[str, Any]: return await self._invoke("dependency_investigation", target, service=service)
     async def redis_dependency_check(self, target: str, service: str) -> Dict[str, Any]: return await self._invoke("redis_dependency_check", target, service=service)
     async def service_config_review(self, target: str, service: str) -> Dict[str, Any]: return await self._invoke("service_config_review", target, service=service)
     async def service_config_llm_repair(self, target: str, service: str) -> Dict[str, Any]: return await self._invoke("service_config_llm_repair", target, service=service)
