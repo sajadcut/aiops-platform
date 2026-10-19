@@ -1244,9 +1244,16 @@ class SSHVMConnector:
             "candidates_not_verified" if base["files"] else "no_systemd_config_candidates")
         return base
 
-    async def dependency_investigation(self, target: str, service: str) -> Dict[str, Any]:
+    async def dependency_investigation(
+        self, target: str, service: str, *,
+        mode: str = "probe", selections: list[dict] | None = None,
+        priority_family: str = "",
+    ) -> Dict[str, Any]:
         from integrations.vm.dependency_investigation import investigate
-        return await investigate(self, target, service)
+        return await investigate(
+            self, target, service, mode=mode,
+            selections=selections, priority_family=priority_family,
+        )
 
     async def redis_dependency_check(self, target: str, service: str) -> Dict[str, Any]:
         """Read-only Redis endpoint verification from a trusted systemd appsettings file."""
