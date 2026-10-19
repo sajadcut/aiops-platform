@@ -120,8 +120,11 @@ async def resolve_llm_bindings(config: object, *, adapter: Any = None) -> dict:
     if adapter is None:
         if (not settings.LLM_BASE_URL or not settings.LLM_MODEL or not _trusted_gateway()):
             return {**base, "status": "trusted_llm_not_configured"}
-        from integrations.llm.openai_compatible import configured_llm_adapter
-        adapter = configured_llm_adapter()
+        try:
+            from integrations.llm.openai_compatible import configured_llm_adapter
+            adapter = configured_llm_adapter()
+        except Exception:
+            return {**base, "status": "llm_binding_unavailable"}
 
     message = {
         "host_fields": hosts, "port_fields": ports,
