@@ -419,9 +419,17 @@ class SignalGateway:
         client = None
         try:
             client = VMEdgeMCPClient()
+            from integrations.vm.central_dependency import investigate_from_aiops
+            priority = next((
+                family for family in (
+                    "database", "message_broker", "cache", "http_dependency",
+                ) if family in classes
+            ), "")
             result = await asyncio.wait_for(
-                client.dependency_investigation(target, unit),
-                timeout=max(8.0, min(45.0, float(settings.MCP_TIMEOUT_SECONDS) * 3)),
+                investigate_from_aiops(
+                    client, target, unit, priority_family=priority,
+                ),
+                timeout=max(18.0, min(90.0, float(settings.MCP_TIMEOUT_SECONDS) * 6)),
             )
             if not isinstance(result, dict) or result.get("success") is not True:
                 return [], {
