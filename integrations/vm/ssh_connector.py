@@ -5,6 +5,7 @@ import json
 import re
 import shlex
 import time
+from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
 import asyncssh
@@ -592,7 +593,13 @@ class SSHVMConnector:
                 if len(parts) == 6:
                     rows.append({"filesystem": parts[0], "blocks": parts[1], "used": parts[2], "available": parts[3], "use_percent": parts[4], "mount": parts[5]})
             return rows
-        return {"success": True, "target": target, "filesystems": parse_df(disk_text), "inodes": parse_df(inode_text)}
+        filesystems = parse_df(disk_text)
+        if not filesystems:
+            return {"success": False, "target": target, "error": "disk_inventory_empty"}
+        return {"success": True, "target": target, "filesystems": filesystems,
+                "inodes": parse_df(inode_text),
+                "observed_at": datetime.now(timezone.utc).isoformat(),
+                "source": self.source_name}
 
     async def disk_forensics(self, target: str) -> Dict[str, Any]:
         """Bounded read-only inventory; never read file contents or delete files.
