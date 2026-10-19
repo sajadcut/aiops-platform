@@ -57,7 +57,8 @@ async def investigate(connector: Any, target: str, service: str) -> dict:
         "read_only": True, "execution_authority": False, "root_cause_confirmed": False,
         "application_health_verified": False, "protocol_health_verified": False,
         "config_contents_exposed": False, "secrets_exposed": False,
-        "config_files_checked": 0, "checks_executed": 0, "dependencies": [],
+        "config_files_read": 0, "config_files_checked": 0,
+        "config_files_parse_failed": 0, "checks_executed": 0, "dependencies": [],
         "limitations": ["network_probe_not_equal_protocol_health"],
     }
     try:
@@ -95,7 +96,14 @@ async def investigate(connector: Any, target: str, service: str) -> dict:
             if not (1 <= len(raw) <= 262144):
                 read_failed += 1
                 continue
-            config = load_config(raw.decode("utf-8-sig"), path)
+            base["config_files_read"] += 1
+            try:
+                config = load_config(raw.decode("utf-8-sig"), path)
+            except (UnicodeError, ValueError, TypeError):
+                # Syntax/encoding is invalid or unsupported; never echo
+                # parser exceptions (they can include secret config bytes).
+                base["config_files_parse_failed"] += 1
+                continue
             base["config_files_checked"] += 1
             # Preserve the exact verified source file and structural setting
             # key; only selected endpoint facts leave the trusted worker.
@@ -126,6 +134,7 @@ async def investigate(connector: Any, target: str, service: str) -> dict:
             break
     if not known:
         base["status"] = ("dependency_not_discovered" if base["config_files_checked"]
+                          else "config_parse_failed" if base["config_files_parse_failed"]
                           else "config_read_unavailable")
         base["limitations"] = ["no_static_dependency_endpoint_verified"]
         return base
