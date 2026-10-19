@@ -316,7 +316,9 @@ def tool_observation_summary(raw: dict) -> str | None:
                     endpoint += f", key={config_key}"
                 endpoint += "]"
             observed.append(endpoint)
-        return safe(f"config_files_checked={raw.get('config_files_checked', 0)}; "
+        return safe(f"config_files_read={raw.get('config_files_read', 0)}; "
+                    f"config_parse_failed={raw.get('config_files_parse_failed', 0)}; "
+                    f"config_files_checked={raw.get('config_files_checked', 0)}; "
                     f"checks_executed={raw.get('checks_executed', 0)}; "
                     + ("; ".join(observed) if observed else "no_verified_dependency"), 380)
     if diagnostic == "redis_dependency_check":
