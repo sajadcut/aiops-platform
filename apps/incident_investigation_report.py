@@ -31,6 +31,53 @@ def _safe(value: Any, limit: int = 200) -> str:
     return redact_text(str(value or "").replace("\n", " ").replace("\r", " "))[:limit]
 
 
+
+def dependency_checks(brief: dict) -> dict:
+    """Expose only independently recorded read-only network/protocol probes.
+
+    Never extrapolate Redis or database health from a successful TCP connect.
+    An absent structured result is explicitly different from an empty result.
+    """
+    observed = []
+    executed = False
+    seen = set()
+    for source in (brief.get("mcp_evidence") or [])[:100]:
+        if not isinstance(source, dict) or source.get("tool") not in {
+            "dependency_investigation", "redis_dependency_check",
+        }:
+            continue
+        executed = True
+        for check in (source.get("dependency_checks") or [])[:6]:
+            if not isinstance(check, dict):
+                continue
+            identity = (check.get("kind"), check.get("host"),
+                        check.get("port"), check.get("config_key"))
+            if identity in seen:
+                continue
+            seen.add(identity)
+            item = {key: check.get(key) for key in (
+                "kind", "host", "port", "config_file", "config_key",
+                "probe_scope", "probe_status", "protocol_status",
+                "http_status", "tcp_reachable", "dns_resolved",
+                "route_found", "probe_supported", "protocol_health_verified",
+                "tls_verified",
+            )}
+            item["evidence_ref"] = _safe(source.get("evidence_ref"), 130)
+            item["collected_at"] = _safe(source.get("collected_at"), 55)
+            observed.append(item)
+            if len(observed) >= 24:
+                break
+        if len(observed) >= 24:
+            break
+    return {
+        "status": ("recorded" if observed else
+                   "details_not_recorded" if executed else "not_recorded"),
+        "items": observed,
+        "read_only": True,
+        "application_health_verified": False,
+    }
+
+
 def build_rows(brief: dict) -> list[dict]:
     groups = {}
     for record in (brief.get("mcp_evidence") or [])[:100]:
@@ -158,7 +205,8 @@ async def explain(brief: dict, lang: str = "fa", *, llm: Any = None) -> dict:
     rows = build_rows(brief)
     base = {
         "snapshot_id": brief.get("snapshot_id"), "language": lang,
-        "rows": rows, "read_only": True, "execution_authority": False,
+        "rows": rows, "dependency_checks": dependency_checks(brief),
+        "read_only": True, "execution_authority": False,
     }
     if not rows:
         return {**base, "status": "no_checks", "llm_status": "not_requested",
