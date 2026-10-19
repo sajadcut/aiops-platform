@@ -69,6 +69,8 @@ def _verified_endpoints(alert: dict) -> list[dict]:
                 "protocol_health_verified": ep.get("protocol_health_verified") is True,
                 "config_file": _clean(ep.get("config_file"), 170),
                 "config_key": _clean(ep.get("config_key"), 100),
+                "config_port_key": _clean(ep.get("config_port_key"), 100),
+                "endpoint_source": _clean(ep.get("endpoint_source"), 70),
             })
             if len(output) >= 6:
                 return output
@@ -92,6 +94,17 @@ def _prefix(alert: dict, endpoints: list[dict], lang: str) -> str:
                 "در شواهد وجود ندارد."
             )
             continue
+        source_file = ep.get("config_file")
+        host_field = ep.get("config_key")
+        port_field = ep.get("config_port_key")
+        if (ep.get("endpoint_source") == "llm_binding_independently_verified"
+                and source_file and host_field and port_field):
+            parts.append(
+                f"مقصد {service} از فایل کانفیگ تأییدشده {source_file} "
+                f"و کلیدهای {host_field} و {port_field} استخراج شده است؛ "
+                "LLM فقط ارتباط دو فیلد را پیشنهاد کرده و مقادیر "
+                "به‌طور مستقل از همان فایل تأیید شده‌اند."
+            )
         if ep["tcp_reachable"] is True:
             statement = f"در بررسی {service} در آدرس {endpoint}، اتصال TCP موفق بوده است."
         elif ep["tcp_reachable"] is False:
