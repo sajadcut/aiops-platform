@@ -109,3 +109,88 @@ def parse_redis_endpoints(value: Any) -> list[dict]:
             return []
         walk(document)
     return endpoints
+
+
+async def check_redis_config(connector: Any, target: str, service: str) -> dict:
+    """Systemd-bound read-only Redis TCP diagnostics; never return config values.
+
+    The MCP worker may temporarily read a bounded config over trusted SSH.
+    LLM text cannot supply a path/host/port or turn this into an arbitrary
+    network scanner. Static Redis host:port values are the only allowed peers.
+    """
+    import base64
+    from integrations.vm.general_config_review import (
+        checked_config_path, remote_config_read_command,
+    )
+    from integrations.vm.dotnet_local_validator import normalize_dotnet_json
+    connector._validate_service(service)
+    discovered = await connector.service_config_discovery(target, service)
+    base = {
+        "success": discovered.get("success") is True,
+        "target": target, "service": service, "diagnostic": "redis_dependency_check",
+        "status": "not_verified", "read_only": True,
+        "execution_authority": False, "application_health_verified": False,
+        "root_cause_confirmed": False, "config_contents_exposed": False,
+        "secrets_exposed": False, "endpoints": [], "checked_files": 0,
+    }
+    if not discovered.get("success"):
+        return {**base, "status": "config_discovery_unavailable"}
+    files = [
+        x.get("path") for x in (discovered.get("files") or [])[:16]
+        if isinstance(x, dict) and x.get("verified_exists") is True
+        and isinstance(x.get("path"), str)
+        and (x["path"].rsplit("/", 1)[-1] == "appsettings.json"
+             or (x["path"].rsplit("/", 1)[-1].startswith("appsettings.")
+                 and x["path"].endswith(".json")))
+    ]
+    if not files and discovered.get("runtime") == "dotnet":
+        runtime = await connector.service_runtime_discovery(target, service)
+        publish = runtime.get("publish_directory")
+        if isinstance(publish, str) and publish.startswith(("/opt/", "/srv/", "/data/")):
+            files.append(publish.rstrip("/") + "/appsettings.json")
+    if not files:
+        return {**base, "status": "no_systemd_bound_appsettings"}
+    found: list[dict] = []
+    failures = 0
+    for path in list(dict.fromkeys(files))[:3]:
+        try:
+            command = remote_config_read_command(checked_config_path(path))
+            result = await connector._run(target, command)
+            if not result.get("success"):
+                failures += 1
+                continue
+            encoded = str(result.get("stdout") or "").strip()
+            binary = base64.b64decode(encoded, validate=True)
+            if not (1 <= len(binary) <= 262_144):
+                failures += 1
+                continue
+            source = binary.decode("utf-8-sig")
+            normalized = normalize_dotnet_json(source)
+            config = json.loads(normalized)
+            base["checked_files"] += 1
+            for endpoint in parse_redis_endpoints(config):
+                if endpoint not in found and len(found) < _MAX_ENDPOINTS:
+                    found.append(endpoint)
+        except Exception:
+            failures += 1
+            # No exception strings: parsers may include JSON config fragments.
+    if not found:
+        return {**base, "status": (
+            "redis_endpoint_not_found" if base["checked_files"] else
+            "config_read_or_parse_unavailable"),
+            "file_failures": failures}
+    for endpoint in found:
+        entry = dict(endpoint)
+        try:
+            reach = await connector.tcp_check(target, entry["host"], entry["port"])
+            entry["tcp_supported"] = reach.get("supported") is True
+            entry["tcp_reachable"] = reach.get("reachable") if entry["tcp_supported"] else None
+            entry["tcp_status"] = (
+                "reachable" if entry["tcp_reachable"] is True else
+                "unreachable" if entry["tcp_reachable"] is False else "unverified")
+        except Exception:
+            entry.update({"tcp_supported": False, "tcp_reachable": None,
+                          "tcp_status": "check_unavailable"})
+        base["endpoints"].append(entry)
+    base["status"] = "tcp_checked" if any(x.get("tcp_supported") for x in base["endpoints"]) else "tcp_unverified"
+    return base
