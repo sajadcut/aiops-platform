@@ -15,6 +15,7 @@ from domain.contracts.config import settings
 from domain.contracts.redaction import redact
 from domain.contracts.logging import logger
 from integrations.llm.openai_compatible import configured_llm_adapter
+from apps.incident_alert_explanation import explain_alert, fallback_explanation
 
 SECTIONS = (
     "incident", "confirmed", "hypotheses", "knowledge", "evidence_gaps",
@@ -353,16 +354,27 @@ async def generate_narrative(brief: dict, lang: str = "fa") -> dict:
             "dotin-general-chatbot", "dotin_general_chatbot",
         }
     ):
-        return fallback(brief, lang, "model_not_configured")
+        result = fallback(brief, lang, "model_not_configured")
+        result["alert_explanation"] = fallback_explanation(brief, lang)
+        return result
 
     encoded = bounded_projection_json(brief)
     if encoded is None:
-        return fallback(brief, lang, "brief_too_large")
+        result = fallback(brief, lang, "brief_too_large")
+        result["alert_explanation"] = fallback_explanation(brief, lang)
+        return result
     cache_key = hashlib.sha256((brief["snapshot_id"] + ":" + lang).encode()).hexdigest()
     cached = _CACHE.get(cache_key)
     if cached and time.monotonic() - cached[0] < _CACHE_TTL_SECONDS:
         _CACHE.move_to_end(cache_key)
         return cached[1]
+
+    # Run the lightweight alert explanation alongside the long RCA narrative.
+    # It remains available even when the strict 11-section validator rejects
+    # the longer answer (for example, narrative_reference).
+    alert_task = (asyncio.create_task(explain_alert(brief, lang))
+                  if (brief.get("alert_focused_report") or {}).get("alert_message")
+                  and lang == "fa" else None)
 
     system = (
         "You are a display-only SRE Incident Decision Brief writer. "
@@ -465,6 +477,13 @@ async def generate_narrative(brief: dict, lang: str = "fa") -> dict:
     except Exception:
         # Never expose gateway errors or model prompts through operator responses.
         result = fallback(brief, lang, "model_unavailable_or_invalid")
+    if alert_task is not None:
+        try:
+            result["alert_explanation"] = await alert_task
+        except Exception:
+            result["alert_explanation"] = fallback_explanation(brief, lang)
+    else:
+        result["alert_explanation"] = fallback_explanation(brief, lang)
     _CACHE[cache_key] = (time.monotonic(), result)
     _CACHE.move_to_end(cache_key)
     while len(_CACHE) > _CACHE_LIMIT:
