@@ -3931,6 +3931,34 @@
     }
     show('#ic-action-controls',controls);
   }
+  function renderInvestigationLedger(brief) {
+    const node=$('#ic-investigation-ledger-body');
+    if(!node)return;
+    const fa=state.language==='fa', report=state.investigationReport;
+    if(state.historic||!report||report.snapshot_id!==brief.snapshot_id||
+       report.language!==state.language){
+      node.textContent=state.historic?(fa?'نسخهٔ تاریخی: به بخش شواهد مراجعه کنید.':'Historical evidence only.'):
+        (fa?'در حال دریافت گزارش مستند…':'Loading recorded checks…');
+      return;
+    }
+    const names=fa?['بخش','بررسی ثبت‌شده','نتیجهٔ مستند']:['Component','Recorded check','Result'];
+    const header='<div class="ic-ledger-scroll"><table class="ic-ledger-table"><thead><tr>'+
+      names.map(x=>'<th scope="col">'+esc(x)+'</th>').join('')+'</tr></thead><tbody>';
+    const body=arr(report.rows).map(x=>'<tr><th scope="row">'+txt(x.component)+'</th>'+
+      '<td>'+txt(x.check)+'</td><td>'+txt(x.result)+
+      (x.llm_interpretation?'<p class="ic-ledger-interpretation">'+
+        esc(fa?'تفسیر LLM: ':'LLM analysis: ')+txt(x.llm_interpretation)+'</p>':'')+
+      (arr(x.evidence_refs).length?'<small class="ic-ledger-source">Evidence: '+
+        arr(x.evidence_refs).slice(0,3).map(v=>txt(v)).join(' · ')+'</small>':'')+
+      '</td></tr>').join('');
+    node.innerHTML=header+body+'</tbody></table></div><p class="ic-ledger-conclusion">'+
+      txt(report.conclusion)+'</p>'+
+      (arr(report.next_checks).length?'<strong>'+
+        esc(fa?'بررسی‌های پیشنهادی، اجرا نشده':'Suggested but not executed')+
+        '</strong><ul>'+arr(report.next_checks).map(x=>'<li>'+
+        txt(x.tool)+' — '+txt(x.why)+'</li>').join('')+'</ul>':'');
+  }
+
   function render() {
     if(!state.report)return;
     const r=state.historic||state.report;
