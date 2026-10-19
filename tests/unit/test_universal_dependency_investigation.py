@@ -193,6 +193,8 @@ def test_mcp_result_contract_rejects_hidden_password_or_undeclared_fields():
     assert schema["properties"]["dependencies"]["maxItems"] == 6
     base = {
         "success": True, "target": "vm01", "execution_authority": False,
+        "root_cause_confirmed": False, "config_contents_exposed": False,
+        "secrets_exposed": False,
         "dependencies": [{
             "kind": "postgresql", "host": "pg.internal", "port": 5432,
             "config_verified": True, "probe_status": "tcp_reachable",
