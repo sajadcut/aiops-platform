@@ -339,6 +339,21 @@ def tool_observation_summary(raw: dict) -> str | None:
         count = raw.get("checked_files") if type(raw.get("checked_files")) is int else 0
         return safe(f"status={status}; verified_config_files_read={count}; TCP=" +
                     ("; ".join(endpoints) if endpoints else "no_verified_endpoint"), 380)
+    if diagnostic == "dependency_error_log_analysis":
+        family = safe(raw.get("family"), 30)
+        hypothesis = safe(raw.get("hypothesis"), 40)
+        model = safe(raw.get("model_status"), 65)
+        source_count = sum(
+            int(entry.get("count") or 0)
+            for entry in arr(raw.get("error_signatures"))[:18]
+            if isinstance(entry, dict)
+        )
+        checked = raw.get("matching_endpoint_count")
+        return safe(
+            f"{family} dependency log analysis; signatures={source_count}; "
+            f"matching_endpoints={checked}; model_status={model}; "
+            f"hypothesis={hypothesis}; {safe(raw.get('summary'), 300)}", 400,
+        )
     if diagnostic == "source_observation" or (
         "result_count" in raw and raw.get("status") in
         {"queried", "skipped", "error", "unavailable"}
