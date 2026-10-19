@@ -24,7 +24,7 @@ READ_ONLY_CHECKS = frozenset({
     "service_status", "service_logs", "process_status", "config_validate",
     "collect_vm_metrics", "memory_diagnostics", "process_snapshot", "disk_status", "host_info", "network_status",
     "port_listener_status", "tcp_check",
-    "service_runtime_discovery", "service_config_discovery", "redis_dependency_check", "service_config_review", "dotnet_config_syntax", "nginx_config_review", "nginx_config_inspect",
+    "service_runtime_discovery", "service_config_discovery", "redis_dependency_check", "dependency_investigation", "service_config_review", "dotnet_config_syntax", "nginx_config_review", "nginx_config_inspect",
 })
 _CHECK_TO_REQUEST = {
     "service_status": ("telemetry", "service status"),
@@ -43,6 +43,7 @@ _CHECK_TO_REQUEST = {
     "dotnet_config_syntax": ("telemetry", "dotnet json syntax"),
     "service_config_discovery": ("telemetry", "config discovery"),
     "redis_dependency_check": ("telemetry", "redis TCP connectivity"),
+    "dependency_investigation": ("telemetry", "downstream dependency investigation"),
     "service_config_review": ("telemetry", "config review"),
     "nginx_config_review": ("telemetry", "nginx config review"),
     "nginx_config_inspect": ("telemetry", "nginx config inspect"),
@@ -400,20 +401,9 @@ class DynamicInvestigationPlanner:
         """LLM chooses from read-only capabilities, never arbitrary code."""
         context = state.get("context") or {}
         evidence = [e for e in context.get("evidence", []) if isinstance(e, dict)]
-        # Dependency problems may exist while the application's unit is active.
-        redis_signalled = any(
-            "redis" in str(row.get("raw_data") or {})[:1400].lower()
-            for row in evidence if isinstance(row, dict)
-            and str(row.get("source") or "").lower() in {
-                "zabbix", "prometheus", "elasticsearch", "vm_mcp"
-            }
-        )
-        redis_checked = any(
-            isinstance(row.get("raw_data"), dict) and
-            row["raw_data"].get("diagnostic") == "redis_dependency_check"
-            for row in evidence if isinstance(row, dict)
-        )
-        redis_needs_check = redis_signalled and not redis_checked
+        from apps.context_service.dependency_signals import dependency_signals, has_dependency_probe
+        dependency_classes = dependency_signals(evidence)
+        dependency_needs_check = bool(dependency_classes) and not has_dependency_probe(evidence)
         failure = cls.confirmed_config_failure(evidence)
         review = cls.config_review_evidence(evidence, failure)
         runtime = cls.runtime_evidence(evidence)
@@ -483,11 +473,11 @@ class DynamicInvestigationPlanner:
             "config_proposal": None,
             "execution_authority": False, "counts_as_live_evidence": False,
         }
-        if redis_needs_check:
-            result["checks"] = ["redis_dependency_check"]
+        if dependency_needs_check:
+            result["checks"] = ["dependency_investigation"]
             result["operator_questions"].append({
-                "question": "Redis errors were recorded. Verify the application\u0027s systemd-bound Redis endpoint and TCP connectivity.",
-                "reason": "Read-only dependency evidence is missing; an active systemd unit is not proof of Redis health.",
+                "question": "A downstream dependency error was recorded. Verify systemd-bound application config, classify endpoints and run a bounded read-only network probe.",
+                "reason": "A live dependency probe is missing. A running systemd unit is not proof of database, broker, cache or HTTP dependency health.",
                 "evidence_refs": [],
             })
         # Prefer the live, complete-file model result for the selected service
@@ -788,7 +778,7 @@ class DynamicInvestigationPlanner:
                 "reason": "Evidence gap was identified by the specialists; it is not proof of a fault.",
                 "evidence_refs": [],
             })
-        if not missing and not failure and unit.get("runtime") != "dotnet" and not redis_needs_check:
+        if not missing and not failure and unit.get("runtime") != "dotnet" and not dependency_needs_check:
             return result
         safe_knowledge, _ = filter_service_knowledge(
             state.get("knowledge_results") or [],
@@ -800,8 +790,8 @@ class DynamicInvestigationPlanner:
             "confirmed_config_failure": failure,
             "runtime_discovery": result.get("runtime_discovery"),
             "missing_evidence": missing,
-            "redis_alert_recorded": redis_signalled,
-            "redis_dependency_not_checked": redis_needs_check,
+            "dependency_error_classes": dependency_classes,
+            "dependency_check_missing": dependency_needs_check,
             "available_read_only_checks": sorted(READ_ONLY_CHECKS),
             "knowledge": [
                 {
@@ -854,9 +844,9 @@ class DynamicInvestigationPlanner:
                 for action in checks[:4]:
                     if isinstance(action, str) and action in READ_ONLY_CHECKS and action not in unique:
                         unique.append(action)
-                result["checks"] = (["redis_dependency_check"] + [
-                    x for x in unique if x != "redis_dependency_check"
-                ])[:2] if redis_needs_check else unique[:2]
+                result["checks"] = (["dependency_investigation"] + [
+                    x for x in unique if x != "dependency_investigation"
+                ])[:2] if dependency_needs_check else unique[:2]
                 available_refs = {
                     str(row["source_ref"]) for row in context_data["knowledge"]
                 }
@@ -886,7 +876,7 @@ class DynamicInvestigationPlanner:
         for action in proposal.get("checks") or []:
             if action not in READ_ONLY_CHECKS:
                 continue
-            if not has_service and action in {"service_status", "service_logs", "process_status", "config_validate", "service_runtime_discovery", "service_config_discovery", "redis_dependency_check", "service_config_review", "dotnet_config_syntax", "nginx_config_review", "nginx_config_inspect"}:
+            if not has_service and action in {"service_status", "service_logs", "process_status", "config_validate", "service_runtime_discovery", "service_config_discovery", "redis_dependency_check", "dependency_investigation", "service_config_review", "dotnet_config_syntax", "nginx_config_review", "nginx_config_inspect"}:
                 continue
             if not has_port and action in {"port_listener_status", "tcp_check"}:
                 continue

@@ -17,11 +17,12 @@ _LABELS = {
     "service_runtime_discovery": "کشف Runtime از systemd",
     "service_config_discovery": "کشف فایل کانفیگ از systemd",
     "redis_dependency_check": "خواندن امن Endpoint ردیس و TCP",
+    "dependency_investigation": "کشف وابستگی‌های برنامه و آزمون ارتباط",
     "tcp_check": "تست TCP", "config_validate": "اعتبارسنجی کانفیگ",
     "dotnet_config_syntax": "بررسی JSON برنامه", "disk_status": "بررسی دیسک",
 }
 _SUGGESTIONS = frozenset({
-    "service_runtime_discovery", "service_config_discovery", "redis_dependency_check",
+    "service_runtime_discovery", "service_config_discovery", "redis_dependency_check", "dependency_investigation",
     "service_logs", "service_status", "tcp_check", "dotnet_config_syntax",
 })
 
@@ -148,7 +149,7 @@ async def explain(brief: dict, lang: str = "fa", *, llm: Any = None) -> dict:
         "next_checks (array of {tool,why}). Never invent executed checks, facts, "
         "numbers, hosts, healthy Redis state, or citations. Zero query results "
         "do NOT prove a healthy dependency. Distinguish hypotheses and checks. "
-        "If Redis error is indicated, recommend systemd-based config path and "
+        "For database, broker, cache and HTTP dependency errors recommend the "
         "connection verification only as NOT YET EXECUTED unless evidence proves it. "
         "Only recommend registered read-only tools: " + ", ".join(sorted(_SUGGESTIONS)) +
         ". Keep each note under 160 characters and conclusion under 260. "
