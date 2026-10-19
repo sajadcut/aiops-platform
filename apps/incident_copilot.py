@@ -383,17 +383,44 @@ def dependency_investigation_answer(value: dict, *, persian: bool = True) -> str
         return ("بررسی وابستگی‌ها اجرا نشد یا مسیر کانفیگ قابل تأیید نبود."
                 if persian else "Dependency probe was unavailable or not verified.")
     facts = []
+    labels = {
+        "tcp_reachable": "اتصال TCP برقرار شد",
+        "tcp_unreachable": "اتصال TCP برقرار نشد",
+        "http_responded": "پاسخ HTTP دریافت شد",
+        "unsupported": "ابزار آزمون موجود نیست",
+        "unavailable": "نتیجهٔ آزمون نامشخص است",
+        "unverified": "آزمون تأیید نشده",
+        "check_unavailable": "اجرای آزمون ممکن نشد",
+    }
     for row in (value.get("dependencies") or [])[:6]:
         if not isinstance(row, dict):
             continue
-        kind, host, port = str(row.get("kind") or "")[:25], str(row.get("host") or "")[:100], row.get("port")
+        kind = redact_text(str(row.get("kind") or ""))[:25]
+        host = redact_text(str(row.get("host") or ""))[:100]
+        port = row.get("port")
         if not kind or not host or type(port) is not int:
             continue
-        state = str(row.get("probe_status") or "unverified")[:45]
+        raw_state = str(row.get("probe_status") or "unverified")[:45]
+        state = labels.get(raw_state, raw_state) if persian else raw_state
         if type(row.get("http_status")) is int:
-            state += " HTTP " + str(row["http_status"])
-        facts.append(f"{kind} {host}:{port} — {state}")
-    pre = ("نتیجهٔ بررسی وابستگی‌ها" if persian else "Downstream dependency checks")
+            state += " (HTTP " + str(row["http_status"]) + ")"
+        file = row.get("config_file")
+        key = row.get("config_key")
+        sources = []
+        if isinstance(file, str) and file.startswith("/"):
+            sources.append(("فایل: " if persian else "file: ") + redact_text(file)[:255])
+        if isinstance(key, str):
+            sources.append(("کلید: " if persian else "key: ") + redact_text(key)[:160])
+        if row.get("port_inferred") is True:
+            sources.append("پورت پیش‌فرض" if persian else "inferred default port")
+        if row.get("probe_scope") == "origin_root_head":
+            sources.append("HEAD / فقط روی مبدأ URL" if persian else "HEAD / at URL origin only")
+        fact = f"{kind} {host}:{port} — {state}"
+        facts.append(fact + (" | " + "؛ ".join(sources) if sources else ""))
+    service = redact_text(str(value.get("service") or ""))[:90]
+    pre = ("نتیجهٔ بررسی وابستگی‌های سرویس " + service if service and persian
+           else "Downstream dependency checks for " + service if service
+           else "نتیجهٔ بررسی وابستگی‌ها" if persian else "Downstream dependency checks")
     status = str(value.get("status") or "unavailable")[:55]
     note = ("این نتایج فقط پاسخ HTTP یا امکان اتصال TCP را گزارش می‌کنند؛ سلامت "
             "پروتکل، احراز هویت، عملکرد برنامه یا علت ریشه‌ای تأیید نشده است."
