@@ -193,7 +193,8 @@ def build_alert_focused_report(incident: dict, evidence: list[dict],
             "result": detail or "نتیجه فنی تفصیلی ثبت نشده است.",
             "evidence_ref": _text(row.get("evidence_ref"), 180),
             "collected_at": _text(row.get("collected_at"), 60),
-            "scope": "related_observation_not_causal_proof",
+            "scope": ("related_observation_not_causal_proof" if observed_service
+                      else "service_identity_not_recorded"),
         })
         if len(observations) >= 6:
             break
