@@ -16,8 +16,8 @@ from domain.contracts.redaction import redact
 # ordering of checks; they never identify a service or authorize a target.
 _FAMILIES = (
     ("redis", r"\bredis\b|\bkeydb\b|\bvalkey\b"),
-    ("database", r"\bdatabase\b|\bdb\b|\bpostgres(?:ql)?\b|\bmysql\b|\bmaria(?:db)?\b|\bmongo(?:db)?\b|\bmssql\b|\bsql[ _-]?server\b|\boracle\b|پایگاه\s*داده|دیتابیس"),
-    ("messaging", r"\bactivemq\b|\brabbitmq\b|\bkafka\b|\bmessage[ _-]?broker\b|\bqueue\b|\bamqp\b|صف\s*پیام"),
+    ("database", r"\bdatabase\b|\bdb\b|\bpostgres(?:ql)?\b|\bmysql\b|\bmaria(?:db)?\b|\bmongo(?:db)?\b|\bmssql\b|\bsql[ _-]?server\b|\boracle\b|\bdb2\b|\bcassandra\b|\bneo4j\b|\bjdbc\b|پایگاه\s*داده|دیتابیس"),
+    ("messaging", r"\bactivemq\b|\bartemis\b|\brabbitmq\b|\bkafka\b|\bnats\b|\bmqtt\b|\bjms\b|\bmessage[ _-]?broker\b|\bqueue\b|\bamqp\b|صف\s*پیام"),
     ("http", r"\bhttp[s]?\b|\bapi\b|\bupstream\b|\bendpoint\b|\bgrpc\b|\bwebhook\b|\burl\b|وب\s*سرویس"),
     ("disk", r"\bdisk\b|\bfilesystem\b|\binode\b|\bstorage\b|\bmount\b|دیسک|فضای\s*ذخیره"),
     ("memory", r"\bmemory\b|\bram\b|\boom\b|\bswap\b|حافظه"),
@@ -39,15 +39,18 @@ _TOOL_FAMILIES = {
 _KIND_FAMILY = {
     "redis": "redis", "valkey": "redis", "keydb": "redis",
     "postgres": "database", "postgresql": "database", "mysql": "database",
+    "database_tcp": "database", "db2": "database", "cassandra": "database",
+    "neo4j": "database",
     "mariadb": "database", "mongodb": "database", "mssql": "database",
     "sqlserver": "database", "oracle": "database",
     "activemq": "messaging", "rabbitmq": "messaging", "kafka": "messaging",
+    "nats": "messaging", "mqtt": "messaging", "zookeeper": "messaging",
     "amqp": "messaging", "http": "http", "https": "http", "grpc": "http",
 }
 _FOLLOWUPS_FA = {
     "redis": "خطاهای اتصال کلاینت برنامه، تنظیمات Endpoint/TLS/Auth، Timeout و Connection Pool را با زمان آلارم تطبیق دهید.",
     "database": "لاگ خطای اتصال برنامه، Endpoint دیتابیس، احراز هویت، Timeout و Pool را با زمان آلارم تطبیق دهید.",
-    "messaging": "وضعیت Broker، اتصال مصرف‌کننده/تولیدکننده، صف‌ها و خطاهای زمان آلارم را بررسی کنید.",
+    "messaging": "Broker و Endpoint واقعی، TLS/SASL/Auth، خطاهای Producer/Consumer، وضعیت صف یا Topic و Timeout را در زمان آلارم بررسی کنید. در Kafka وضعیت Bootstrap/Advertised Listeners، Metadata و Consumer Lag؛ در ActiveMQ وضعیت Transport، Queue و DLQ را نیز بررسی کنید.",
     "http": "Endpoint تأییدشده، DNS/TLS، کد پاسخ و Timeout درخواست واقعی برنامه را با آلارم تطبیق دهید.",
     "disk": "مصرف دیسک و inode، وضعیت Mount و روند پرشدن را در بازه آلارم بررسی کنید.",
     "memory": "فشار حافظه، OOM، Swap و روند مصرف را با بازه آلارم مقایسه کنید.",
@@ -252,6 +255,7 @@ def build_alert_focused_report(incident: dict, evidence: list[dict],
                     "status": _text(f.get("status"), 70),
                     "host_fields": f.get("host_fields"),
                     "port_fields": f.get("port_fields"),
+                    "inline_endpoint_fields": f.get("inline_endpoint_fields"),
                     "verified_pairs": f.get("verified_pairs"),
                 }
                 for f in (row.get("dependency_llm_file_results") or [])[:4]
