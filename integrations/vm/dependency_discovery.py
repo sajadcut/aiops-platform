@@ -173,7 +173,7 @@ def discover(config: object, limit: int = MAX_ENDPOINTS) -> list[dict]:
             return
         value = value.strip().strip('"').strip("'")
         # StackExchange.Redis option ssl=true is a hint, not proof of TLS.
-        redis_tls = bool(re.search(r"(?:^|,)\\s*ssl\\s*=\\s*true(?:,|$)", value, re.I))
+        redis_tls = bool(re.search(r"(?:^|,)\s*ssl\s*=\s*true(?:,|$)", value, re.I))
         if value.lower().startswith("jdbc:"):
             value = value[5:]
         # Oracle JDBC Thin has a vendor-specific prefix rather than a URI.
