@@ -1790,6 +1790,11 @@
     const alertHeadline=alertName
       ?(fa?'بررسی آلارم دریافتی: ':'Analysis of received alert: ')+alertName.slice(0,155)
       :title;
+    const alertHypotheses=arr(alert.agent_interpretations).slice(0,3).map(item=>
+      '<li><strong>'+txt(item.agent||'Agent')+'</strong> — '+txt(item.hypothesis)+
+      ' <small>'+esc(fa?'صرفاً فرضیهٔ ایجنت؛ نه علت تأییدشده':
+        'Unverified agent hypothesis, not a confirmed cause')+'</small>'+
+      refs(item.evidence_refs)+'</li>');
     const alertChecks=alertObserved.map(row=>
       '<li><strong>'+txt(row.tool||'MCP')+'</strong> — '+txt(row.result)+
       ' <small>('+txt(row.status||'unknown')+')</small>'+
@@ -1811,6 +1816,9 @@
         '<p class="ic-ir-caution">'+esc(fa?
         'هیچ تست مستقیمی برای موضوع این هشدار ثبت نشده است؛ بررسی‌های عمومی سرور جایگزین آن نیستند.':
         'No direct check of this alarm is recorded; generic VM health does not replace it.')+'</p>')+
+      (alertHypotheses.length?
+        '<h4>'+esc(fa?'فرضیه‌های مرتبط ایجنت‌ها (تأییدنشده)':
+          'Relevant agent hypotheses (unverified)')+'</h4>'+list(alertHypotheses):'')+
       '<p><strong>'+esc(fa?'بررسی بعدی پیشنهادی (اجرا نشده): ':'Suggested next check (not executed): ')+
       '</strong>'+txt(alert.next_check_fa||
         (fa?'با توجه به موضوع آلارم شواهد مستقیم جمع‌آوری شود.':'Collect direct evidence for the alert.'))+'</p>'+
