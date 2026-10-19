@@ -29,6 +29,10 @@ KINDS = {
     "zookeeper": ("zookeeper", 2181), "nats": ("nats", 4222),
     "mqtt": ("mqtt", 1883), "neo4j": ("neo4j", 7687),
     "etcd": ("etcd", 2379), "consul": ("consul", 8500),
+    # Technology-neutral database config; never guess the server protocol.
+    "datasource": ("database_tcp", None), "r2dbc": ("database_tcp", None),
+    "jdbc": ("database_tcp", None), "dbconnection": ("database_tcp", None),
+    "database": ("database_tcp", None),
 }
 SCHEMES = {
     "redis": "redis", "rediss": "redis", "postgres": "postgresql",
@@ -45,7 +49,7 @@ SCHEMES = {
 ENDPOINT_FIELDS = {"host", "hostname", "server", "endpoint", "endpoints",
                    "address", "nodes", "url", "uri", "baseurl", "brokerurl",
                    "connection", "connectionstring", "configuration",
-                   "bootstrapservers", "servers", "brokers", "primary", "secondary",
+                   "bootstrapservers", "contactpoints", "seednodes", "servers", "brokers", "primary", "secondary",
                    "master", "replica", "connectionstring"}
 
 
@@ -168,10 +172,176 @@ def discover(config: object, limit: int = MAX_ENDPOINTS) -> list[dict]:
             output.append(record)
 
     def parse(value, hint, source_key=None, explicit_port=None):
-        if not isinstance(value, str) or len(value) > 1900 or (
-            "$" in value or "%" in value
-        ):
+        if not isinstance(value, str) or len(value) > 1900:
             return
+        # Reject unresolved placeholders in the destination itself below.
+        # Credentials may legitimately contain '%' or '
+        value = value.strip().strip('"').strip("'")
+        # StackExchange.Redis option ssl=true is a hint, not proof of TLS.
+        redis_tls = bool(re.search(r"(?:^|,)\s*ssl\s*=\s*true(?:,|$)", value, re.I))
+        if value.lower().startswith("jdbc:"):
+            value = value[5:]
+        # ActiveMQ/OpenWire supports failover:(tcp://a:61616,tcp://b:61617).
+        # A single urlsplit() on the outer failover scheme loses all brokers.
+        if value.lower().startswith("failover:("):
+            inner, sep, _ = value[len("failover:("):].partition(")")
+            if not sep:
+                return
+            for target in inner.split(",")[:8]:
+                parse(target.strip(), hint or "activemq", source_key)
+            return
+        # MongoDB replica sets use comma-separated hosts in one URI.
+        # Extract authority only, never the username, password or database.
+        if value.lower().startswith(("mongodb://", "mongodb+srv://")):
+            scheme, tail = value.split("://", 1)
+            authority = tail.split("/", 1)[0].split("?", 1)[0].rsplit("@", 1)[-1]
+            for peer in authority.split(",")[:8]:
+                peer = peer.strip()
+                try:
+                    parsed_peer = urlsplit("mongodb://" + peer)
+                    explicit = parsed_peer.port
+                    if scheme.lower() == "mongodb+srv":
+                        # SRV records are DNS-discovered, not configured TCP
+                        # ports. No default port may be verified by TCP here.
+                        continue
+                    put("mongodb", parsed_peer.hostname, explicit or 27017,
+                        inferred=explicit is None, source_key=source_key)
+                except ValueError:
+                    continue
+            return
+        # Oracle JDBC Thin has a vendor-specific prefix rather than a URI.
+        if value.lower().startswith("oracle:thin:@//"):
+            value = "oracle://" + value[len("oracle:thin:@//"):]
+        # SQL Server and PostgreSQL key/value connection strings.
+        parts = {}
+        if ";" in value and "=" in value:
+            parts = {k.strip().lower(): v.strip() for fragment in value.split(";")[:20]
+                     for k, sep, v in (fragment.partition("="),) if sep}
+        host = parts.get("server") or parts.get("data source") or parts.get("host")
+        if host:
+            server, comma, port = host.partition(",")
+            kind = ("mssql" if comma or "initial catalog" in parts or
+                    "trusted_connection" in parts else
+                    hint if hint not in {None, "database"} else
+                    "custom_tcp" if ("port" in parts or port) else "database")
+            explicit = safe_port(parts.get("port") or port)
+            default = next((p for k, p in KINDS.values() if k == kind), None)
+            # Server/Port can be separate connection-string properties.
+            # A missing explicit value remains *inferred*, never tested.
+            if explicit is not None or default is not None:
+                put(kind, server, explicit if explicit is not None else default,
+                    inferred=explicit is None, source_key=source_key)
+            return
+        if "://" in value:
+            try:
+                # SQL Server JDBC semicolon properties are not part of host:port.
+                uri = urlsplit(value.split(";", 1)[0] if value.lower().startswith(
+                    "sqlserver://") else value)
+                scheme = uri.scheme.lower()
+                kind = SCHEMES.get(scheme)
+                # tcp:// and ssl:// are generic transports. Only a verified
+                # ActiveMQ/Artemis context may identify them as ActiveMQ.
+                if scheme in {"tcp", "ssl"}:
+                    kind = hint if hint in {"activemq", "amqp", "kafka", "nats",
+                                            "mqtt", "redis"} else "custom_tcp"
+                if kind:
+                    default = next((p for k, p in KINDS.values() if k == kind), None)
+                    if scheme == "amqps":
+                        default = 5671
+                    if scheme == "mqtts":
+                        default = 8883
+                    port = uri.port
+                    put(kind, uri.hostname, port if port is not None else default,
+                        inferred=port is None, source_key=source_key,
+                        tls_requested=(kind == "redis" and scheme == "rediss"))
+            except ValueError:
+                return
+            return
+        for item in value.split(",")[:8]:
+            token = item.strip()
+            match = HOSTPORT.fullmatch(token)
+            if match:
+                put(hint, match.group(1), match.group(2), source_key=source_key,
+                    tls_requested=(hint == "redis" and redis_tls))
+            elif hint in {v[0] for v in KINDS.values()} and "=" not in token:
+                default = next((p for k, p in KINDS.values() if k == hint), None)
+                port = explicit_port if explicit_port is not None else default
+                put(hint, token, port, inferred=explicit_port is None, source_key=source_key,
+                    tls_requested=(hint == "redis" and redis_tls))
+
+    def walk(node, hint=None, depth=0, keypath=(), inherited_port=None):
+        if depth > 8 or len(output) >= limit:
+            return
+        if isinstance(node, dict):
+            # Host and Port can live in the same object or its Redis/database
+            # parent, e.g. Redis: {Port: 6389, Endpoints: {Host: ...}}.
+            # This is a verified config value, never a default guessed by LLM.
+            local_ports = [
+                safe_port(v) for k, v in node.items()
+                if re.sub("[^a-z0-9]", "", str(k).lower()) == "port"
+            ]
+            explicit_port = next((p for p in local_ports if p is not None), inherited_port)
+            for key, item in list(node.items())[:100]:
+                name = re.sub("[^a-z0-9]", "", str(key).lower())
+                if SECRET.search(name):
+                    continue
+                source_path = keypath + (str(key),)
+                source_key = safe_config_key(source_path)
+                next_hint = next((kind for part, (kind, _) in KINDS.items()
+                                  if part in name), hint)
+                if name in {"db", "dbserver", "dbsettings", "dbconfig"}:
+                    next_hint = "database_tcp"
+                if next_hint is None and name in {
+                    "baseurl", "apiurl", "serviceurl", "webhookurl", "httpurl"
+                }:
+                    next_hint = "http"
+                # Generic application URL declarations are also legitimate
+                # dependencies when backed by the same verified service file.
+                if (next_hint is None and name in {
+                    "url", "uri", "endpoint", "jdbcurl"
+                } and isinstance(item, str)):
+                    if item.startswith(("http://", "https://")):
+                        next_hint = "http"
+                    elif item.startswith("jdbc:"):
+                        next_hint = "database"
+                    elif "://" in item and item.split("://", 1)[0].lower() in SCHEMES:
+                        next_hint = "custom_tcp"
+                if next_hint is None and name in {"datasource", "jdbcsource"}:
+                    next_hint = "database"
+                if next_hint is None and name in {"connectionstring", "connectionstrings"}:
+                    next_hint = "database"
+                if isinstance(item, dict):
+                    if next_hint != "database":
+                        host = item.get("Host", item.get("host", item.get("hostname")))
+                        port = item.get("Port", item.get("port")) or explicit_port
+                        if host and port:
+                            put(next_hint or "custom_tcp", host, port, source_key=source_key)
+                            # The same host key must not produce a spurious
+                            # additional probe on the default vendor port.
+                            reduced = {k: v for k, v in item.items()
+                                       if k.lower() not in {"host", "hostname"}}
+                            walk(reduced, next_hint, depth + 1, source_path, explicit_port)
+                            continue
+                    walk(item, next_hint, depth + 1, source_path, explicit_port)
+                elif isinstance(item, list):
+                    for child in item[:8]:
+                        walk(child, next_hint, depth + 1, source_path, explicit_port)
+                elif isinstance(item, str) and (
+                    (next_hint and (next_hint != hint or name in ENDPOINT_FIELDS))
+                    or (hint == "database" and (
+                        "://" in item or item.lower().startswith(
+                            ("server=", "host=", "data source=")
+                        )
+                    ))
+                ):
+                    parse(item, next_hint or "database", source_key, explicit_port)
+        elif isinstance(node, str) and hint:
+            parse(node, hint, safe_config_key(keypath), inherited_port)
+
+    walk(config)
+    return output
+; no credential
+        # value is returned, logged or sent to the LLM.
         value = value.strip().strip('"').strip("'")
         # StackExchange.Redis option ssl=true is a hint, not proof of TLS.
         redis_tls = bool(re.search(r"(?:^|,)\s*ssl\s*=\s*true(?:,|$)", value, re.I))
