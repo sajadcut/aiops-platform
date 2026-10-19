@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field, field_validator
 from apps.context_service.asset_identity import AssetIdentityResolver
 from apps.context_service.knowledge_topology import KnowledgeTopologyResolver
 from apps.context_service.knowledge_relevance import filter_service_knowledge
+from apps.context_service.knowledge_orientation import build_orientation, service_profile_query
 from apps.context_service.service_identity import ServiceIdentityResolver
 from apps.incident_service.repository import IncidentRepository
 from apps.orchestrator.learning_runtime import LearningDurableWorkflowRuntime
@@ -379,6 +380,7 @@ class SignalGateway:
             },
         }
         query = KnowledgeTopologyResolver.build_discovery_query(incident)
+        profile_query = service_profile_query(signal.service, signal.summary)
         expected_fqdns = ServiceIdentityResolver.expected_fqdns(
             summary=signal.summary, context=signal.raw_data,
         )
@@ -389,45 +391,76 @@ class SignalGateway:
             "count": 0,
             "phase": "signal_asset_discovery",
         }
-        try:
-            raw_results = await KnowledgeRAGService().search(
-                query,
-                limit=min(20, max(5, settings.AGENT_MAX_AUXILIARY_CONTEXT_ITEMS * 3))
-                    if signal.service else settings.AGENT_MAX_AUXILIARY_CONTEXT_ITEMS,
-            )
-            knowledge_results, relevance_audit = filter_service_knowledge(
-                raw_results, expected_service=signal.service,
-                expected_fqdns=expected_fqdns,
-                purpose="signal_asset_discovery",
-            )
-            knowledge_results = knowledge_results[:settings.AGENT_MAX_AUXILIARY_CONTEXT_ITEMS]
+        # Every alert gets a topology lookup before correlation/routing.
+        # When the alert names a service, also ask specifically for its stack,
+        # runtime and configuration/dependencies. Neither query can authorize
+        # an endpoint/path or override the service named in live evidence.
+        lookup_queries = [("topology", query)]
+        if profile_query and profile_query != query:
+            lookup_queries.append(("service_profile", profile_query))
+        limit = (min(20, max(5, settings.AGENT_MAX_AUXILIARY_CONTEXT_ITEMS * 3))
+                 if signal.service else settings.AGENT_MAX_AUXILIARY_CONTEXT_ITEMS)
+        rag = KnowledgeRAGService()
+        responses = await asyncio.gather(*(
+            rag.search(phrase, limit=limit) for _, phrase in lookup_queries
+        ), return_exceptions=True)
+        raw_results: list[dict] = []
+        query_statuses = []
+        failure = None
+        for (purpose, _phrase), response in zip(lookup_queries, responses):
+            if isinstance(response, BaseException):
+                failure = failure or response
+                query_statuses.append({"purpose": purpose, "status": "error",
+                                       "error_type": type(response).__name__})
+                continue
+            if not isinstance(response, list):
+                failure = failure or ValueError("invalid_cognia_result")
+                query_statuses.append({"purpose": purpose, "status": "invalid_response"})
+                continue
+            query_statuses.append({"purpose": purpose, "status": "queried",
+                                   "returned_count": len(response)})
+            raw_results.extend(row for row in response[:limit] if isinstance(row, dict))
+        # Deduplicate by document reference BEFORE applying the same service
+        # ownership gate. Do not count the same hit twice.
+        distinct: dict[str, dict] = {}
+        for index, document in enumerate(raw_results):
+            ref = str(document.get("source_id") or document.get("id") or "")
+            distinct.setdefault(ref if ref else f"missing-ref-{index}", document)
+        knowledge_results, relevance_audit = filter_service_knowledge(
+            distinct.values(), expected_service=signal.service,
+            expected_fqdns=expected_fqdns, purpose="signal_asset_discovery",
+        )
+        knowledge_results = knowledge_results[:settings.AGENT_MAX_AUXILIARY_CONTEXT_ITEMS]
+        if failure is not None and not any(x["status"] == "queried" for x in query_statuses):
+            knowledge_status = {
+                "provider": "cognia", "status": "error",
+                "code": type(failure).__name__, "count": 0,
+                "phase": "signal_asset_discovery",
+            }
+        else:
             knowledge_status = {
                 "provider": "cognia",
-                "status": ("filtered_empty" if relevance_audit["rejected_count"] and not knowledge_results
+                "status": ("partial" if failure is not None else
+                           "filtered_empty" if relevance_audit["rejected_count"] and not knowledge_results
                            else "available" if knowledge_results else "empty"),
                 "count": len(knowledge_results),
                 "phase": "signal_asset_discovery",
                 "relevance": relevance_audit,
             }
-            if relevance_audit["rejected_count"]:
-                logger.info("cognia_service_relevance_filtered",
-                            service=signal.service, phase="signal_asset_discovery",
-                            accepted=len(knowledge_results),
-                            rejected=relevance_audit["rejected_count"],
-                            rejected_refs=[x["source_id"] for x in relevance_audit["rejected"]])
-        except Exception as exc:
-            knowledge_status = {
-                "provider": "cognia",
-                "status": "error",
-                "code": type(exc).__name__,
-                "count": 0,
-                "phase": "signal_asset_discovery",
-            }
+        knowledge_status["queries"] = query_statuses
+        if relevance_audit["rejected_count"]:
+            logger.info("cognia_service_relevance_filtered",
+                        service=signal.service, phase="signal_asset_discovery",
+                        accepted=len(knowledge_results),
+                        rejected=relevance_audit["rejected_count"],
+                        rejected_refs=[x["source_id"] for x in relevance_audit["rejected"]])
+        if failure is not None:
             logger.warning(
                 "signal_asset_discovery_knowledge_query_failed",
                 source=signal.source,
-                error_type=type(exc).__name__,
+                error_type=type(failure).__name__,
             )
+        orientation = build_orientation(knowledge_results, expected_service=signal.service)
 
         topology = KnowledgeTopologyResolver.resolve(
             knowledge_results,
@@ -580,6 +613,7 @@ class SignalGateway:
             "topology_context": resolution["topology_context"],
             "knowledge_results": knowledge_results,
             "knowledge_status": knowledge_status,
+            "knowledge_orientation": orientation,
             "knowledge_discovery_query": query,
         }
 
@@ -713,6 +747,7 @@ class SignalGateway:
                 "topology_context": discovery.get("topology_context"),
                 "knowledge_results": discovery.get("knowledge_results", []),
                 "knowledge_status": discovery.get("knowledge_status", {}),
+                "knowledge_orientation": discovery.get("knowledge_orientation", {}),
                 "knowledge_discovery_query": discovery.get("knowledge_discovery_query"),
                 "correlation": correlation_context,
                 "related_signals": [],
