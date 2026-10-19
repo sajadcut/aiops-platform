@@ -279,3 +279,68 @@ async def test_llm_selected_readonly_followups_require_independent_vm_proof():
         Client(), state, ["service_logs", "network_status"],
     )
     assert blocked == [] and calls == []
+
+
+@pytest.mark.asyncio
+async def test_orchestrator_preserves_verified_gfp_alias_across_context(monkeypatch):
+    from apps.orchestrator.signal_aware import SignalAwareE2EOrchestrator
+    from domain.contracts.config import settings
+
+    monkeypatch.setattr(settings, "ELASTIC_SERVICE_DISCOVERY_ALIASES",
+                        {"GFP_Backend": ["gfpapi"]})
+
+    class Collector:
+        async def collect(self, service, since, until=None):
+            return {"service": service, "evidence": [], "asset_context": {}}
+
+    workflow = SignalAwareE2EOrchestrator.__new__(SignalAwareE2EOrchestrator)
+    workflow.db = None
+    workflow.evidence_collector = Collector()
+    workflow.progress_emitter = None
+    workflow.llm = None
+    monkeypatch.setattr(SignalAwareE2EOrchestrator, "_audit",
+                        staticmethod(lambda *args, **kwargs: None))
+
+    ref = "elastic-discovery-vm:10.248.16.82:gfpapi"
+    proof = {
+        "type": "telemetry", "source": "vm_mcp",
+        "reference": ref,
+        "raw_data": {
+            "diagnostic": "service_status", "success": True,
+            "target": "10.248.16.82", "service": "gfpapi",
+            "unit_id": "gfpapi.service", "load_state": "loaded",
+            "source_service_label": "GFP_Backend",
+        },
+    }
+    signal = OperationalSignal(
+        source="elasticsearch", source_id="alert-redis-alias",
+        signal_type="redis_error_threshold",
+        service="GFP_Backend", summary="Redis timeout in GFP Backend",
+    )
+    state = {
+        "incident_id": "alias-incident", "service_name": "gfpapi",
+        "evidence_summary": signal.summary,
+        "context": {
+            "service": "gfpapi",
+            "evidence": [proof, signal.to_evidence()],
+            "trigger_evidence": [signal.to_evidence()],
+            "trigger_signal": signal.model_dump(mode="json"),
+            "host_discovery": {
+                "status": "verified_by_vm_mcp",
+                "verified_target": "10.248.16.82",
+                "verified_runtime_service": "gfpapi",
+            },
+            "verified_runtime_mapping": {
+                "source_service": "GFP_Backend",
+                "runtime_service": "gfpapi",
+                "target": "10.248.16.82",
+                "evidence_reference": ref,
+                "verification": "vm_mcp_service_status",
+            },
+        },
+        "live_evidence": {"evidence": [proof]},
+    }
+    result = await workflow._context_node(state)
+    assert result["service_name"] == "gfpapi"
+    assert result["context"]["verified_runtime_mapping"]["runtime_service"] == "gfpapi"
+    assert result["context"]["host_discovery"]["verified_target"] == "10.248.16.82"
