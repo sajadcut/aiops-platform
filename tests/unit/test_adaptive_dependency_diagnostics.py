@@ -71,7 +71,7 @@ async def test_plaintext_redis_uses_bounded_read_only_resp_fallback_without_redi
             assert "PING" in command and "AUTH" not in command
             assert "password" not in command.lower()
             assert "--tls" not in command
-            return {"success": True, "stdout": "+PONG\\r"}
+            return {"success": True, "stdout": "+PONG\r"}
     result = await redis_unauthenticated_ping(
         Worker(), "vm-a", "cache.internal", 6379, tls=False,
     )
