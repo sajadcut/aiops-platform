@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 
 from fastapi import Request
 from fastapi.responses import StreamingResponse
@@ -110,13 +111,13 @@ async def get_host_discovery(incident_id: UUID):
                 str(item.get("requested_runtime_unit"))[:128]
                 if item.get("verification_status") == "vm_canonical_unit_mismatch"
                 and isinstance(item.get("requested_runtime_unit"), str)
-                and __import__("re").fullmatch(r"[a-z0-9@_.:-]{2,128}", item["requested_runtime_unit"])
+                and re.fullmatch(r"[a-z0-9@_.:-]{2,128}", item["requested_runtime_unit"])
                 else None),
             "observed_canonical_unit": (
                 str(item.get("observed_canonical_unit"))[:128]
                 if item.get("verification_status") == "vm_canonical_unit_mismatch"
                 and isinstance(item.get("observed_canonical_unit"), str)
-                and __import__("re").fullmatch(r"[a-z0-9@_.:-]{2,128}", item["observed_canonical_unit"])
+                and re.fullmatch(r"[a-z0-9@_.:-]{2,128}", item["observed_canonical_unit"])
                 else None),
             "verification_method": (str(item.get("verification_method") or "")[:16]
                                     if item.get("verification_method") in {"hostname", "ip"} else None),
