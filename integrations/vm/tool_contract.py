@@ -102,7 +102,20 @@ def validate_vm_observation(tool: str, target: str, payload: Any) -> dict[str, A
     if not payload["success"]:
         return payload
     if tool == "dependency_investigation":
-        if payload.get("execution_authority") is not False:
+        safe_top = {
+            "success", "target", "service", "status", "diagnostic", "read_only",
+            "execution_authority", "root_cause_confirmed", "application_health_verified",
+            "protocol_health_verified", "config_contents_exposed", "secrets_exposed",
+            "config_files_checked", "config_files_failed", "checks_executed",
+            "dependencies", "limitations", "error", "observed_at",
+        }
+        if not set(payload) <= safe_top:
+            raise ValueError("vm_mcp_dependency_unexpected_payload")
+        if any(payload.get(k) is not False for k in (
+            "execution_authority", "root_cause_confirmed",
+            "config_contents_exposed", "secrets_exposed",
+        )):
+            raise ValueError("vm_mcp_dependency_safety_claim_invalid")
             raise ValueError("vm_mcp_dependency_execution_authority_invalid")
         rows = payload.get("dependencies")
         if not isinstance(rows, list) or len(rows) > 6:
