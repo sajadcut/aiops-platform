@@ -12,7 +12,7 @@ from prometheus_client import Counter, Histogram
 from apps.chatbot.models import ChatMessageRequest, ChatMessageResponse
 from apps.chatbot.service import ChatbotService
 from apps.chatbot.tools import ToolIntent
-from apps.chatbot.vm_result_formatter import render_vm_disk_status, render_vm_services
+from apps.chatbot.vm_result_formatter import render_vm_disk_status, render_vm_services, render_vm_investigation
 from apps.security.oidc import Identity
 from integrations.llm.base import LLMAdapter, LLMResponse
 from integrations.llm.openai_compatible import configured_llm_adapter
@@ -220,6 +220,34 @@ def _deterministic_vm_service_read_call(
     if not turns:
         return None
     current = turns[-1].replace("\u200c", " ")
+    # Explicit causal questions require a bounded evidence chain, never only
+    # a cached/service_status result. An imperative write is not investigation.
+    causal = bool(re.search(
+        r"چرا|علت|عیب.?یابی|\bwhy\b|\btroubleshoot\b|\bdiagnos|\bslow\b|کند|"
+        r"بالا\s*نمی|بالا\s*نمی|استارت\s*نمی|خطای\s*سرویس",
+        current, re.IGNORECASE,
+    ))
+    if causal and "vm_investigate" in _available_tool_names(tools):
+        # Avoid mistaking imperative service mutations for read-only diagnosis.
+        imperative = bool(re.search(
+            r"(?:ریستارت|استارت|restart|start|reload|اعمال|اصلاح).{0,15}(?:کن|بزن|اجرا\s*کن)",
+            current, re.IGNORECASE,
+        ))
+        if not imperative:
+            target = _resolve_vm_target_from_turns(turns)
+            if target:
+                service = _resolve_service_from_turns(turns)
+                scope = "service_start_failure" if service and re.search(
+                    r"سرویس|\bservice\b|بالا\s*نمی|استارت\s*نمی|\bfailed\b|\bdown\b",
+                    current, re.IGNORECASE,
+                ) else "host_performance"
+                args: dict[str, Any] = {"target": target, "scope": scope}
+                if scope == "service_start_failure":
+                    args["service"] = service
+                return {"id": "deterministic-vm-investigation", "type": "function",
+                        "function": {"name": "vm_investigate", "arguments": json.dumps(
+                            args, ensure_ascii=False, separators=(",", ":"))}}
+
     if _MUTATION_REQUEST_RE.search(current):
         return None
     if not (
@@ -585,6 +613,12 @@ class OperationsCopilotService(ChatbotService):
         session_id: str,
         recent_operator_context: str = "",
     ) -> str:
+        if intent.tool_name == "vm_investigation":
+            rendered = render_vm_investigation(
+                payload, persian=bool(_PERSIAN_RE.search(f"{recent_operator_context}\n{user_message}")),
+            )
+            if rendered is not None:
+                return rendered
         # Numeric disk inventories are rendered deterministically from structured
         # MCP data, rather than risking loss of rows or percentage hallucination.
         if intent.tool_name == "vm_telemetry" and intent.action in {"list_services", "search_services"}:

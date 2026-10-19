@@ -13,6 +13,7 @@ def test_chatbot_tool_catalog_is_bounded_and_has_no_arbitrary_execution():
     names = {item["function"]["name"] for item in CHAT_TOOL_SCHEMAS}
     assert names == {
         "vm_metrics",
+        "vm_investigate",
         "vm_diagnostics",
         "vm_services",
         "vm_service_status",
@@ -113,3 +114,16 @@ def test_vm_service_inventory_is_read_only_and_scope_bounded():
     assert search.action == "search_services"
     with pytest.raises(ValueError, match="invalid_vm_service_search_query"):
         normalize_tool_intent("vm_services", {"target": "vm1", "filter": "search", "query": ""})
+
+
+
+def test_vm_investigate_is_read_only_and_scoped():
+    service = normalize_tool_intent("vm_investigate", {
+        "target": "vm-1", "scope": "service_start_failure", "service": "gfpapi"})
+    assert service.tool_name == "vm_investigation"
+    assert not service.mutating and service.action == "service_start_failure"
+    assert service.parameters == {"service": "gfpapi"}
+    perf = normalize_tool_intent("vm_investigate", {"target": "vm-1", "scope": "host_performance"})
+    assert perf.action == "host_performance" and perf.parameters == {}
+    with pytest.raises(ValueError):
+        normalize_tool_intent("vm_investigate", {"target": "vm-1", "scope": "service_start_failure"})

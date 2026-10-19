@@ -26,6 +26,23 @@ CHAT_TOOL_SCHEMAS = [
     {
         "type": "function",
         "function": {
+            "name": "vm_investigate",
+            "description": "Investigate why a VM is slow or an allowlisted systemd service fails to start, using a bounded multi-step governed READ-ONLY evidence plan. Never assert root cause or recovery without independent proof.",
+            "parameters": {
+                "type": "object",
+                "required": ["target", "scope"],
+                "additionalProperties": False,
+                "properties": {
+                    "target": {"type": "string"},
+                    "scope": {"type": "string", "enum": ["host_performance", "service_start_failure"]},
+                    "service": {"type": "string"}
+                }
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "vm_metrics",
             "description": "Read live CPU, memory, swap, load and IO metrics for one VM through the governed VM MCP. This is a read-only operation and never requires user confirmation.",
             "parameters": {
@@ -231,6 +248,16 @@ def parse_tool_call(call: dict[str, Any]) -> tuple[str, dict[str, Any]]:
 
 
 def normalize_tool_intent(name: str, args: dict[str, Any]) -> ToolIntent:
+    if name == "vm_investigate":
+        target = _safe_name(args.get("target"), "target")
+        scope = str(args.get("scope") or "").strip()
+        if scope not in {"host_performance", "service_start_failure"}:
+            raise ValueError("invalid_vm_investigation_scope")
+        service = (_safe_name(args.get("service"), "service")
+                   if scope == "service_start_failure" else None)
+        return ToolIntent(name, "vm_investigation", scope, target,
+                          {"service": service} if service else {}, False, "low")
+
     if name == "vm_metrics":
         return ToolIntent(name, "vm_telemetry", "collect_vm_metrics", _safe_name(args.get("target"), "target"), {}, False, "low")
 

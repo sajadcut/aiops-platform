@@ -147,3 +147,90 @@ def render_vm_services(payload: dict[str, Any], *, persian: bool = True) -> str 
     if result.get("truncated") or len(rows) > 500:
         lines.append("هشدار: فهرست ناقص است." if persian else "Warning: inventory truncated.")
     return "\n".join(lines)
+
+
+
+def render_vm_investigation(payload: dict[str, Any], *, persian: bool = True) -> str | None:
+    """Evidence-first diagnostic narrative; never equate systemd with app health."""
+    raw = payload.get("result")
+    if not isinstance(raw, dict) or not isinstance(raw.get("observations"), list):
+        return None
+    target = _label(raw.get("target"))
+    service = _label(raw.get("service")) if raw.get("service") else None
+    steps = raw["observations"][:7]
+    fa = persian
+    lines = [
+        (f"بررسی چندمرحله‌ای {'سرویس '+service if service else 'سرور'} روی {target}"
+         if fa else f"Multi-step VM investigation: {service or target} on {target}"),
+        (f"زمان بررسی: {_label(raw.get('observed_at'))} | منبع: MCP زنده"
+         if fa else f"Observed: {_label(raw.get('observed_at'))} | Source: governed VM MCP"),
+    ]
+    data_by_tool: dict[str, dict[str, Any]] = {}
+    for step in steps:
+        if not isinstance(step, dict):
+            continue
+        tool = _label(step.get("tool"))
+        status = str(step.get("status") or "unknown")
+        data = step.get("data")
+        if status == "observed" and isinstance(data, dict):
+            data_by_tool[tool] = data
+            msg = "شاهد دریافت شد" if fa else "evidence received"
+        else:
+            msg = _label(step.get("error") or status)
+        lines.append(f"- {tool}: {msg}")
+    hypotheses: list[str] = []
+    service_state = data_by_tool.get("service_status")
+    if service_state:
+        state = _label(service_state.get("active_state") or "unknown")
+        lines.append(f"{'وضعیت systemd' if fa else 'systemd state'}: {state}")
+        if state != "active":
+            hypotheses.append("سرویس در systemd فعال نیست؛ علت توقف نیاز به شواهد بیشتر دارد."
+                              if fa else "systemd does not report active; the failure cause is not yet proven.")
+    metrics = data_by_tool.get("collect_vm_metrics", {}).get("metrics")
+    if isinstance(metrics, dict):
+        for key, label in (("cpu_usage", "CPU"), ("memory_usage", "RAM"), ("io_wait", "I/O wait")):
+            value = metrics.get(key)
+            if type(value) in (float, int) and 0 <= value <= 100:
+                lines.append(f"{label}: {value:.2f}%")
+                if key == "cpu_usage" and value >= 90:
+                    hypotheses.append("فشار CPU مشاهده شده، اما علت کندی به‌تنهایی اثبات نمی‌شود."
+                                      if fa else "High CPU observed; causation remains unproven.")
+    disk = data_by_tool.get("disk_status", {})
+    disks = disk.get("filesystems") if isinstance(disk, dict) else []
+    if isinstance(disks, list):
+        for entry in disks[:32]:
+            if not isinstance(entry, dict):
+                continue
+            percent = _percentage(entry.get("use_percent"))
+            if percent is None:
+                continue
+            free = _bytes(entry.get("available"))
+            mount = _label(entry.get("mount"))
+            lines.append(f"{'دیسک' if fa else 'Disk'} {mount}: {percent} {'مصرف' if fa else 'used'}, {'آزاد' if fa else 'free'} {free or '?'}")
+            if float(percent.removesuffix("%")) >= 95:
+                hypotheses.append(f"{'ظرفیت دیسک' if fa else 'Disk pressure'} {mount}: {percent} "
+                                  + ("می‌تواند عامل مؤثر باشد؛ علت قطعی اثبات نشده است." if fa
+                                     else "may contribute; no causality established."))
+    logs = data_by_tool.get("service_logs", {}).get("logs")
+    if isinstance(logs, list):
+        excerpt = "\n".join(str(x) for x in logs[-25:]).lower()
+        patterns = (
+            ("permission denied", "رد دسترسی در لاگ مشاهده شد." if fa else "Permission denied observed in logs."),
+            ("address already in use", "تداخل پورت در لاگ مشاهده شد." if fa else "Port conflict observed in logs."),
+            ("syntax error", "خطای syntax در لاگ مشاهده شد." if fa else "Syntax error observed in logs."),
+            ("out of memory", "نشانهٔ کمبود حافظه در لاگ مشاهده شد." if fa else "OOM evidence observed in logs."),
+        )
+        for token, finding in patterns:
+            if token in excerpt:
+                hypotheses.append(finding)
+    if hypotheses:
+        lines.append("یافته‌ها و فرضیه‌ها:" if fa else "Findings and hypotheses:")
+        lines.extend("- " + item for item in hypotheses[:6])
+    else:
+        lines.append("علت قطعی از شواهد موجود مشخص نشد." if fa else "No confirmed cause from the available evidence.")
+    if raw.get("partial") or raw.get("success") is not True:
+        lines.append("هشدار: جمع‌آوری شواهد ناقص است؛ بررسی نتیجهٔ قطعی ندارد." if fa
+                     else "Warning: evidence collection is incomplete; no definitive conclusion.")
+    lines.append("سلامت اپلیکیشن و Recovery تأیید نشده‌اند؛ این بررسی فقط خواندنی است." if fa
+                 else "Application health and recovery remain unverified; this investigation is read-only.")
+    return "\n".join(lines)
