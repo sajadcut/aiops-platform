@@ -23,6 +23,7 @@ from apps.approval_service import ApprovalService
 from apps.audit_service import AuditService
 from apps.context_service.evidence_collector import EvidenceCollector
 from apps.context_service.knowledge_relevance import filter_service_knowledge
+from apps.context_service.knowledge_orientation import build_orientation
 from apps.context_service.service_identity import ServiceIdentityResolver
 from apps.evaluator.gate import EvaluationGate
 from apps.decision_engine import DecisionAction, DecisionEngine
@@ -291,11 +292,14 @@ class E2EOrchestrator:
         context = dict(state.get("context", {}))
         service = state.get("service_name") or context.get("service") or "unknown"
         query = str(context.get("incident", {}).get("summary") or state.get("evidence_summary") or service)
+        # Ingest has already consulted Cognia for topology AND the service
+        # stack before deciding the initial correlation path. Keep its
+        # provenance rather than discarding it before the triage LLM.
+        upstream = context.get("knowledge_results")
+        upstream = upstream if isinstance(upstream, list) else []
         state["knowledge_results"] = []
         state["knowledge_status"] = {
-            "provider": "cognia",
-            "status": "not_queried",
-            "count": 0,
+            "provider": "cognia", "status": "not_queried", "count": 0,
         }
         state["memory_results"] = []
 
@@ -349,8 +353,20 @@ class E2EOrchestrator:
                         incident.get("context") if isinstance(incident, dict) else None
                     ),
                 )
+                # Ingest discovery is not subject-scoped; never reuse its
+                # documents when an incident requires Cognia subject isolation.
+                # Even outside that case, reapply the relevance gate to both
+                # sources against the authoritative trigger service/FQDN.
+                combined = (upstream[:settings.AGENT_MAX_AUXILIARY_CONTEXT_ITEMS]
+                            if subject is None else []) + list(raw_knowledge or [])
+                unique: dict[str, dict] = {}
+                for index, document in enumerate(combined[:60]):
+                    if not isinstance(document, dict):
+                        continue
+                    source_id = str(document.get("source_id") or document.get("id") or "")
+                    unique.setdefault(source_id or f"unreferenced-{index}", document)
                 documents, relevance = filter_service_knowledge(
-                    raw_knowledge, expected_service=expected_service,
+                    unique.values(), expected_service=expected_service,
                     expected_fqdns=expected_fqdns, purpose="e2e_context",
                 )
                 state["knowledge_results"] = documents[:settings.AGENT_MAX_AUXILIARY_CONTEXT_ITEMS]
@@ -359,11 +375,35 @@ class E2EOrchestrator:
                     "status": ("filtered_empty" if relevance["rejected_count"] and not documents
                                else "available" if documents else "empty"),
                     "count": len(state["knowledge_results"]),
+                    "phase": "pre_triage_knowledge_orientation",
+                    "ingest_documents_considered": min(
+                        len(upstream), settings.AGENT_MAX_AUXILIARY_CONTEXT_ITEMS
+                    ) if subject is None else 0,
                     "relevance": relevance,
                 }
             except Exception as exc:
-                state["knowledge_status"] = self._knowledge_failure_status(exc)
-                state["knowledge_status"]["count"] = 0
+                # The context lookup may fail after a successful ingestion
+                # lookup. Subject-scoped incidents must not reuse the earlier,
+                # unscoped documents. Never describe a network failure as
+                # "no knowledge exists".
+                if subject is None and upstream:
+                    filtered, relevance = filter_service_knowledge(
+                        upstream, expected_service=(
+                            str((context.get("trigger_signal") or {}).get("service") or "")
+                            if isinstance(context.get("trigger_signal"), dict) else service
+                        ) or service, purpose="e2e_ingest_fallback",
+                    )
+                    state["knowledge_results"] = filtered[:settings.AGENT_MAX_AUXILIARY_CONTEXT_ITEMS]
+                    state["knowledge_status"] = {
+                        "provider": "cognia", "status": "partial" if filtered else "unavailable",
+                        "count": len(state["knowledge_results"]),
+                        "code": type(exc).__name__,
+                        "relevance": relevance,
+                        "phase": "pre_triage_knowledge_orientation",
+                    }
+                else:
+                    state["knowledge_status"] = self._knowledge_failure_status(exc)
+                    state["knowledge_status"]["count"] = 0
                 logger.warning(
                     "knowledge_rag_retrieval_failed",
                     provider=state["knowledge_status"].get("provider"),
@@ -374,7 +414,7 @@ class E2EOrchestrator:
             knowledge_status = str(state.get("knowledge_status", {}).get("status") or "")
             await self.progress_emitter(
                 state.get("incident_id"), "knowledge",
-                "completed" if knowledge_status in {"available", "empty", "filtered_empty"}
+                "completed" if knowledge_status in {"available", "empty", "filtered_empty", "partial"}
                 else "skipped" if knowledge_status == "invalid_scope" else "failed",
             )
         # Preserve independently verified, pre-ingest read-only VM status
@@ -450,6 +490,13 @@ class E2EOrchestrator:
 
         context["knowledge_results"] = state["knowledge_results"]
         context["knowledge_status"] = state["knowledge_status"]
+        # Service-owned Cognia hints are explicitly advisory: triage can
+        # consider them alongside live evidence, never promote them to an
+        # observed runtime, verified config path, endpoint, or write scope.
+        context["knowledge_orientation"] = build_orientation(
+            state["knowledge_results"],
+            expected_service=state.get("service_name") or service,
+        )
         context["memory_results"] = state["memory_results"]
         context["historical_operational_memory"] = {
             "policy": "HISTORICAL OPERATIONAL EXPERIENCE - NOT CURRENT EVIDENCE",
