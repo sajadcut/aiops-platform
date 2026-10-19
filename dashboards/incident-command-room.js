@@ -2877,6 +2877,12 @@
             'The model changed unrelated lines. Its patch was correctly rejected; rebuild and validate a minimal fix before queuing Approval.':
             'Reason: no complete acceptable candidate was produced or securely stored; approval cannot be queued.'))+
       '</p>':'';
+    const recordedRequest=state.configResponse?.approval_queue_registered===true&&
+      approval==='pending_validation'?
+      '<p role="status" data-config-request-status="recorded">'+
+      esc(fa?'درخواست تغییر در صف Approval ثبت شد؛ وضعیت: pending_validation، بدون مجوز اعمال فایل.':
+        'Configuration change queued for human Approval: pending_validation. No apply authority.')+
+      '</p>':'';
     const warning=signingBlocked?
       '<p class="ic-config-banner-warning" role="status">'+
         esc(fa?'اعمال فعلاً متوقف است: توکن MCP در API برای امضای اجرا تنظیم نشده یا ضعیف است.':
@@ -2902,7 +2908,7 @@
       '</p>':'';
     node.innerHTML='<div class="ic-config-banner-copy"><strong style="font-size:1.2rem;">'+esc(title)+'</strong>'+urgentExplanation+
       '<p class="ic-config-banner-summary">'+summary+'</p>'+
-      '<p>'+esc(instruction)+'</p>'+stagedCode+repairWarning+warning+liveStatus+technical+
+      '<p>'+esc(instruction)+'</p>'+recordedRequest+stagedCode+repairWarning+warning+liveStatus+technical+
       '</div><div class="ic-config-banner-actions">'+primary+secondary+extraLLMButton+'</div>';
   }
 
