@@ -79,7 +79,7 @@ async def test_specialist_redis_probe_also_refuses_guessed_port():
         def _validate_service(self, service): pass
         async def service_config_discovery(self, *args):
             return {"success": True, "files": [
-                {"path": "/app/appsettings.json", "verified_exists": True},
+                {"path": "/srv/prod/appsettings.json", "verified_exists": True},
             ]}
         async def _run(self, *args):
             return {"success": True, "stdout": encoded}
