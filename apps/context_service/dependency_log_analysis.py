@@ -166,7 +166,7 @@ async def analyze_dependency_logs(
                 ip_mentions = re.findall(r"(?<![\w.])(?:\d{1,3}\.){3}\d{1,3}(?![\w.])", text)
                 if (candidate in _ALLOWED and 20 <= len(text) <= 650
                         and not any(host not in allowed_hosts for host in ip_mentions)
-                        and not re.search(r"علت\s+قطعی|قطعاً\s+مشخص|ریشه\s+تأیید", text)):
+                        and not re.search(r"علت\s+قطعی\s+(?:است|مشخص|تأیید\s+شده)|قطعاً\s+مشخص|ریشه\s+تأیید\s+شده", text)):
                     hypothesis = candidate
                     narrative = str(redact(text))
                     model_status = "llm_analyzed"
