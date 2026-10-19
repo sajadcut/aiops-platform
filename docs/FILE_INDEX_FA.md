@@ -3,7 +3,7 @@
 > این فایل فهرست فایل‌به‌فایل repository است. توضیح معماری و flow در `CODEBASE_GUIDE_FA.md` آمده است.
 > این فایل با `scripts/generate_file_index_fa.py` ساخته و در CI کنترل می‌شود.
 
-**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 753**
+**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 755**
 
 | Path | Type | Purpose | Called By | Calls/Depends On | Runtime/Test/Docs | Notes |
 |---|---|---|---|---|---|---|
@@ -156,6 +156,7 @@
 | `apps/execution_service/tools/registry.py` | Python | Execution: مرز اجرای governed، tool registry، idempotency و policy | API/workflow | Approval/tools/MCP | Runtime | write boundary؛ fail-closed |
 | `apps/execution_service/tools/ssh_vm.py` | Python | Execution: مرز اجرای governed، tool registry، idempotency و policy | API/workflow | Approval/tools/MCP | Runtime | write boundary؛ fail-closed |
 | `apps/execution_service/tools/vm_telemetry.py` | Python | Execution: مرز اجرای governed، tool registry، idempotency و policy | API/workflow | Approval/tools/MCP | Runtime | write boundary؛ fail-closed |
+| `apps/incident_alert_explanation.py` | Python | ماژول service لایه application | Runtime | domain/integrations | Runtime | جزء Control Plane |
 | `apps/incident_alert_focused_report.py` | Python | ماژول service لایه application | Runtime | domain/integrations | Runtime | جزء Control Plane |
 | `apps/incident_copilot.py` | Python | ماژول service لایه application | Runtime | domain/integrations | Runtime | جزء Control Plane |
 | `apps/incident_elastic.py` | Python | ماژول service لایه application | Runtime | domain/integrations | Runtime | جزء Control Plane |
@@ -605,6 +606,7 @@
 | `tests/unit/test_http_transport_policy.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_idempotency.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_identity_reliability_engine.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
+| `tests/unit/test_incident_alert_explanation.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_incident_alert_focused_report.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_incident_analysis_live_status.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_incident_command_room.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
