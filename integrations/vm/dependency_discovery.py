@@ -167,7 +167,7 @@ def discover(config: object, limit: int = MAX_ENDPOINTS) -> list[dict]:
                 record["tls_requested"] = tls_requested is True
             output.append(record)
 
-    def parse(value, hint, source_key=None):
+    def parse(value, hint, source_key=None, explicit_port=None):
         if not isinstance(value, str) or len(value) > 1900 or (
             "$" in value or "%" in value
         ):
@@ -230,13 +230,22 @@ def discover(config: object, limit: int = MAX_ENDPOINTS) -> list[dict]:
                     tls_requested=(hint == "redis" and redis_tls))
             elif hint in {v[0] for v in KINDS.values()} and "=" not in token:
                 default = next((p for k, p in KINDS.values() if k == hint), None)
-                put(hint, token, default, inferred=True, source_key=source_key,
+                port = explicit_port if explicit_port is not None else default
+                put(hint, token, port, inferred=explicit_port is None, source_key=source_key,
                     tls_requested=(hint == "redis" and redis_tls))
 
-    def walk(node, hint=None, depth=0, keypath=()):
+    def walk(node, hint=None, depth=0, keypath=(), inherited_port=None):
         if depth > 8 or len(output) >= limit:
             return
         if isinstance(node, dict):
+            # Host and Port can live in the same object or its Redis/database
+            # parent, e.g. Redis: {Port: 6389, Endpoints: {Host: ...}}.
+            # This is a verified config value, never a default guessed by LLM.
+            local_ports = [
+                safe_port(v) for k, v in node.items()
+                if re.sub("[^a-z0-9]", "", str(k).lower()) == "port"
+            ]
+            explicit_port = next((p for p in local_ports if p is not None), inherited_port)
             for key, item in list(node.items())[:100]:
                 name = re.sub("[^a-z0-9]", "", str(key).lower())
                 if SECRET.search(name):
@@ -267,19 +276,19 @@ def discover(config: object, limit: int = MAX_ENDPOINTS) -> list[dict]:
                 if isinstance(item, dict):
                     if next_hint != "database":
                         host = item.get("Host", item.get("host", item.get("hostname")))
-                        port = item.get("Port", item.get("port"))
+                        port = item.get("Port", item.get("port")) or explicit_port
                         if host and port:
                             put(next_hint or "custom_tcp", host, port, source_key=source_key)
                             # The same host key must not produce a spurious
                             # additional probe on the default vendor port.
                             reduced = {k: v for k, v in item.items()
                                        if k.lower() not in {"host", "hostname"}}
-                            walk(reduced, next_hint, depth + 1, source_path)
+                            walk(reduced, next_hint, depth + 1, source_path, explicit_port)
                             continue
-                    walk(item, next_hint, depth + 1, source_path)
+                    walk(item, next_hint, depth + 1, source_path, explicit_port)
                 elif isinstance(item, list):
                     for child in item[:8]:
-                        walk(child, next_hint, depth + 1, source_path)
+                        walk(child, next_hint, depth + 1, source_path, explicit_port)
                 elif isinstance(item, str) and (
                     (next_hint and (next_hint != hint or name in ENDPOINT_FIELDS))
                     or (hint == "database" and (
@@ -288,7 +297,7 @@ def discover(config: object, limit: int = MAX_ENDPOINTS) -> list[dict]:
                         )
                     ))
                 ):
-                    parse(item, next_hint or "database", source_key)
+                    parse(item, next_hint or "database", source_key, explicit_port)
         elif isinstance(node, str) and hint:
             parse(node, hint, safe_config_key(keypath))
 
