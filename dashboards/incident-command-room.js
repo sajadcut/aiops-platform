@@ -1798,6 +1798,11 @@
     const alertChecks=alertObserved.map(row=>
       '<li><strong>'+txt(row.tool||'MCP')+'</strong> — '+txt(row.result)+
       ' <small>('+txt(row.status||'unknown')+')</small>'+
+      (row.scope==='service_identity_not_recorded'
+        ?'<small>'+esc(fa
+          ?'هویت سرویس در همین مشاهده ثبت نشده؛ انتساب به این آلارم هنوز نیازمند تأیید است.'
+          :'Service identity was not recorded for this check; attribution remains unverified.')+'</small>'
+        :'')+
       refs([row.evidence_ref].filter(Boolean))+'</li>');
     const alertSection='<div class="ic-ir-alert-focus" data-alert-focus="mandatory">'+
       '<p><strong>'+esc(fa?'متن هشدار مورد بررسی: ':'Alert being investigated: ')+
