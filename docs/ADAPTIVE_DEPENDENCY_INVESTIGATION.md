@@ -86,3 +86,30 @@ GitHub CI is necessary but not sufficient. Actual endpoint protocol,
 credentials, Zabbix/Prometheus label mapping, VM worker allowlists, and
 application behavior require real-environment tests and must be reported
 as REAL ENV REQUIRED until observed.
+
+## LLM-assisted, file-backed host/port binding
+
+A dependency error must be investigated against the **service's verified config file**, not a vendor-default port. The VM MCP worker discovers a candidate through systemd/service configuration discovery, verifies file existence, securely reads the full file and parses JSON/JSONC, YAML, properties, XML or other supported structured formats. Raw config and secrets remain inside the trusted worker.
+
+The optional LLM step in `integrations/vm/dependency_llm_binding.py` receives only a bounded, allowlisted projection: structural host/port field paths and validated host/port scalar values. It selects field **IDs** instead of proposing new values. The worker independently resolves selected IDs against its own parsed document and verifies the same dependency family/scope and an explicit, valid port. Only then is a bounded TCP/HTTP probe permitted. The model **cannot** authorize arbitrary host/port scanning, change targets, return credentials, modify files or execute remediation. If a sibling group has multiple plausible ports and no verifiable association, no speculative probe is performed.
+
+Example (verified service configuration):
+
+```json
+{
+  "Redis": {
+    "Endpoints": {"Primary": {"Host": "10.248.34.221"}},
+    "ConnectionOptions": {"TcpPort": 6389}
+  }
+}
+```
+
+A successful model selection of the existing `Redis.Endpoints.Primary.Host` and `Redis.ConnectionOptions.TcpPort` IDs yields the **literal** endpoint `10.248.34.221:6389` with `port_inferred=false`, `config_key`, `config_port_key`, `config_file` and `endpoint_source=llm_binding_independently_verified`. No check on 6379 is justified by these values. If the endpoint is not verifiable, emit `port_unverified` or the model-binding diagnostic; never manufacture a successful TCP connection.
+
+### Runtime configuration and status
+
+To use this step, the **VM MCP process** (which executes the trusted config read) must have its own valid `LLM_PROVIDER`, `LLM_BASE_URL`, `LLM_MODEL` and, if required by the provider, `LLM_API_KEY` configuration. The model endpoint must use HTTPS (loopback HTTP is allowed for local development). Configuring an LLM **only** in the API process does not activate model calls from the separate VM MCP process. No extra signing keys are introduced.
+
+The read-only `dependency_investigation` response reports `llm_field_binding_status` and bounded `llm_field_binding_files` metadata. Examples include `verified`, `trusted_llm_not_configured`, `no_safe_host_port_candidates`, `llm_response_invalid`, `llm_cross_dependency_selection` and `llm_binding_unavailable`. The existing strict parser can still discover and test explicitly configured endpoints if the LLM is unavailable; this fallback must be shown as deterministic rather than attributed to an LLM.
+
+Deployment acceptance requires a **real** VM MCP read and observed TCP outcome on the application's effective configured port. Unit tests are not a substitute for it. Compare the config source keys with the application's active environment overrides and verify that any dynamically injected endpoint is either independently resolved or explicitly marked `effective_endpoint_unverified`.

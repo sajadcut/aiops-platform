@@ -9,6 +9,7 @@ import shlex
 from typing import Any
 
 from integrations.vm.dependency_discovery import discover, load_config
+from integrations.vm.dependency_llm_binding import resolve_llm_bindings
 from integrations.vm.general_config_review import checked_config_path, remote_config_read_command
 from integrations.vm.protocol_diagnostics import redis_unauthenticated_ping
 
@@ -63,6 +64,8 @@ async def investigate(connector: Any, target: str, service: str) -> dict:
         "config_files_parse_failed": 0, "checks_executed": 0, "dependencies": [],
         "limitations": ["network_probe_not_equal_protocol_health"],
         "investigation_status": "not_started", "next_checks": [],
+        "llm_field_binding_status": "not_requested",
+        "llm_field_binding_files": [],
     }
     try:
         discovered = await connector.service_config_discovery(target, service)
@@ -110,14 +113,43 @@ async def investigate(connector: Any, target: str, service: str) -> dict:
             base["config_files_checked"] += 1
             # Preserve the exact verified source file and structural setting
             # key; only selected endpoint facts leave the trusted worker.
+            # The entire verified document is parsed on the trusted worker.
+            # LLM receives only host/port field IDs, paths and safe literal
+            # values; never source bytes, secrets, or arbitrary config strings.
+            llm = await resolve_llm_bindings(config)
+            base["llm_field_binding_files"].append({
+                "config_file": verified_path,
+                "status": llm["status"],
+                "candidate_host_count": llm["candidate_host_count"],
+                "candidate_port_count": llm["candidate_port_count"],
+                "verified_pair_count": len(llm["endpoints"]),
+            })
+            selected = llm["endpoints"]
+            if selected:
+                # A model-chosen pair is only accepted after independent
+                # resolution to the exact literal keys/values in THIS file.
+                base["llm_field_binding_status"] = "verified"
+            elif base["llm_field_binding_status"] != "verified":
+                base["llm_field_binding_status"] = llm["status"]
+            static = discover(config)
+            selected_targets = {(item["kind"], item["host"]) for item in selected}
+            # A vendor-default inference must not compete with a precisely
+            # bound value discovered in the same configuration.
+            static = [
+                row for row in static
+                if not (row.get("port_inferred") is True and
+                        (row["kind"], row["host"]) in selected_targets)
+            ]
             by_file.append([
                 {**item, "config_file": verified_path}
-                for item in discover(config)[:MAX_CHECKS]
+                for item in (selected + static)[:MAX_CHECKS]
             ])
         except Exception:
             # No parser trace or input excerpts: they can contain credentials.
             read_failed += 1
     base["config_files_failed"] = read_failed
+    # Never persist the complete parsed config or prompt in incident evidence.
+    # Only bounded field counts, path provenance, and transport outcomes leave.
     # Spread the fixed probe budget across verified files. Otherwise one
     # config with six endpoints can starve the failing dependency in another.
     known: list[dict] = []
