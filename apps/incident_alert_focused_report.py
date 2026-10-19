@@ -169,7 +169,24 @@ def build_alert_focused_report(incident: dict, evidence: list[dict],
             # this one. Explicitly mapped aliases require separate live identity.
             continue
         if tool == "dependency_investigation" and len(binding_diagnostics) < 3:
+            checked_kinds = sorted({
+                _text(check.get("kind"), 28)
+                for check in checks[:6]
+                if isinstance(check, dict) and check.get("kind")
+            })
+            family_checks = [
+                check for check in checks[:6] if isinstance(check, dict)
+                and _KIND_FAMILY.get(str(check.get("kind") or "").lower()) == family
+            ]
             binding_diagnostics.append({
+                # A successful generic dependency investigation is NOT a
+                # successful investigation of the alert's DB/broker family.
+                "alert_family": family,
+                "matching_endpoint_count": len(family_checks),
+                "other_dependency_kinds": [
+                    kind for kind in checked_kinds
+                    if _KIND_FAMILY.get(kind.lower()) != family
+                ],
                 "status": _text(row.get("dependency_discovery_status"), 70),
                 "binding_status": _text(row.get("llm_field_binding_status"), 70),
                 "agent_contract_status": _text(row.get("dependency_agent_contract_status"), 70),
