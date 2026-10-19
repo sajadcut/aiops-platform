@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 592 | Dashboard JS files scanned: 8 | Symbols indexed: 6696**
+**Python files scanned: 592 | Dashboard JS files scanned: 8 | Symbols indexed: 6718**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1097,8 +1097,8 @@
 | `apps/context_service/asset_identity.py` | `AssetIdentityResolver._classify_elastic` | 316 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AssetIdentityResolver |
 | `apps/context_service/builder.py` | `ContextBuilder` | 4 | class | Normalizes an incoming incident context and preserves evidence refs. | module |
 | `apps/context_service/builder.py` | `ContextBuilder.build` | 7 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | ContextBuilder |
-| `apps/context_service/dependency_signals.py` | `dependency_signals` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/context_service/dependency_signals.py` | `has_dependency_probe` | 48 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/context_service/dependency_signals.py` | `dependency_signals` | 36 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/context_service/dependency_signals.py` | `has_dependency_probe` | 56 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/context_service/evidence_collector.py` | `EvidenceCollector` | 13 | class | Read-only cross-source Evidence boundary used by orchestration. | module |
 | `apps/context_service/evidence_collector.py` | `EvidenceCollector.__init__` | 33 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
 | `apps/context_service/evidence_collector.py` | `EvidenceCollector._progress` | 42 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceCollector |
@@ -1168,10 +1168,10 @@
 | `apps/decision_brief.py` | `tool_failed` | 187 | function | HTTP 200 alone does not prove nested tool success. | module |
 | `apps/decision_brief.py` | `_agents` | 202 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/decision_brief.py` | `tool_observation_summary` | 272 | function | Only bounded, whitelisted scalar facts: never dump journals or tool JSON. | module |
-| `apps/decision_brief.py` | `_mcp` | 343 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/decision_brief.py` | `_knowledge` | 406 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/decision_brief.py` | `_memory` | 499 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/decision_brief.py` | `build_decision_brief` | 524 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `apps/decision_brief.py` | `_mcp` | 355 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/decision_brief.py` | `_knowledge` | 418 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/decision_brief.py` | `_memory` | 511 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/decision_brief.py` | `build_decision_brief` | 536 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
 | `apps/decision_brief_history.py` | `archive_decision_brief` | 22 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/decision_brief_history.py` | `list_decision_brief_history` | 62 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/decision_brief_history.py` | `read_decision_brief_snapshot` | 83 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
@@ -1269,15 +1269,15 @@
 | `apps/incident_copilot.py` | `unsupported_security_exclusion_claim` | 239 | function | Prevent unverified negative auth claims from a fluent LLM response. | module |
 | `apps/incident_copilot.py` | `is_recovery_comparison_question` | 257 | function | A request to *explain* Start versus Restart is not a write request. | module |
 | `apps/incident_copilot.py` | `fallback_intent` | 277 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/incident_copilot.py` | `redis_dependency_answer` | 343 | function | Summarize only measured TCP outcomes; TCP is not Redis protocol health. | module |
-| `apps/incident_copilot.py` | `dependency_investigation_answer` | 380 | function | Grounded network observations, never a claim of dependency health. | module |
-| `apps/incident_copilot.py` | `public_result` | 407 | function | Project known diagnostic keys; never forward arbitrary MCP payloads. | module |
-| `apps/incident_copilot.py` | `nginx_inspection_answer` | 543 | function | Deterministic user-visible facts from sanitized VM MCP inspection. | module |
-| `apps/incident_copilot.py` | `_bounded_investigation_report` | 590 | function | Audit-safe evidence. Never persist raw journal text or command line. | module |
-| `apps/incident_copilot.py` | `vm_read` | 638 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/incident_copilot.py` | `llm_plan` | 691 | async function | LLM may select a bounded enum but cannot set a target or authorize writes. | module |
-| `apps/incident_copilot.py` | `history` | 814 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/incident_copilot.py` | `append_turn` | 835 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/incident_copilot.py` | `redis_dependency_answer` | 344 | function | Summarize only measured TCP outcomes; TCP is not Redis protocol health. | module |
+| `apps/incident_copilot.py` | `dependency_investigation_answer` | 381 | function | Grounded network observations, never a claim of dependency health. | module |
+| `apps/incident_copilot.py` | `public_result` | 438 | function | Project known diagnostic keys; never forward arbitrary MCP payloads. | module |
+| `apps/incident_copilot.py` | `nginx_inspection_answer` | 575 | function | Deterministic user-visible facts from sanitized VM MCP inspection. | module |
+| `apps/incident_copilot.py` | `_bounded_investigation_report` | 622 | function | Audit-safe evidence. Never persist raw journal text or command line. | module |
+| `apps/incident_copilot.py` | `vm_read` | 670 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/incident_copilot.py` | `llm_plan` | 723 | async function | LLM may select a bounded enum but cannot set a target or authorize writes. | module |
+| `apps/incident_copilot.py` | `history` | 851 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/incident_copilot.py` | `append_turn` | 872 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_elastic.py` | `is_elastic_question` | 13 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_elastic.py` | `wants_live_elastic` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_elastic.py` | `_iso` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -2539,15 +2539,16 @@
 | `integrations/vm/config_candidate_vault.py` | `_prune_expired` | 192 | function | Opportunistic bounded ciphertext retention, never touch unknown files. | module |
 | `integrations/vm/config_candidate_vault.py` | `store_candidate` | 216 | function | Seal the exact complete response, durably. Never return its bytes. | module |
 | `integrations/vm/config_candidate_vault.py` | `load_candidate` | 286 | function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `integrations/vm/dependency_discovery.py` | `safe_host` | 47 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/dependency_discovery.py` | `safe_port` | 58 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/dependency_discovery.py` | `load_config` | 65 | function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
-| `integrations/vm/dependency_discovery.py` | `discover` | 125 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/dependency_discovery.py` | `discover.put` | 129 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | discover |
-| `integrations/vm/dependency_discovery.py` | `discover.parse` | 143 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | discover |
-| `integrations/vm/dependency_discovery.py` | `discover.walk` | 187 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | discover |
+| `integrations/vm/dependency_discovery.py` | `safe_config_key` | 54 | function | Structural key provenance only; never return arbitrary config key/value. | module |
+| `integrations/vm/dependency_discovery.py` | `safe_host` | 64 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/dependency_discovery.py` | `safe_port` | 75 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/dependency_discovery.py` | `load_config` | 82 | function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
+| `integrations/vm/dependency_discovery.py` | `discover` | 146 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/dependency_discovery.py` | `discover.put` | 150 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | discover |
+| `integrations/vm/dependency_discovery.py` | `discover.parse` | 167 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | discover |
+| `integrations/vm/dependency_discovery.py` | `discover.walk` | 228 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | discover |
 | `integrations/vm/dependency_investigation.py` | `http_head` | 20 | async function | HEAD '/' only, no auth, redirects, proxy, body or user-provided URL path. | module |
-| `integrations/vm/dependency_investigation.py` | `investigate` | 51 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/dependency_investigation.py` | `investigate` | 52 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/dotnet_json_repair.py` | `_parse_strict` | 31 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/dotnet_json_repair.py` | `dotnet_json_repair` | 36 | function | Find a *unique*, parser-valid JSON candidate; do not guess values. | module |
 | `integrations/vm/dotnet_json_repair.py` | `dotnet_json_candidate` | 97 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -2734,8 +2735,8 @@
 | `integrations/vm/target_context.py` | `bind_vm_port` | 80 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/target_context.py` | `reset_vm_port` | 84 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/target_context.py` | `current_vm_port` | 88 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/tool_contract.py` | `output_schema` | 63 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/tool_contract.py` | `validate_vm_observation` | 88 | function | Subset of the output schema validated on both modern and legacy responses. | module |
+| `integrations/vm/tool_contract.py` | `output_schema` | 68 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/tool_contract.py` | `validate_vm_observation` | 95 | function | Subset of the output schema validated on both modern and legacy responses. | module |
 | `integrations/vm/windows_secure_acl.py` | `_worker_sid` | 12 | function | Obtain the actual worker token SID without pywin32 or guessing user names. | module |
 | `integrations/vm/windows_secure_acl.py` | `_worker_sid.SID_AND_ATTRIBUTES` | 17 | class | کلاس | _worker_sid |
 | `integrations/vm/windows_secure_acl.py` | `harden_private_windows_acl` | 68 | function | Protect only the dedicated candidate directory from inherited broad ACEs. | module |
@@ -6114,7 +6115,28 @@
 | `tests/unit/test_universal_dependency_investigation.py` | `test_incident_chat_generic_intents_are_read_only` | 134 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_universal_dependency_investigation.py` | `test_tomcat_context_xml_and_dotnet_app_config_are_only_structural_sources` | 147 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_universal_dependency_investigation.py` | `test_unknown_vendor_explicit_host_port_uses_generic_tcp_without_guessing` | 174 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_universal_dependency_investigation.py` | `test_mcp_result_contract_rejects_hidden_password_or_undeclared_fields` | 190 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_universal_dependency_investigation.py` | `test_mcp_result_contract_rejects_hidden_password_or_undeclared_fields` | 191 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_universal_dependency_investigation.py` | `test_generic_tcp_is_not_mislabeled_activemq_and_jdbc_sqlserver` | 217 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_universal_dependency_investigation.py` | `test_probe_budget_fair_across_service_verified_files_and_tracks_sources` | 237 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_universal_dependency_investigation.py` | `test_probe_budget_fair_across_service_verified_files_and_tracks_sources.Stub` | 250 | class | کلاس | test_probe_budget_fair_across_service_verified_files_and_tracks_sources |
+| `tests/unit/test_universal_dependency_investigation.py` | `test_probe_budget_fair_across_service_verified_files_and_tracks_sources.Stub._validate_target` | 251 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_probe_budget_fair_across_service_verified_files_and_tracks_sources.Stub |
+| `tests/unit/test_universal_dependency_investigation.py` | `test_probe_budget_fair_across_service_verified_files_and_tracks_sources.Stub._validate_service` | 252 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_probe_budget_fair_across_service_verified_files_and_tracks_sources.Stub |
+| `tests/unit/test_universal_dependency_investigation.py` | `test_probe_budget_fair_across_service_verified_files_and_tracks_sources.Stub._validate_remote_host` | 253 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_probe_budget_fair_across_service_verified_files_and_tracks_sources.Stub |
+| `tests/unit/test_universal_dependency_investigation.py` | `test_probe_budget_fair_across_service_verified_files_and_tracks_sources.Stub._validate_port` | 254 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_probe_budget_fair_across_service_verified_files_and_tracks_sources.Stub |
+| `tests/unit/test_universal_dependency_investigation.py` | `test_probe_budget_fair_across_service_verified_files_and_tracks_sources.Stub.service_config_discovery` | 256 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_probe_budget_fair_across_service_verified_files_and_tracks_sources.Stub |
+| `tests/unit/test_universal_dependency_investigation.py` | `test_probe_budget_fair_across_service_verified_files_and_tracks_sources.Stub._run` | 262 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_probe_budget_fair_across_service_verified_files_and_tracks_sources.Stub |
+| `tests/unit/test_universal_dependency_investigation.py` | `test_probe_budget_fair_across_service_verified_files_and_tracks_sources.Stub.tcp_check` | 269 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_probe_budget_fair_across_service_verified_files_and_tracks_sources.Stub |
+| `tests/unit/test_universal_dependency_investigation.py` | `test_provenance_contract_rejects_sneaky_values_and_invalid_paths` | 284 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_universal_dependency_investigation.py` | `test_unknown_stack_transport_error_still_proposes_bounded_discovery` | 312 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_universal_dependency_investigation.py` | `test_invalid_config_has_distinct_parse_status_without_leaking_values` | 319 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_universal_dependency_investigation.py` | `test_invalid_config_has_distinct_parse_status_without_leaking_values.Stub` | 322 | class | کلاس | test_invalid_config_has_distinct_parse_status_without_leaking_values |
+| `tests/unit/test_universal_dependency_investigation.py` | `test_invalid_config_has_distinct_parse_status_without_leaking_values.Stub._validate_target` | 323 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_invalid_config_has_distinct_parse_status_without_leaking_values.Stub |
+| `tests/unit/test_universal_dependency_investigation.py` | `test_invalid_config_has_distinct_parse_status_without_leaking_values.Stub._validate_service` | 324 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_invalid_config_has_distinct_parse_status_without_leaking_values.Stub |
+| `tests/unit/test_universal_dependency_investigation.py` | `test_invalid_config_has_distinct_parse_status_without_leaking_values.Stub.service_config_discovery` | 326 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_invalid_config_has_distinct_parse_status_without_leaking_values.Stub |
+| `tests/unit/test_universal_dependency_investigation.py` | `test_invalid_config_has_distinct_parse_status_without_leaking_values.Stub._run` | 331 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_invalid_config_has_distinct_parse_status_without_leaking_values.Stub |
+| `tests/unit/test_universal_dependency_investigation.py` | `test_invalid_config_has_distinct_parse_status_without_leaking_values.Stub.tcp_check` | 334 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_invalid_config_has_distinct_parse_status_without_leaking_values.Stub |
+| `tests/unit/test_universal_dependency_investigation.py` | `test_public_dependency_answer_identifies_provenance_not_business_health` | 345 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_universal_dependency_investigation.py` | `test_toml_and_cnf_config_dependency_sources` | 362 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_universal_llm_config_syntax.py` | `test_grammar_projection_does_not_leak_values` | 24 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_universal_llm_config_syntax.py` | `test_json_trailing_comma_can_be_projected_for_both_llm_passes` | 35 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_universal_llm_config_syntax.py` | `test_public_result_forbids_raw_and_malicious_config_content` | 49 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
