@@ -162,6 +162,15 @@ def discover(config: object, limit: int = MAX_ENDPOINTS) -> list[dict]:
                     "baseurl", "apiurl", "serviceurl", "webhookurl", "httpurl"
                 }:
                     next_hint = "http"
+                # Generic application URL declarations are also legitimate
+                # dependencies when backed by the same verified service file.
+                if (next_hint is None and name in {
+                    "url", "uri", "endpoint", "jdbcurl"
+                } and isinstance(item, str)):
+                    if item.startswith(("http://", "https://")):
+                        next_hint = "http"
+                    elif item.startswith("jdbc:"):
+                        next_hint = "database"
                 if next_hint is None and name in {"datasource", "jdbcsource"}:
                     next_hint = "database"
                 if next_hint is None and name in {"connectionstring", "connectionstrings"}:
