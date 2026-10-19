@@ -21,6 +21,7 @@ from apps.execution_service.tools.registry import tool_registry
 from apps.orchestrator.e2e_graph import E2EOrchestrator, E2EState
 from apps.remediation_planner import RemediationPlanner
 from apps.orchestrator.dynamic_investigation import DynamicInvestigationPlanner
+from apps.orchestrator.verified_dependency_followup import run_verified_dependency_followup
 from apps.orchestrator.recovery_advice import build_vm_recovery_advisory
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
@@ -368,7 +369,32 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
                 has_service=bool(state.get("service_name")),
                 has_port=bool((state.get("live_evidence") or {}).get("vm_port")),
             )
-            if requests and await self._additional_evidence_round(state, requests):
+            # The ingestion path already independently verified the VM and
+            # actual systemd unit. Use that proof for LLM-selected read-only
+            # followups; do not let the generic collector guess a VM from logs.
+            bound_rows = await run_verified_dependency_followup(
+                getattr(self, "vm_connector", None), state,
+                proposal.get("checks") or [],
+            )
+            if bound_rows:
+                context = state.setdefault("context", {})
+                context["evidence"] = (
+                    list(context.get("evidence") or []) + bound_rows
+                )[-200:]
+                live = state.setdefault("live_evidence", {})
+                live["evidence"] = (
+                    list(live.get("evidence") or []) + bound_rows
+                )[-200:]
+                state["evidence_rounds"] = int(state.get("evidence_rounds") or 1) + 1
+                proposal["verified_followup_checks"] = [
+                    str(row["raw_data"]["diagnostic"]) for row in bound_rows
+                ]
+                self._audit(
+                    "verified_dependency_followup_completed", state,
+                    tools=proposal["verified_followup_checks"],
+                    evidence_count=len(bound_rows), execution_authority=False,
+                )
+            if bound_rows or (requests and await self._additional_evidence_round(state, requests)):
                 self._publish_peer_context(state, findings, coordination)
                 findings = await self._run_specialists(selected, state)
                 coordination = self.coordinator.synthesize(findings)
