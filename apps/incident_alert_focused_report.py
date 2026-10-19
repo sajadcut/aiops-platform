@@ -220,6 +220,21 @@ def build_alert_focused_report(incident: dict, evidence: list[dict],
             "collected_at": _text(row.get("collected_at"), 60),
             "endpoints": endpoints,
             "llm_field_binding_status": _text(row.get("llm_field_binding_status"), 80),
+            "dependency_discovery_status": _text(row.get("dependency_discovery_status"), 80),
+            "config_files_read": row.get("dependency_config_files_read"),
+            "config_files_parse_failed": row.get("dependency_config_files_parse_failed"),
+            "config_files_checked": row.get("dependency_config_files_checked"),
+            "llm_file_results": [
+                {
+                    "config_file": _text(f.get("config_file"), 180),
+                    "status": _text(f.get("status"), 70),
+                    "host_fields": f.get("host_fields"),
+                    "port_fields": f.get("port_fields"),
+                    "verified_pairs": f.get("verified_pairs"),
+                }
+                for f in (row.get("dependency_llm_file_results") or [])[:4]
+                if isinstance(f, dict)
+            ],
             "evidence_refs": [_text(row.get("evidence_ref"), 180)] if row.get("evidence_ref") else [],
             "scope": (
                 "dependency_port_not_verified" if any(
