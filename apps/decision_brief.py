@@ -418,6 +418,10 @@ def _mcp(rows: Iterable[dict], now: datetime) -> tuple[list[dict], list[dict]]:
             "freshness": age,
             "phase": safe(raw.get("phase") or raw.get("collection_phase"), 70) or "unknown",
             "finding": tool_observation_summary(raw),
+            # Provenance labels only; they do not establish identity without
+            # independent verification but prevent cross-service attribution.
+            "observed_service": safe(raw.get("service") or inner.get("service"), 120),
+            "observed_target": safe(raw.get("target") or inner.get("target"), 160),
         }
         # Preserve bounded, redacted probe *facts* for the operator. A prose
         # finding is truncated and cannot serve as a complete test report.
