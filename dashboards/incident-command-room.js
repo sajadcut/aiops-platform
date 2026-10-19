@@ -3966,6 +3966,7 @@
     renderHero(r);renderServiceStatus();renderServiceProfile();renderConfigActionBanner(r);renderOverview(r);renderReview(r);renderAnalysis(r);renderEvidence(r);
     renderKnowledge(r);renderInvestigation(r);renderOutcome(r);renderTimeline(r);renderDecision(r);renderReceivedSignals();
     renderIncidentChat();
+    renderInvestigationLedger(r);
     renderAnalysisProgress();
     $('#ic-snapshot-label').textContent='Snapshot '+String(r.snapshot_id||'').slice(0,14);
   }
