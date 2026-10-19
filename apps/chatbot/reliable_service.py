@@ -12,7 +12,7 @@ from prometheus_client import Counter, Histogram
 from apps.chatbot.models import ChatMessageRequest, ChatMessageResponse
 from apps.chatbot.service import ChatbotService
 from apps.chatbot.tools import ToolIntent
-from apps.chatbot.vm_result_formatter import render_vm_disk_status
+from apps.chatbot.vm_result_formatter import render_vm_disk_status, render_vm_services
 from apps.security.oidc import Identity
 from integrations.llm.base import LLMAdapter, LLMResponse
 from integrations.llm.openai_compatible import configured_llm_adapter
@@ -257,6 +257,21 @@ def _deterministic_vm_service_read_call(
                 ),
             },
         }
+
+    # Service inventories are distinct from a single service's status, even
+    # when a preceding operator turn mentioned a particular service.
+    inventory_request = bool(re.search(
+        r"(?:لیست|فهرست|تمام|همه|کدام|چه)\s*.{0,40}(?:سرویس|service|unit)"
+        r"|(?:سرویس|service).{0,35}(?:لیست|فهرست|failed)",
+        current, re.IGNORECASE,
+    ))
+    if inventory_request and "vm_services" in available:
+        failed = bool(re.search(r"\bfailed\b|\bfail\b|ناموفق|خراب", current, re.IGNORECASE))
+        return {"id": "deterministic-vm-service-inventory", "type": "function",
+                "function": {"name": "vm_services",
+                             "arguments": json.dumps(
+                                 {"target": target, "filter": "failed" if failed else "all"},
+                                 ensure_ascii=False, separators=(",", ":"))}}
 
     service = _resolve_service_from_turns(turns)
     if not service:
@@ -572,6 +587,12 @@ class OperationsCopilotService(ChatbotService):
     ) -> str:
         # Numeric disk inventories are rendered deterministically from structured
         # MCP data, rather than risking loss of rows or percentage hallucination.
+        if intent.tool_name == "vm_telemetry" and intent.action in {"list_services", "search_services"}:
+            rendered = render_vm_services(
+                payload, persian=bool(_PERSIAN_RE.search(f"{recent_operator_context}\n{user_message}")),
+            )
+            if rendered is not None:
+                return rendered
         if intent.tool_name == "vm_telemetry" and intent.action == "disk_status":
             rendered = render_vm_disk_status(
                 payload,

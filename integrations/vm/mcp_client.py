@@ -20,7 +20,7 @@ class VMEdgeMCPClient(MCPClient):
 
     READ_TOOLS = {
         "collect_vm_metrics", "memory_diagnostics", "host_info", "disk_status", "disk_forensics", "network_status",
-        "service_status", "service_logs", "system_logs", "process_snapshot",
+        "service_status", "service_logs", "list_services", "search_services", "system_logs", "process_snapshot",
         "process_status", "tcp_check", "port_listener_status", "dns_check",
         "route_check", "firewall_status", "config_validate", "nginx_config_review", "nginx_config_inspect",
         "service_runtime_discovery", "service_config_discovery", "service_config_review", "service_config_llm_repair", "dotnet_config_syntax",
@@ -172,6 +172,8 @@ class VMEdgeMCPClient(MCPClient):
     async def disk_status(self, target: str) -> Dict[str, Any]: return await self._invoke("disk_status", target)
     async def disk_forensics(self, target: str) -> Dict[str, Any]: return await self._invoke("disk_forensics", target)
     async def network_status(self, target: str) -> Dict[str, Any]: return await self._invoke("network_status", target)
+    async def list_services(self, target: str, *, state: str | None = None, limit: int = 250) -> Dict[str, Any]: return await self._invoke("list_services", target, state=state, limit=limit)
+    async def search_services(self, target: str, query: str, *, state: str | None = None, limit: int = 250) -> Dict[str, Any]: return await self._invoke("search_services", target, query=query, state=state, limit=limit)
     async def service_status(self, target: str, service: str) -> Dict[str, Any]: return await self._invoke("service_status", target, service=service)
     async def service_logs(self, target: str, service: str, limit: int = 150) -> Dict[str, Any]: return await self._invoke("service_logs", target, service=service, limit=limit)
     async def system_logs(self, target: str, limit: int = 50) -> Dict[str, Any]: return await self._invoke("system_logs", target, limit=limit)

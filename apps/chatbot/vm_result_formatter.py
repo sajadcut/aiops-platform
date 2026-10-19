@@ -111,3 +111,39 @@ def render_vm_disk_status(payload: dict[str, Any], *, persian: bool = True) -> s
             message = f"Warning: {invalid} invalid rows and {max(0, len(rows)-256)} rows beyond the display limit; inventory incomplete."
         lines.append(message)
     return "\n".join(lines)
+
+
+def render_vm_services(payload: dict[str, Any], *, persian: bool = True) -> str | None:
+    """Display verified systemd observations without hiding policy scope."""
+    result = payload.get("result")
+    if not isinstance(result, dict):
+        return None
+    target = _label(result.get("target"))
+    source = _label(payload.get("source") or "vm_mcp")
+    if result.get("success") is not True:
+        error = _label(result.get("error") or "service_inventory_failed")
+        return (f"دریافت فهرست سرویس‌های {target} ناموفق بود: {error}" if persian
+                else f"Service inventory failed for {target}: {error}")
+    rows = result.get("services")
+    if not isinstance(rows, list):
+        return None
+    count = result.get("matching_count")
+    count = count if type(count) is int and count >= 0 else len(rows)
+    if persian:
+        lines = [f"فهرست سرویس‌های systemd سرور {target} (منبع: {source}؛ موارد منطبق: {count})"]
+        if result.get("scope_restricted"):
+            lines.append("دامنه: فقط سرویس‌های مجاز Allowlist؛ این فهرست تمام سرویس‌های میزبان نیست.")
+        lines.append(f"زمان مشاهده: {_label(result['observed_at'])}" if result.get("observed_at")
+                     else "زمان مشاهده توسط ابزار ثبت نشده است.")
+    else:
+        lines = [f"systemd services for {target} (source: {source}; matches: {count})"]
+        if result.get("scope_restricted"):
+            lines.append("Scope: allowlisted services only; not the entire host inventory.")
+        lines.append(f"Observed: {_label(result['observed_at'])}" if result.get("observed_at")
+                     else "Observation timestamp not supplied.")
+    for item in rows[:500]:
+        if isinstance(item, dict):
+            lines.append(f"- {_label(item.get('name'))}: {_label(item.get('active_state'))}/{_label(item.get('sub_state'))} — {_label(item.get('description'))}")
+    if result.get("truncated") or len(rows) > 500:
+        lines.append("هشدار: فهرست ناقص است." if persian else "Warning: inventory truncated.")
+    return "\n".join(lines)

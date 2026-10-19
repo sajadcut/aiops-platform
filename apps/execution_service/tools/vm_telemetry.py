@@ -35,6 +35,8 @@ class VMTelemetryTool(BaseTool):
         params = input_data.parameters or {}
         if input_data.action in {"service_status", "service_logs", "config_validate", "nginx_config_review", "nginx_config_inspect", "service_runtime_discovery", "dotnet_config_syntax"}:
             return bool(str(params.get("service", "")).strip())
+        if input_data.action == "search_services":
+            return bool(str(params.get("query") or "").strip())
         if input_data.action == "process_status":
             return bool(str(params.get("process", "")).strip())
         if input_data.action in {"port_listener_status"}:
@@ -57,6 +59,8 @@ class VMTelemetryTool(BaseTool):
         elif action == "host_info": result = await connector.host_info(target)
         elif action == "disk_status": result = await connector.disk_status(target)
         elif action == "network_status": result = await connector.network_status(target)
+        elif action == "list_services": result = await connector.list_services(target, state=params.get("state"), limit=int(params.get("limit") or 100))
+        elif action == "search_services": result = await connector.search_services(target, str(params["query"]), state=params.get("state"), limit=int(params.get("limit") or 100))
         elif action == "service_status": result = await connector.service_status(target, str(params["service"]))
         elif action == "service_logs": result = await connector.service_logs(target, str(params["service"]), int(params.get("limit", 100)))
         elif action == "system_logs": result = await connector.system_logs(target, int(params.get("limit", 100)))

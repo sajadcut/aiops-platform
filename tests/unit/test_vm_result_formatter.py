@@ -52,3 +52,13 @@ def test_english_and_no_timestamp_are_explicit():
     answer = render_vm_disk_status(p, persian=False)
     assert "Observation timestamp not supplied" in answer
     assert "available 50.00 GiB" in answer
+
+
+def test_service_inventory_display_scopes_failed_rows():
+    from apps.chatbot.vm_result_formatter import render_vm_services
+    p = {"source": "vm_mcp", "result": {"success": True, "target": "vm1", "scope_restricted": True,
+         "matching_count": 1, "services": [
+            {"name": "gfpapi.service", "active_state": "failed", "sub_state": "failed", "description": "GFP API"}]}}
+    result = render_vm_services(p)
+    assert "gfpapi.service" in result and "failed/failed" in result
+    assert "تمام سرویس‌های میزبان نیست" in result

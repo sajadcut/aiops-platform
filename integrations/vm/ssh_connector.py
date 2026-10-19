@@ -13,6 +13,7 @@ import asyncssh
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
 from domain.contracts.redaction import redact_text
+from integrations.vm.service_inventory import parse_systemd_services
 from integrations.vm.service_adapters import (
     get_service_adapter, discover_config_path, config_check_for_path,
     parse_config_diagnostic,
@@ -771,6 +772,41 @@ class SSHVMConnector:
         except json.JSONDecodeError:
             return {"success": False, "target": target, "error": "invalid_network_payload"}
         return {"success": True, "supported": True, "target": target, "interfaces": interfaces, "routes": routes}
+
+    async def list_services(self, target: str, state: str | None = None,
+                            query: str | None = None, limit: int = 250) -> Dict[str, Any]:
+        """Fixed read-only systemctl inventory; display only policy-visible units."""
+        self._validate_target(target)
+        if state not in (None, "failed"):
+            raise ValueError("invalid_service_state_filter")
+        if query is not None and (not isinstance(query, str) or not query.strip()
+                                  or len(query) > 80 or any(ord(c) < 32 for c in query)):
+            raise ValueError("invalid_service_search_query")
+        limit = min(max(int(limit), 1), 500)
+        observed = await self._run(
+            target,
+            "LC_ALL=C systemctl list-units --type=service --all --no-pager --plain --full --no-legend",
+        )
+        if observed.get("success") is not True:
+            return {"success": False, "target": target, "services": [],
+                    "error": "service_inventory_command_failed"}
+        configured = (settings.VM_AGENT_ALLOWED_SERVICES if self.source_name == "vm_agent"
+                      else settings.SSH_ALLOWED_SERVICES)
+        allowed = {str(service).strip() for service in configured if str(service).strip()}
+        parsed = parse_systemd_services(str(observed.get("stdout") or ""),
+                                        allowed_services=allowed if allowed else None,
+                                        state=state, query=query, limit=limit)
+        for unit in parsed["services"]:
+            unit["description"] = redact_text(unit["description"])
+        return {"success": True, "target": target, **parsed,
+                "observed_at": datetime.now(timezone.utc).isoformat(),
+                "source": self.source_name}
+
+    async def search_services(self, target: str, query: str,
+                              state: str | None = None, limit: int = 250) -> Dict[str, Any]:
+        if not isinstance(query, str) or not query.strip():
+            raise ValueError("invalid_service_search_query")
+        return await self.list_services(target, query=query, state=state, limit=limit)
 
     async def service_status(self, target: str, service: str) -> Dict[str, Any]:
         """Read structured systemd properties and bounded 'systemctl status'.

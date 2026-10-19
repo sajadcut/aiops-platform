@@ -14,6 +14,7 @@ def test_chatbot_tool_catalog_is_bounded_and_has_no_arbitrary_execution():
     assert names == {
         "vm_metrics",
         "vm_diagnostics",
+        "vm_services",
         "vm_service_status",
         "vm_service_logs",
         "zabbix_problems",
@@ -102,3 +103,13 @@ def test_prompt_injection_text_cannot_create_capability():
     # User text is data. Tool capability still comes only from a valid model tool call.
     with pytest.raises(PermissionError):
         parse_tool_call(_call("kubectl", {"command": hostile}))
+
+
+def test_vm_service_inventory_is_read_only_and_scope_bounded():
+    intent = normalize_tool_intent("vm_services", {"target": "vm1", "filter": "failed"})
+    assert not intent.mutating
+    assert intent.action == "list_services" and intent.parameters["state"] == "failed"
+    search = normalize_tool_intent("vm_services", {"target": "vm1", "filter": "search", "query": "gfp"})
+    assert search.action == "search_services"
+    with pytest.raises(ValueError, match="invalid_vm_service_search_query"):
+        normalize_tool_intent("vm_services", {"target": "vm1", "filter": "search", "query": ""})

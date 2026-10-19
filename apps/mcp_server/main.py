@@ -69,6 +69,8 @@ _TOOL_SCHEMAS: Dict[str, Dict[str, Dict[str, Any]]] = {
         "disk_status": {"description": "Read filesystem capacity, inode usage and mount status", "inputSchema": {"type": "object", "required": ["target"], "properties": dict(_TARGET)}},
         "disk_forensics": {"description": "Read-only bounded high-pressure mount and large-file metadata; never delete or read contents", "inputSchema": {"type": "object", "required": ["target"], "additionalProperties": False, "properties": dict(_TARGET)}},
         "network_status": {"description": "Read interface addresses and routing table", "inputSchema": {"type": "object", "required": ["target"], "properties": dict(_TARGET)}},
+        "list_services": {"description": "Read bounded allowlist-scoped systemd unit inventory", "inputSchema": {"type": "object", "required": ["target"], "additionalProperties": False, "properties": {**_TARGET, "state": {"type": "string", "enum": ["failed"]}, "limit": {"type": "integer", "minimum": 1, "maximum": 500}}}},
+        "search_services": {"description": "Search allowlisted systemd unit names and descriptions with local filtering", "inputSchema": {"type": "object", "required": ["target", "query"], "additionalProperties": False, "properties": {**_TARGET, "query": {"type": "string", "minLength": 1, "maxLength": 80}, "state": {"type": "string", "enum": ["failed"]}, "limit": {"type": "integer", "minimum": 1, "maximum": 500}}}},
         "service_status": {"description": "Read normalized systemd service state", "inputSchema": {"type": "object", "required": ["target", "service"], "properties": {**_TARGET, **_SERVICE}}},
         "service_logs": {"description": "Read bounded journal logs for an allowlisted service", "inputSchema": {"type": "object", "required": ["target", "service"], "properties": {**_TARGET, **_SERVICE, "limit": {"type": "integer", "minimum": 1, "maximum": 200}}}},
         "system_logs": {"description": "Read bounded system journal logs", "inputSchema": {"type": "object", "required": ["target"], "properties": {**_TARGET, "limit": {"type": "integer", "minimum": 1, "maximum": 200}}}},
@@ -190,6 +192,8 @@ async def _call(provider: str, tool: str, args: Dict[str, Any]) -> Any:
     if tool == "memory_diagnostics": return await connector.memory_diagnostics(target)
     if tool == "host_info": return await connector.host_info(target)
     if tool == "disk_status": return await connector.disk_status(target)
+    if tool == "list_services": return await connector.list_services(target, state=args.get("state"), limit=_limit(args.get("limit"), 100, 500))
+    if tool == "search_services": return await connector.search_services(target, str(args.get("query") or ""), state=args.get("state"), limit=_limit(args.get("limit"), 100, 500))
     if tool == "disk_forensics": return await connector.disk_forensics(target)
     if tool == "network_status": return await connector.network_status(target)
     if tool == "process_snapshot": return await connector.process_snapshot(target)

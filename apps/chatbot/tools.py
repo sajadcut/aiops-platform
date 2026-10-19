@@ -56,6 +56,23 @@ CHAT_TOOL_SCHEMAS = [
     {
         "type": "function",
         "function": {
+            "name": "vm_services",
+            "description": "List or search allowlisted Linux systemd services on a VM. Filter for failed units; report allowlist scope. Read-only.",
+            "parameters": {
+                "type": "object", "required": ["target", "filter"],
+                "additionalProperties": False,
+                "properties": {
+                    "target": {"type": "string"},
+                    "filter": {"type": "string", "enum": ["all", "failed", "search"]},
+                    "query": {"type": "string", "minLength": 1, "maxLength": 80},
+                    "limit": {"type": "integer", "minimum": 1, "maximum": 200}
+                }
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "vm_service_status",
             "description": "Read the live systemd service state for an allowlisted service on one VM. This is read-only and never requires user confirmation.",
             "parameters": {
@@ -226,6 +243,23 @@ def normalize_tool_intent(name: str, args: dict[str, Any]) -> ToolIntent:
         if diagnostic == "system_logs":
             params["limit"] = _bounded_int(args.get("limit"), "limit", 1, 200, 50)
         return ToolIntent(name, "vm_telemetry", diagnostic, target, params, False, "low")
+
+    if name == "vm_services":
+        target = _safe_name(args.get("target"), "target")
+        scope = str(args.get("filter") or "").strip()
+        if scope not in {"all", "failed", "search"}:
+            raise ValueError("invalid_vm_service_filter")
+        params: dict[str, Any] = {"limit": _bounded_int(args.get("limit"), "limit", 1, 200, 100)}
+        if scope == "failed":
+            params["state"] = "failed"
+        if scope == "search":
+            query = str(args.get("query") or "").strip()
+            if not query or len(query) > 80 or any(ord(ch) < 32 for ch in query):
+                raise ValueError("invalid_vm_service_search_query")
+            params["query"] = query
+        return ToolIntent(name, "vm_telemetry",
+                          "search_services" if scope == "search" else "list_services",
+                          target, params, False, "low")
 
     if name in {"vm_service_status", "vm_service_logs"}:
         target = _safe_name(args.get("target"), "target")

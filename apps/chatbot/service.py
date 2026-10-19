@@ -568,7 +568,7 @@ class ChatbotService:
                 if verdict == "mismatch" and not (
                     len(results) == 1
                     and results[0]["intent"].tool_name == "vm_telemetry"
-                    and results[0]["intent"].action == "disk_status"
+                    and results[0]["intent"].action in {"disk_status", "list_services", "search_services"}
                 ):
                     # A review model cannot override deterministic, source-backed
                     # disk values (or replace every numeric mount with a vague note).

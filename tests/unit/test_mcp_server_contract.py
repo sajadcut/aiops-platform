@@ -10,7 +10,7 @@ def test_provider_tool_names_match_control_plane_clients():
     assert set(_TOOL_SCHEMAS["kubernetes"]) == {"collect_kubernetes_evidence"}
     assert set(_TOOL_SCHEMAS["vm"]) == {
         "collect_vm_metrics", "memory_diagnostics", "host_info", "disk_status", "disk_forensics", "network_status",
-        "service_status", "service_logs", "system_logs", "process_snapshot",
+        "service_status", "service_logs", "list_services", "search_services", "system_logs", "process_snapshot",
         "process_status", "tcp_check", "port_listener_status", "dns_check",
         "route_check", "firewall_status", "config_validate", "nginx_config_review", "nginx_config_inspect",
         "service_runtime_discovery", "service_config_discovery", "service_config_review", "service_config_llm_repair", "dotnet_config_syntax",
