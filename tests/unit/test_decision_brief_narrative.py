@@ -122,6 +122,61 @@ async def test_configured_llm_generates_grounded_prose_once(monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_wrong_section_count_is_repaired_once_without_changing_validators(monkeypatch):
+    brief = sample_brief()
+    brief["snapshot_id"] = "narrative-schema-one-bounded-retry"
+    monkeypatch.setattr(settings, "LLM_PROVIDER", "dotin-general-chatbot")
+    monkeypatch.setattr(settings, "LLM_BASE_URL", "https://llm.example.invalid")
+    monkeypatch.setattr(settings, "LLM_MODEL", "internal-model")
+    calls = []
+
+    class Provider:
+        async def generate_with_messages(self, messages, **kwargs):
+            calls.append(messages)
+            payload = valid_rows()
+            if len(calls) == 1:
+                payload["sections"].pop()
+            return SimpleNamespace(
+                content=json.dumps(payload, ensure_ascii=False),
+                finish_reason="stop",
+            )
+
+    monkeypatch.setattr(service, "configured_llm_adapter", lambda: Provider())
+    result = await service.generate_narrative(brief, "fa")
+    assert result["status"] == "available"
+    assert len(result["sections"]) == len(service.SECTIONS)
+    assert len(calls) == 2
+    assert "CORRECT STRUCTURE" in calls[1][0]["content"]
+    assert result["authorizes_execution"] is False
+
+
+@pytest.mark.asyncio
+async def test_citation_policy_violation_does_not_get_retried(monkeypatch):
+    brief = sample_brief()
+    brief["snapshot_id"] = "narrative-safety-no-retry"
+    monkeypatch.setattr(settings, "LLM_PROVIDER", "dotin-general-chatbot")
+    monkeypatch.setattr(settings, "LLM_BASE_URL", "https://llm.example.invalid")
+    monkeypatch.setattr(settings, "LLM_MODEL", "internal-model")
+    calls = []
+
+    class Provider:
+        async def generate_with_messages(self, messages, **kwargs):
+            calls.append(1)
+            payload = valid_rows()
+            payload["sections"][0]["citations"] = ["invented-source"]
+            return SimpleNamespace(
+                content=json.dumps(payload, ensure_ascii=False),
+                finish_reason="stop",
+            )
+
+    monkeypatch.setattr(service, "configured_llm_adapter", lambda: Provider())
+    result = await service.generate_narrative(brief, "fa")
+    assert result["status"] == "fallback"
+    assert result["validation_code"] == "narrative_reference"
+    assert len(calls) == 1
+
+
+@pytest.mark.asyncio
 async def test_llm_failure_leaves_structured_brief_available(monkeypatch):
     brief = sample_brief()
     brief["snapshot_id"] = "failed-llm-case"
