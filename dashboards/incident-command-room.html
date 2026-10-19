@@ -104,6 +104,7 @@
     <a href="#ic-review" data-i18n="navReview">قبل از تأیید</a>
     <a href="#ic-analysis" data-i18n="navAnalysis">تحلیل Agentها</a>
     <a href="#ic-ai-proposed-fix" data-i18n="navFix">اصلاح کانفیگ</a>
+    <a href="#ic-dependency-checks">بررسی وابستگی‌ها</a>
     <a href="#ic-evidence" data-i18n="navEvidence">شواهد و MCP</a>
     <a href="#ic-knowledge" data-i18n="navKnowledge">دانش و تجربه</a>
     <a href="#ic-outcome" data-i18n="navOutcome">نتیجه اجرا</a>
@@ -122,6 +123,11 @@
           <h3>چه چیزهایی بررسی شد و نتیجه چه بود؟</h3>
           <p class="ic-meta">نتایج واقعی از Evidence ثبت شده؛ LLM فقط تحلیل و پیشنهاد بررسی بعدی را ارائه می‌کند.</p>
           <div id="ic-investigation-ledger-body" aria-live="polite">در حال گردآوری گزارش مستند…</div>
+        </section>
+        <section id="ic-dependency-checks" class="ic-investigation-ledger" aria-label="بررسی مستند اتصال وابستگی‌های سرویس">
+          <h3>بررسی وابستگی‌های سرویس (Redis / DB / MQ / HTTP)</h3>
+          <p class="ic-meta">فقط تست‌های ثبت‌شده در MCP؛ موفقیت اتصال TCP به معنی سلامت Redis یا اپلیکیشن نیست.</p>
+          <div id="ic-dependency-checks-body" aria-live="polite">در حال خواندن شواهد وابستگی‌ها…</div>
         </section>
         <section id="ic-remediation-actions" class="ic-config-diagnostic" aria-live="polite" aria-label="موارد مستقل اصلاح و وضعیت امکان اعمال"></section>
         <details class="ic-overview-details"><summary>نمایش تحلیل‌های تکمیلی، جزئیات مدل و ممیزی</summary><div class="ic-overview-details-body">
