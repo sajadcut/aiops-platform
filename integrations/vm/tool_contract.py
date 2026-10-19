@@ -76,6 +76,8 @@ def output_schema(tool: str) -> dict[str, Any]:
         schema["properties"]["dependencies"] = {
             "type": "array", "maxItems": 6, "items": _DEPENDENCY_ROW,
         }
+        schema["properties"]["config_files_read"] = {"type": "integer"}
+        schema["properties"]["config_files_parse_failed"] = {"type": "integer"}
         schema["properties"]["config_files_checked"] = {"type": "integer"}
         schema["properties"]["checks_executed"] = {"type": "integer"}
         schema["properties"]["execution_authority"] = {"type": "boolean"}
@@ -111,6 +113,7 @@ def validate_vm_observation(tool: str, target: str, payload: Any) -> dict[str, A
             "success", "target", "service", "status", "diagnostic", "read_only",
             "execution_authority", "root_cause_confirmed", "application_health_verified",
             "protocol_health_verified", "config_contents_exposed", "secrets_exposed",
+            "config_files_read", "config_files_parse_failed",
             "config_files_checked", "config_files_failed", "checks_executed",
             "dependencies", "limitations", "error", "observed_at",
         }
