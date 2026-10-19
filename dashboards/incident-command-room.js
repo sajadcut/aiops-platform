@@ -4266,6 +4266,18 @@
       if(state.configResponse?.approval_queue_registered) await load();
     }
   }
+  async function loadInvestigationReport() {
+    const snapshot=state.report?.snapshot_id;
+    if(!snapshot||state.historic)return;
+    try {
+      const report=await api(base+'/investigation-report?lang='+encodeURIComponent(state.language));
+      if(!state.historic&&state.report?.snapshot_id===snapshot){
+        state.investigationReport=report;
+        renderInvestigationLedger(state.report);
+      }
+    } catch(_) {state.investigationReportStatus='failed';}
+  }
+
   async function loadNarrative() {
     if(!state.report||state.historic)return;
     const snapshot=state.report.snapshot_id,lang=state.language;
