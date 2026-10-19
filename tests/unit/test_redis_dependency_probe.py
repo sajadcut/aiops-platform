@@ -191,8 +191,8 @@ async def test_redis_alert_gets_bounded_dependency_check_without_model():
 def test_incident_chat_explicit_redis_uses_read_only_intent():
     from apps.incident_copilot import fallback_intent, redis_dependency_answer
 
-    assert fallback_intent("اتصال ردیس سرویس gfpapi رو بررسی زنده کن") == "redis_dependency_check"
-    assert fallback_intent("بررسی زنده Redis سرویس") == "redis_dependency_check"
+    assert fallback_intent("اتصال ردیس سرویس gfpapi رو بررسی زنده کن") == "dependency_investigation"
+    assert fallback_intent("بررسی زنده Redis سرویس") == "dependency_investigation"
     response = redis_dependency_answer({
         "success": True, "status": "tcp_checked",
         "endpoints": [{"host": "redis.internal", "port": 6380,
