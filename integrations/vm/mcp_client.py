@@ -4,6 +4,7 @@ from typing import Any, Dict, Optional
 
 from domain.contracts.config import settings
 from integrations.mcp_client import MCPClient
+from integrations.vm.tool_contract import validate_vm_observation
 
 
 def vm_transport_configured() -> bool:
@@ -143,10 +144,11 @@ class VMEdgeMCPClient(MCPClient):
     async def _invoke(self, name: str, target: str, **params: Any) -> Dict[str, Any]:
         if self._backend == "agent_pull":
             from apps.api.vm_agent_broker import broker
-            return await broker.dispatch(
+            result = await broker.dispatch(
                 target, name, {"target": target, **params},
                 timeout=self.tool_timeout_seconds.get(name, settings.MCP_TIMEOUT_SECONDS),
             )
+            return validate_vm_observation(name, target, result)
         if self._backend == "agent" and not self._endpoint_direct:
             # No target supplied by an alarm, chatbot or LLM can select its own
             # URL. Only this operator-managed target-to-endpoint map can route.
@@ -159,11 +161,21 @@ class VMEdgeMCPClient(MCPClient):
             finally:
                 await worker.close()
         result = await self.call_tool(name, {"target": target, **params})
+        structured = result.get("structuredContent")
+        if isinstance(structured, dict):
+            return validate_vm_observation(name, target, structured)
         if isinstance(result.get("content"), list) and result["content"]:
             first = result["content"][0]
             if isinstance(first, dict):
-                return first
-        return result
+                if first.get("type") == "text":
+                    import json
+                    try:
+                        decoded = json.loads(str(first.get("text") or ""))
+                    except json.JSONDecodeError as exc:
+                        raise ValueError("vm_mcp_invalid_text_content") from exc
+                    return validate_vm_observation(name, target, decoded)
+                return validate_vm_observation(name, target, first)
+        raise ValueError("vm_mcp_missing_tool_result")
 
     async def collect_vm_metrics(self, target: str) -> Dict[str, Any]: return await self._invoke("collect_vm_metrics", target)
     async def collect_metrics(self, target: str) -> Dict[str, Any]: return await self.collect_vm_metrics(target)
