@@ -207,7 +207,12 @@ def build_alert_focused_report(incident: dict, evidence: list[dict],
         # The tool result is an observation, not a verified underlying RCA.
         observations.append({
             "tool": tool,
-            "status": _text(row.get("status"), 35) or "unknown",
+            "status": (
+                "port_unverified" if matched_checks and all(
+                    check.get("port_inferred") is not False
+                    for check in matched_checks
+                ) else _text(row.get("status"), 35) or "unknown"
+            ),
             "result": detail or "نتیجه فنی تفصیلی ثبت نشده است.",
             "evidence_ref": _text(row.get("evidence_ref"), 180),
             "collected_at": _text(row.get("collected_at"), 60),
