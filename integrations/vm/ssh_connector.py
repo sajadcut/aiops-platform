@@ -1096,7 +1096,10 @@ class SSHVMConnector:
                 if inventory.get("success") is True:
                     for discovered in str(inventory.get("stdout") or "").splitlines()[:12]:
                         name = discovered.rsplit("/", 1)[-1]
-                        if not re.fullmatch(r"appsettings(?:\.[A-Za-z0-9_-]{1,48})?\.json", name):
+                        if (not re.fullmatch(r"appsettings(?:\.[A-Za-z0-9_-]{1,48})?\.json", name)
+                                or any(term in name.lower() for term in (
+                                    "secret", "password", "credential", "private",
+                                ))):
                             continue
                         path = _candidate_path(discovered)
                         if (path and path.startswith(publish.rstrip("/") + "/")
