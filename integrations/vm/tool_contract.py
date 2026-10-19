@@ -61,6 +61,12 @@ _DEPENDENCY_ROW = {
         "tcp_reachable": {"type": ["boolean", "null"]},
         "http_status": {"type": ["integer", "null"]},
         "tls_verified": {"type": ["boolean", "null"]},
+        "tls_requested": {"type": "boolean"},
+        "protocol_status": {"type": "string", "maxLength": 65},
+        "protocol_supported": {"type": "boolean"},
+        "protocol_health_verified": {"type": "boolean"},
+        "dns_resolved": {"type": ["boolean", "null"]},
+        "route_found": {"type": ["boolean", "null"]},
     },
 }
 VALIDATED_TOOLS = frozenset({"disk_status", "list_services", "search_services", "dependency_investigation"})
@@ -116,6 +122,7 @@ def validate_vm_observation(tool: str, target: str, payload: Any) -> dict[str, A
             "config_files_read", "config_files_parse_failed",
             "config_files_checked", "config_files_failed", "checks_executed",
             "dependencies", "limitations", "error", "observed_at",
+            "investigation_status", "next_checks",
         }
         if not set(payload) <= safe_top:
             raise ValueError("vm_mcp_dependency_unexpected_payload")
@@ -124,6 +131,16 @@ def validate_vm_observation(tool: str, target: str, payload: Any) -> dict[str, A
             "config_contents_exposed", "secrets_exposed",
         )):
             raise ValueError("vm_mcp_dependency_safety_claim_invalid")
+        checks = payload.get("next_checks", [])
+        permitted_hints = {
+            "review_dns_configuration", "review_network_path",
+            "compare_application_auth_settings",
+            "inspect_client_timeouts_pool_and_errors",
+            "review_tls_mode_and_certificates", "protocol_check_unavailable",
+        }
+        if (not isinstance(checks, list) or len(checks) > 6
+                or any(hint not in permitted_hints for hint in checks)):
+            raise ValueError("vm_mcp_dependency_next_checks_invalid")
         rows = payload.get("dependencies")
         if not isinstance(rows, list) or len(rows) > 6:
             raise ValueError("vm_mcp_dependency_inventory_invalid")
@@ -146,6 +163,10 @@ def validate_vm_observation(tool: str, target: str, payload: Any) -> dict[str, A
                 or safe_config_key(tuple(source_key.split("."))) != source_key
             ):
                 raise ValueError("vm_mcp_dependency_config_key_invalid")
+            if row.get("protocol_status") is not None and row["kind"] != "redis":
+                raise ValueError("vm_mcp_dependency_protocol_mismatch")
+            if row.get("tls_requested") is not None and row["kind"] != "redis":
+                raise ValueError("vm_mcp_dependency_tls_mismatch")
             scope = row.get("probe_scope")
             if scope is not None and (
                 (scope == "origin_root_head" and row.get("probe") != "http_head")
