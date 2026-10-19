@@ -13,6 +13,7 @@ from typing import Any
 
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
+from integrations.vm.dependency_investigation import _matches_priority
 
 _INSTRUCTION = (
     "You are analyzing a specific service dependency incident, not doing a "
@@ -26,6 +27,27 @@ _INSTRUCTION = (
     "command, credential, config path, or identity. Return ONLY JSON: "
     '{"pairs":[{"host_id":"h0","port_id":"p0"}],"endpoint_ids":["e0"]}.'
 )
+
+
+def _focused_fields(candidate: dict, family: str) -> dict:
+    """Preserve original IDs while omitting unrelated technologies from the LLM."""
+    if not family:
+        return candidate
+    return {
+        **candidate,
+        "host_fields": [
+            row for row in candidate["host_fields"]
+            if _matches_priority(str(row.get("family") or ""), family)
+        ],
+        "port_fields": [
+            row for row in candidate["port_fields"]
+            if _matches_priority(str(row.get("family") or ""), family)
+        ],
+        "inline_endpoint_fields": [
+            row for row in candidate["inline_endpoint_fields"]
+            if _matches_priority(str(row.get("kind") or ""), family)
+        ],
+    }
 
 
 def _valid_selection(response: Any, candidate: dict) -> dict | None:
@@ -94,7 +116,8 @@ async def investigate_from_aiops(
     llm_status = "no_safe_host_port_candidates"
     selections: list[dict] = []
     actionable = [
-        item for item in candidates[:4]
+        item for original in candidates[:4]
+        for item in [_focused_fields(original, priority_family)]
         if item.get("inline_endpoint_fields")
         or (item.get("host_fields") and item.get("port_fields"))
     ]
