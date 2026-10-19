@@ -382,6 +382,13 @@
 .ic-ir-meta code{max-width:100%;word-break:break-all}
 .ic-ir-section{padding:22px clamp(20px,2.7vw,38px);border-bottom:1px solid var(--line)}
 .ic-ir-section:last-of-type{border-bottom:0}
+/* Visually prioritize the received alert without adding a competing banner. */
+.ic-ir-alert-priority{background:color-mix(in srgb,var(--accent) 4%,var(--surface));border-inline-start:3px solid var(--accent)}
+.ic-ir-alert-focus{max-width:96ch;overflow-wrap:anywhere}
+.ic-ir-alert-focus>p:first-child{padding:10px 14px;background:var(--raised);border:1px solid var(--line);border-radius:10px}
+.ic-ir-alert-focus h4{margin:18px 0 8px;font-size:14px;color:var(--text)}
+.ic-ir-alert-focus>small{display:block;color:var(--muted);margin-top:12px;font-size:12px}
+
 .ic-ir-section h3{margin:0 0 12px;font-size:17px;line-height:1.8;color:var(--text)}
 .ic-ir-section p{margin:8px 0 12px}
 .ic-ir-section code{display:inline-block;max-width:100%;overflow-wrap:anywhere;font:12px/1.9 ui-monospace,SFMono-Regular,Consolas,monospace;padding:2px 7px;background:var(--raised);border:1px solid var(--line);border-radius:6px}
