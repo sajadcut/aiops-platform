@@ -279,6 +279,10 @@ def fallback_intent(message: str) -> str:
     from apps.incident_elastic import is_elastic_question, wants_live_elastic
     if is_elastic_question(text):
         return "elastic_logs" if wants_live_elastic(text) else "elastic_recorded"
+    if re.search(r"redis|ردیس", text, re.I) and re.search(
+        r"اتصال|بررسی زنده|تست کن|چک کن|connectivity|test redis|check redis", text, re.I
+    ):
+        return "redis_dependency_check"
     if (re.search(r"چرا|علت|عیب.?یابی|\bdiagnos|\btroubleshoot", text, re.I)
             and re.search(r"سرویس|service|failed|بالا\s*نمی|استارت\s*نمی|down", text, re.I)
             and not re.search(r"(?:ریستارت|استارت|restart|start|اعمال|اصلاح).{0,12}(?:کن|بزن)", text, re.I)):
@@ -304,10 +308,6 @@ def fallback_intent(message: str) -> str:
         text, re.I,
     ):
         return "nginx_config_review"
-    if re.search(r"redis|ردیس", text, re.I) and re.search(
-        r"اتصال|بررسی زنده|تست کن|چک کن|connectivity|test redis|check redis", text, re.I
-    ):
-        return "redis_dependency_check"
     if "service_config_discovery" in text:
         return "service_config_discovery"
     if "service_config_review" in text:
