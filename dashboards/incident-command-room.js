@@ -214,6 +214,7 @@
     receivedSignals: null, receivedSignalsStatus: 'loading',
     hostDiscovery: null,
     configResponse: null, configResponseStatus: 'loading',
+    investigationReport: null, investigationReportStatus: 'loading',
     chat: null, chatStatus: 'loading', chatBusy: false, chatLastResult: null,
     configPreviewPending: false, configPreviewLastResult: null,
     serviceStatus: null, serviceStatusLoading: false, serviceStatusBusy: false,
