@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 599 | Dashboard JS files scanned: 8 | Symbols indexed: 6833**
+**Python files scanned: 600 | Dashboard JS files scanned: 8 | Symbols indexed: 6849**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -2712,30 +2712,31 @@
 | `integrations/vm/ssh_connector.py` | `SSHVMConnector.search_services` | 823 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | SSHVMConnector |
 | `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_status` | 829 | async method | Read structured systemd properties and bounded 'systemctl status'. | SSHVMConnector |
 | `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_status.numeric` | 855 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector.service_status |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.process_status` | 895 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.process_snapshot` | 910 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_logs` | 924 | async method | Collect bounded journald history; retry read-only via sudo -n if denied. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.system_logs` | 954 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.tcp_check` | 970 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.port_listener_status` | 984 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.dns_check` | 996 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.route_check` | 1008 | async method | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.firewall_status` | 1016 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_runtime_discovery` | 1028 | async method | Read selected systemd properties; never return ExecStart argv or env values. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_config_discovery` | 1045 | async method | Read-only proof of config-path existence from systemd-derived paths. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.dependency_investigation` | 1189 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.redis_dependency_check` | 1193 | async method | Read-only Redis endpoint verification from a trusted systemd appsettings file. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_config_llm_repair` | 1198 | async method | Operator-requested full-file LLM repair, read-only and not approvable. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_config_review` | 1274 | async method | Read-only bounded review for a vendor error or verified unit file. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.dotnet_config_syntax` | 1417 | async method | Remote Linux coreutils read; *local AIOps Python* JSON syntax check. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.nginx_config_inspect` | 1478 | async method | Inspect only allowlisted Nginx config structure; no raw file bytes. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.nginx_config_review` | 1524 | async method | Generate a non-executable, bounded review from current validator proof. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.nginx_config_review.safe_preview_text` | 1585 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector.nginx_config_review |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.nginx_config_review.safe_rows` | 1588 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector.nginx_config_review |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.config_validate` | 1623 | async method | Locate the running unit's config, run a fixed read-only syntax check. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.start_service` | 1739 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.restart_service` | 1746 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.reload_service` | 1753 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.process_status` | 895 | async method | Correlate a systemd service to its actual MainPID, not just comm. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.process_status.read_ps` | 911 | method | داده را بدون تغییر state بازیابی/فهرست می‌کند | SSHVMConnector.process_status |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.process_snapshot` | 968 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_logs` | 982 | async method | Collect bounded journald history; retry read-only via sudo -n if denied. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.system_logs` | 1012 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.tcp_check` | 1028 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.port_listener_status` | 1042 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.dns_check` | 1054 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.route_check` | 1066 | async method | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.firewall_status` | 1074 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_runtime_discovery` | 1086 | async method | Read selected systemd properties; never return ExecStart argv or env values. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_config_discovery` | 1103 | async method | Read-only proof of config-path existence from systemd-derived paths. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.dependency_investigation` | 1247 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.redis_dependency_check` | 1251 | async method | Read-only Redis endpoint verification from a trusted systemd appsettings file. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_config_llm_repair` | 1256 | async method | Operator-requested full-file LLM repair, read-only and not approvable. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_config_review` | 1332 | async method | Read-only bounded review for a vendor error or verified unit file. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.dotnet_config_syntax` | 1475 | async method | Remote Linux coreutils read; *local AIOps Python* JSON syntax check. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.nginx_config_inspect` | 1536 | async method | Inspect only allowlisted Nginx config structure; no raw file bytes. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.nginx_config_review` | 1582 | async method | Generate a non-executable, bounded review from current validator proof. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.nginx_config_review.safe_preview_text` | 1643 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector.nginx_config_review |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.nginx_config_review.safe_rows` | 1646 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector.nginx_config_review |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.config_validate` | 1681 | async method | Locate the running unit's config, run a fixed read-only syntax check. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.start_service` | 1797 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.restart_service` | 1804 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.reload_service` | 1811 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
 | `integrations/vm/target_context.py` | `bind_vm_probe_blocked` | 22 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/target_context.py` | `reset_vm_probe_blocked` | 26 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/target_context.py` | `vm_probes_blocked` | 30 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -6572,6 +6573,21 @@
 | `tests/unit/test_vm_outbound_agent.py` | `test_negotiated_relative_lease_write_requires_fresh_api_commit` | 438 | async function | A write cannot start until the API confirms its own monotonic deadline. | module |
 | `tests/unit/test_vm_outbound_agent.py` | `test_expired_relative_write_is_never_committed_by_api` | 477 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_outbound_agent.py` | `test_relative_config_claim_must_be_live_at_api_commit` | 512 | async function | No API commit if signed claim expires during network/queue delay. | module |
+| `tests/unit/test_vm_process_systemd_mainpid.py` | `test_systemd_mainpid_is_verified_when_process_comm_differs` | 7 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_process_systemd_mainpid.py` | `test_systemd_mainpid_is_verified_when_process_comm_differs.Worker` | 9 | class | کلاس | test_systemd_mainpid_is_verified_when_process_comm_differs |
+| `tests/unit/test_vm_process_systemd_mainpid.py` | `test_systemd_mainpid_is_verified_when_process_comm_differs.Worker._validate_service` | 10 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_systemd_mainpid_is_verified_when_process_comm_differs.Worker |
+| `tests/unit/test_vm_process_systemd_mainpid.py` | `test_systemd_mainpid_is_verified_when_process_comm_differs.Worker._run` | 12 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_systemd_mainpid_is_verified_when_process_comm_differs.Worker |
+| `tests/unit/test_vm_process_systemd_mainpid.py` | `test_systemd_mainpid_is_verified_when_process_comm_differs.Worker.service_status` | 18 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_systemd_mainpid_is_verified_when_process_comm_differs.Worker |
+| `tests/unit/test_vm_process_systemd_mainpid.py` | `test_mismatched_unit_does_not_get_attributed_to_requested_service` | 32 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_process_systemd_mainpid.py` | `test_mismatched_unit_does_not_get_attributed_to_requested_service.Worker` | 33 | class | کلاس | test_mismatched_unit_does_not_get_attributed_to_requested_service |
+| `tests/unit/test_vm_process_systemd_mainpid.py` | `test_mismatched_unit_does_not_get_attributed_to_requested_service.Worker._validate_service` | 34 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_mismatched_unit_does_not_get_attributed_to_requested_service.Worker |
+| `tests/unit/test_vm_process_systemd_mainpid.py` | `test_mismatched_unit_does_not_get_attributed_to_requested_service.Worker._run` | 35 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_mismatched_unit_does_not_get_attributed_to_requested_service.Worker |
+| `tests/unit/test_vm_process_systemd_mainpid.py` | `test_mismatched_unit_does_not_get_attributed_to_requested_service.Worker.service_status` | 38 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_mismatched_unit_does_not_get_attributed_to_requested_service.Worker |
+| `tests/unit/test_vm_process_systemd_mainpid.py` | `test_zombie_systemd_mainpid_is_not_running` | 49 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_vm_process_systemd_mainpid.py` | `test_zombie_systemd_mainpid_is_not_running.Worker` | 50 | class | کلاس | test_zombie_systemd_mainpid_is_not_running |
+| `tests/unit/test_vm_process_systemd_mainpid.py` | `test_zombie_systemd_mainpid_is_not_running.Worker._validate_service` | 51 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_zombie_systemd_mainpid_is_not_running.Worker |
+| `tests/unit/test_vm_process_systemd_mainpid.py` | `test_zombie_systemd_mainpid_is_not_running.Worker._run` | 52 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_zombie_systemd_mainpid_is_not_running.Worker |
+| `tests/unit/test_vm_process_systemd_mainpid.py` | `test_zombie_systemd_mainpid_is_not_running.Worker.service_status` | 56 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_zombie_systemd_mainpid_is_not_running.Worker |
 | `tests/unit/test_vm_pull_review.py` | `test_pull_agent_connection_cannot_deadlock_api_readiness` | 16 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_pull_review.py` | `test_write_failure_after_dispatch_never_claims_no_write` | 44 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_vm_pull_review.py` | `test_write_expiry_before_dispatch_is_not_started` | 58 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
