@@ -40,7 +40,25 @@ _SERVICE_ROW = {
     },
     "additionalProperties": True,
 }
-VALIDATED_TOOLS = frozenset({"disk_status", "list_services", "search_services"})
+_DEPENDENCY_ROW = {
+    "type": "object",
+    "required": ["kind", "host", "port", "probe_status"],
+    "additionalProperties": False,
+    "properties": {
+        "kind": {"type": "string"},
+        "host": {"type": "string"},
+        "port": {"type": "integer", "minimum": 1, "maximum": 65535},
+        "port_inferred": {"type": "boolean"},
+        "probe": {"type": "string", "enum": ["http_head", "tcp"]},
+        "config_verified": {"type": "boolean"},
+        "probe_supported": {"type": "boolean"},
+        "probe_status": {"type": "string"},
+        "tcp_reachable": {"type": ["boolean", "null"]},
+        "http_status": {"type": ["integer", "null"]},
+        "tls_verified": {"type": ["boolean", "null"]},
+    },
+}
+VALIDATED_TOOLS = frozenset({"disk_status", "list_services", "search_services", "dependency_investigation"})
 
 def output_schema(tool: str) -> dict[str, Any]:
     if tool not in VALIDATED_TOOLS:
@@ -49,7 +67,14 @@ def output_schema(tool: str) -> dict[str, Any]:
         **_OBS_SCHEMA,
         "properties": {**_OBS_SCHEMA["properties"]},
     }
-    if tool == "disk_status":
+    if tool == "dependency_investigation":
+        schema["properties"]["dependencies"] = {
+            "type": "array", "maxItems": 6, "items": _DEPENDENCY_ROW,
+        }
+        schema["properties"]["config_files_checked"] = {"type": "integer"}
+        schema["properties"]["checks_executed"] = {"type": "integer"}
+        schema["properties"]["execution_authority"] = {"type": "boolean"}
+    elif tool == "disk_status":
         schema["properties"]["filesystems"] = {"type": "array", "items": _FILE_ROW}
         schema["properties"]["block_devices"] = {"type": "array", "items": {"type": "object"}}
         schema["properties"]["inodes"] = {"type": "array", "items": _FILE_ROW}
@@ -75,6 +100,24 @@ def validate_vm_observation(tool: str, target: str, payload: Any) -> dict[str, A
     if payload.get("target") != target:
         raise ValueError("vm_mcp_schema_target_mismatch")
     if not payload["success"]:
+        return payload
+    if tool == "dependency_investigation":
+        if payload.get("execution_authority") is not False:
+            raise ValueError("vm_mcp_dependency_execution_authority_invalid")
+        rows = payload.get("dependencies")
+        if not isinstance(rows, list) or len(rows) > 6:
+            raise ValueError("vm_mcp_dependency_inventory_invalid")
+        safe_fields = set(_DEPENDENCY_ROW["properties"])
+        for row in rows:
+            if not isinstance(row, dict) or not set(row) <= safe_fields:
+                raise ValueError("vm_mcp_dependency_field_invalid")
+            if (not isinstance(row.get("kind"), str)
+                    or not isinstance(row.get("host"), str)
+                    or type(row.get("port")) is not int
+                    or not 1 <= row["port"] <= 65535
+                    or row.get("config_verified") is not True
+                    or not isinstance(row.get("probe_status"), str)):
+                raise ValueError("vm_mcp_dependency_row_invalid")
         return payload
     field = "filesystems" if tool == "disk_status" else "services"
     rows = payload.get(field)
