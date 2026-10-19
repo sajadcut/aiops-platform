@@ -45,7 +45,8 @@ SCHEMES = {
 ENDPOINT_FIELDS = {"host", "hostname", "server", "endpoint", "endpoints",
                    "address", "nodes", "url", "uri", "baseurl", "brokerurl",
                    "connection", "connectionstring", "configuration",
-                   "bootstrapservers", "servers", "brokers"}
+                   "bootstrapservers", "servers", "brokers", "primary", "secondary",
+                   "master", "replica", "connectionstring"}
 
 
 _CONFIG_KEY_PART = re.compile(r"^[A-Za-z_][A-Za-z0-9_-]{0,49}$")
