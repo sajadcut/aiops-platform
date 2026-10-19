@@ -734,6 +734,55 @@ class SignalGateway:
         }
 
     @staticmethod
+    async def _persist_duplicate_dependency_evidence(
+        checkpoints: WorkflowCheckpointStore,
+        incident_id: str,
+        state: Dict[str, Any],
+        discovery: Dict[str, Any],
+    ) -> None:
+        """Keep fresh, source-bound read-only MCP facts on repeated alerts.
+
+        A repeated source ID must not duplicate the incident or rerun its
+        execution stages. The verified check itself is independently performed
+        at ingress; this only updates the existing incident's evidence ledger.
+        """
+        verified_rows = [
+            row for row in (discovery.get("dependency_evidence") or [])
+            if isinstance(row, dict) and row.get("source") == "vm_mcp"
+            and isinstance(row.get("raw_data"), dict)
+            and row["raw_data"].get("diagnostic") == "dependency_investigation"
+            and row["raw_data"].get("success") is True
+            and row["raw_data"].get("binding") == "independent_vm_mcp_service_status"
+        ]
+        if not verified_rows or not state:
+            return
+        checkpoint = await checkpoints.load(incident_id)
+        if not checkpoint:
+            return
+
+        def merged(previous: Any) -> list[Dict[str, Any]]:
+            rows = [row for row in (previous or []) if isinstance(row, dict)]
+            replacing = {str(row.get("reference") or "") for row in verified_rows}
+            rows = [row for row in rows if str(row.get("reference") or "") not in replacing]
+            return (rows + verified_rows)[-200:]
+
+        context = state.setdefault("context", {})
+        context["evidence"] = merged(context.get("evidence"))
+        context["verified_dependency_evidence"] = merged(
+            context.get("verified_dependency_evidence"))
+        context["dependency_followup"] = discovery.get("dependency_followup", {})
+        if (discovery.get("host_discovery") or {}).get("status") == "verified_by_vm_mcp":
+            context["host_discovery"] = discovery["host_discovery"]
+        if discovery.get("verified_runtime_mapping"):
+            context["verified_runtime_mapping"] = discovery["verified_runtime_mapping"]
+        live = state.setdefault("live_evidence", {})
+        live["evidence"] = merged(live.get("evidence"))
+        # Preserve completed/paused workflow status and never replay write nodes.
+        await checkpoints.save(
+            incident_id, state, status=str(checkpoint.get("status") or "paused"),
+        )
+
+    @staticmethod
     async def ingest(session, signal: OperationalSignal) -> Dict[str, Any]:
         trigger_evidence = signal.to_evidence()
         discovery = await SignalGateway._knowledge_assisted_asset(signal, trigger_evidence)
@@ -755,6 +804,9 @@ class SignalGateway:
         existing_incident_id = await incidents.find_incident_by_evidence_reference(source=signal.source, reference=signal.source_id)
         if existing_incident_id:
             state = await SignalGateway._existing_state(checkpoints, existing_incident_id)
+            await SignalGateway._persist_duplicate_dependency_evidence(
+                checkpoints, existing_incident_id, state, discovery,
+            )
             state.update({
                 "trigger_source": signal.source,
                 "trigger_signal_type": signal.signal_type,
@@ -771,6 +823,9 @@ class SignalGateway:
         existing_incident_id = await incidents.find_incident_by_evidence_reference(source=signal.source, reference=signal.source_id)
         if existing_incident_id:
             state = await SignalGateway._existing_state(checkpoints, existing_incident_id)
+            await SignalGateway._persist_duplicate_dependency_evidence(
+                checkpoints, existing_incident_id, state, discovery,
+            )
             state.update({
                 "trigger_source": signal.source,
                 "trigger_signal_type": signal.signal_type,
@@ -812,6 +867,9 @@ class SignalGateway:
                     await checkpoints.save(existing_incident_id, state, status=str((checkpoint or {}).get("status") or "paused"))
                 else:
                     await incidents.commit()
+                await SignalGateway._persist_duplicate_dependency_evidence(
+                    checkpoints, existing_incident_id, state, discovery,
+                )
                 state.update({
                     "incident_id": existing_incident_id,
                     "trigger_source": signal.source,
