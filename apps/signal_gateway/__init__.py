@@ -712,8 +712,8 @@ class SignalGateway:
         # This is deliberately not a general inventory scan.
         if (signal.source in {"zabbix", "prometheus"}
                 and ServiceIdentityResolver.known(signal.service)):
-            raw_ips = asset.get("ip_addresses") or []
-            raw_host = str(asset.get("hostname") or "").strip()
+            raw_ips = live_asset.get("ip_addresses") or []
+            raw_host = str(live_asset.get("hostname") or "").strip()
             if raw_ips or raw_host:
                 host_discovery = {
                     "status": "candidates_found",
