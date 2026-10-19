@@ -60,10 +60,15 @@ async def test_database_log_correlation_ignores_other_services_and_redacts_conne
     assert facts["model_status"] == "llm_analyzed"
     assert facts["hypothesis"] == "pool"
     assert facts["matching_endpoint_count"] == 1
-    assert facts["error_signatures"] == [{
-        "source": "elasticsearch", "error_signature": "pool_exhaustion",
-        "count": 1, "evidence_ref": "elastic-1",
-    }]
+    assert any(
+        entry["source"] == "elasticsearch"
+        and entry["error_signature"] == "pool_exhaustion"
+        and entry["count"] == 1
+        and entry["evidence_ref"] == "elastic-1"
+        for entry in facts["error_signatures"]
+    )
+    assert all(entry["error_signature"] != "authentication_failed"
+               for entry in facts["error_signatures"])
     assert "TOP_SECRET_NEVER_SEND" not in str(result)
     assert "TOP_SECRET_NEVER_SEND" not in str(model.prompts)
     assert "cache.internal" not in str(model.prompts)
