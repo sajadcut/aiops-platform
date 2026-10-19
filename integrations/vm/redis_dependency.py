@@ -90,10 +90,11 @@ def parse_redis_endpoints(value: Any) -> list[dict]:
                     walk(v, True, depth + 1)
                 elif key in {"configuration", "connectionstring", "connectionstrings",
                              "endpoint", "endpoints", "servers", "nodes", "primary",
-                             "host", "hostname", "address", "cache"}:
-                    # connectionstrings only contains Redis keys, and never
+                             "cache"}:
+                    # ConnectionStrings is not itself a Redis hint. Only a
+                    # nested Redis key can enter the Redis parsing scope.
                     # assumes a random SQL/TCP connection string means Redis.
-                    walk(v, scoped or key == "cache", depth + 1)
+                    walk(v, scoped, depth + 1)
         elif isinstance(node, list):
             for entry in node[:8]:
                 walk(entry, redis_scope, depth + 1)
