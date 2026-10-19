@@ -179,6 +179,7 @@ def test_unknown_vendor_explicit_host_port_uses_generic_tcp_without_guessing():
     assert result == [{
         "kind": "custom_tcp", "host": "payment.internal", "port": 60001,
         "port_inferred": False, "probe": "tcp", "config_verified": True,
+        "config_key": "PaymentAdapter",
     }]
     assert discover({"PaymentAdapter": {"Host": "payment.internal"}}) == []
     assert ("nats", "bus.internal", 4222) in {
@@ -211,3 +212,161 @@ def test_mcp_result_contract_rejects_hidden_password_or_undeclared_fields():
         validate_vm_observation("dependency_investigation", "vm01", {
             **base, "execution_authority": True,
         })
+
+
+def test_generic_tcp_is_not_mislabeled_activemq_and_jdbc_sqlserver():
+    rows = discover({
+        "ActiveMQ": {"BrokerUrl": "tcp://mq.internal:61616"},
+        "Payment": {"BaseUrl": "tcp://payment.internal:60001"},
+        "ConnectionStrings": {
+            "Billing": "jdbc:sqlserver://sql.internal:1433;databaseName=Billing;password=PRIVATE"
+        },
+        "Oracle": {"Url": "jdbc:oracle:thin:@//ora.internal:1521/prod"},
+    })
+    expected = {(r["kind"], r["host"], r["port"]): r for r in rows}
+    assert ("activemq", "mq.internal", 61616) in expected
+    assert ("custom_tcp", "payment.internal", 60001) in expected
+    assert ("mssql", "sql.internal", 1433) in expected
+    assert ("oracle", "ora.internal", 1521) in expected
+    assert expected[("mssql", "sql.internal", 1433)]["config_key"] == "ConnectionStrings.Billing"
+    assert "PRIVATE" not in repr(rows)
+    assert discover({"PrivateToken": {"Host": "should-not-probe.internal", "Port": 1234}}) == []
+
+
+@pytest.mark.asyncio
+async def test_probe_budget_fair_across_service_verified_files_and_tracks_sources():
+    first = base64.b64encode(json.dumps({
+        "Redis": "redis://cache.internal:6379",
+        "Postgres": "postgresql://pg.internal:5432/app",
+        "Kafka": "kafka://kafka.internal:9092",
+        "RabbitMQ": "amqp://rabbit.internal:5672",
+        "ActiveMQ": "tcp://mq.internal:61616",
+        "MongoDB": "mongodb://mongo.internal:27017/db",
+    }).encode()).decode()
+    second = base64.b64encode(json.dumps({
+        "Billing": {"BaseUrl": "https://billing.internal:9443/private?key=TOPSECRET"}
+    }).encode()).decode()
+
+    class Stub:
+        def _validate_target(self, value): assert value == "vm-a"
+        def _validate_service(self, value): assert value == "gfpapi"
+        def _validate_remote_host(self, value): assert value == "billing.internal"
+        def _validate_port(self, value): return value
+
+        async def service_config_discovery(self, target, service):
+            return {"success": True, "files": [
+                {"path": "/srv/gfp/appsettings.json", "verified_exists": True},
+                {"path": "/etc/gfp/connections.json", "verified_exists": True},
+            ]}
+
+        async def _run(self, target, command):
+            if "curl " in command:
+                assert "/private" not in command and "TOPSECRET" not in command
+                return {"success": True, "stdout": "403 0"}
+            return {"success": True, "stdout": (
+                second if "/etc/gfp/connections.json" in command else first)}
+
+        async def tcp_check(self, target, host, port):
+            return {"success": True, "supported": True, "reachable": True}
+
+    result = await investigate(Stub(), "vm-a", "gfpapi")
+    assert result["config_files_checked"] == 2
+    assert result["checks_executed"] == 6
+    billing = next(r for r in result["dependencies"] if r["host"] == "billing.internal")
+    assert billing["config_file"] == "/etc/gfp/connections.json"
+    assert billing["config_key"] == "Billing.BaseUrl"
+    assert billing["probe_scope"] == "origin_root_head"
+    assert billing["http_status"] == 403
+    assert "TOPSECRET" not in repr(result)
+    assert result["root_cause_confirmed"] is False
+
+
+def test_provenance_contract_rejects_sneaky_values_and_invalid_paths():
+    from integrations.vm.tool_contract import validate_vm_observation
+    base = {
+        "success": True, "target": "vm-a",
+        "execution_authority": False, "root_cause_confirmed": False,
+        "config_contents_exposed": False, "secrets_exposed": False,
+        "dependencies": [{
+            "kind": "amqp", "host": "mq.internal", "port": 5672,
+            "config_verified": True, "probe": "tcp",
+            "probe_status": "tcp_reachable",
+            "config_file": "/etc/gfp/connections.json",
+            "config_key": "Messaging.BrokerUrl",
+            "probe_scope": "transport_tcp_connect",
+        }],
+    }
+    assert validate_vm_observation("dependency_investigation", "vm-a", base) == base
+    for changed in (
+        {"config_file": "/etc/ssh/secret.config"},
+        {"config_key": "Messaging.Password"},
+        {"config_key": "BROKER_SECRET"},
+        {"probe_scope": "origin_root_head"},
+    ):
+        candidate = dict(base)
+        candidate["dependencies"] = [{**base["dependencies"][0], **changed}]
+        with pytest.raises(ValueError):
+            validate_vm_observation("dependency_investigation", "vm-a", candidate)
+
+
+def test_unknown_stack_transport_error_still_proposes_bounded_discovery():
+    rows = [{"source": "elasticsearch", "type": "log",
+             "raw_data": {"message": "PaymentClient SocketException: ECONNREFUSED"}}]
+    assert dependency_signals(rows) == ["unknown_dependency"]
+
+
+@pytest.mark.asyncio
+async def test_invalid_config_has_distinct_parse_status_without_leaking_values():
+    encoded = base64.b64encode(b'{"Main": "SECRET", broken syntax').decode()
+
+    class Stub:
+        def _validate_target(self, target): pass
+        def _validate_service(self, service): pass
+
+        async def service_config_discovery(self, target, service):
+            return {"success": True, "files": [
+                {"path": "/srv/app/appsettings.json", "verified_exists": True},
+            ]}
+
+        async def _run(self, target, command):
+            return {"success": True, "stdout": encoded}
+
+        async def tcp_check(self, target, host, port):
+            raise AssertionError("never probe from invalid config")
+
+    result = await investigate(Stub(), "vm", "svc")
+    assert result["status"] == "config_parse_failed"
+    assert result["config_files_read"] == 1
+    assert result["config_files_parse_failed"] == 1
+    assert result["checks_executed"] == 0
+    assert "SECRET" not in repr(result)
+
+
+def test_public_dependency_answer_identifies_provenance_not_business_health():
+    from apps.incident_copilot import dependency_investigation_answer
+    answer = dependency_investigation_answer({
+        "success": True, "service": "gfpapi", "status": "checks_completed",
+        "dependencies": [{
+            "kind": "custom_tcp", "host": "payment.internal", "port": 60001,
+            "probe_status": "tcp_reachable", "probe_scope": "transport_tcp_connect",
+            "config_file": "/srv/gfp/appsettings.json",
+            "config_key": "PaymentAdapter.Host",
+        }],
+    })
+    assert "gfpapi" in answer
+    assert "/srv/gfp/appsettings.json" in answer
+    assert "PaymentAdapter.Host" in answer
+    assert "علت ریشه‌ای تأیید نشده" in answer
+
+
+def test_toml_and_cnf_config_dependency_sources():
+    toml = '[payment]\nurl = "https://pay.internal:8443/charge?secret=NEVER_COPY"\n'
+    cnf = 'broker.url=tcp://broker.internal:61616\n'
+    toml_rows = discover(load_config(toml, "settings.toml"))
+    assert any(r["kind"] == "https" and r["host"] == "pay.internal"
+               and r["config_key"] == "payment.url" for r in toml_rows)
+    assert "NEVER_COPY" not in repr(toml_rows)
+    # A generic broker URL must not be classified as ActiveMQ on its own.
+    cnf_rows = discover(load_config(cnf, "settings.cnf"))
+    assert any(r["kind"] == "custom_tcp" and r["host"] == "broker.internal"
+               for r in cnf_rows)

@@ -14,7 +14,7 @@ from integrations.vm.general_config_review import checked_config_path, remote_co
 MAX_FILES = 4
 MAX_CHECKS = 6
 MAX_ENCODED = 349528
-SUPPORTED = (".json", ".yaml", ".yml", ".properties", ".ini", ".cfg", ".conf", ".xml", ".config")
+SUPPORTED = (".json", ".yaml", ".yml", ".toml", ".properties", ".ini", ".cfg", ".cnf", ".conf", ".xml", ".config")
 
 
 async def http_head(connector: Any, target: str, *, host: str, port: int, scheme: str) -> dict:
@@ -24,7 +24,8 @@ async def http_head(connector: Any, target: str, *, host: str, port: int, scheme
     if scheme not in {"http", "https"}:
         return {"supported": False, "http_status": None, "tls_verified": None}
     # Host comes from verified config and was validated again before quoting.
-    uri = scheme + "://" + host + ":" + str(port) + "/"
+    uri_host = "[" + host + "]" if ":" in host else host
+    uri = scheme + "://" + uri_host + ":" + str(port) + "/"
     cmd = (
         "if ! command -v curl >/dev/null 2>&1; then printf 'unsupported'; "
         "else curl --head --silent --show-error --max-time 5 --connect-timeout 3 "
@@ -57,7 +58,8 @@ async def investigate(connector: Any, target: str, service: str) -> dict:
         "read_only": True, "execution_authority": False, "root_cause_confirmed": False,
         "application_health_verified": False, "protocol_health_verified": False,
         "config_contents_exposed": False, "secrets_exposed": False,
-        "config_files_checked": 0, "checks_executed": 0, "dependencies": [],
+        "config_files_read": 0, "config_files_checked": 0,
+        "config_files_parse_failed": 0, "checks_executed": 0, "dependencies": [],
         "limitations": ["network_probe_not_equal_protocol_health"],
     }
     try:
@@ -77,11 +79,12 @@ async def investigate(connector: Any, target: str, service: str) -> dict:
     if not filenames:
         return {**base, "status": "no_verified_config_files",
                 "limitations": ["systemd_config_path_not_verified"]}
-    known = []
+    by_file: list[list[dict]] = []
     read_failed = 0
     for path in list(dict.fromkeys(filenames))[:MAX_FILES]:
         try:
-            cmd = remote_config_read_command(checked_config_path(path))
+            verified_path = checked_config_path(path)
+            cmd = remote_config_read_command(verified_path)
             response = await connector._run(target, cmd)
             if response.get("success") is not True:
                 read_failed += 1
@@ -94,17 +97,45 @@ async def investigate(connector: Any, target: str, service: str) -> dict:
             if not (1 <= len(raw) <= 262144):
                 read_failed += 1
                 continue
-            config = load_config(raw.decode("utf-8-sig"), path)
+            base["config_files_read"] += 1
+            try:
+                config = load_config(raw.decode("utf-8-sig"), path)
+            except (UnicodeError, ValueError, TypeError):
+                # Syntax/encoding is invalid or unsupported; never echo
+                # parser exceptions (they can include secret config bytes).
+                base["config_files_parse_failed"] += 1
+                continue
             base["config_files_checked"] += 1
-            for item in discover(config):
-                if item not in known and len(known) < MAX_CHECKS:
-                    known.append(item)
+            # Preserve the exact verified source file and structural setting
+            # key; only selected endpoint facts leave the trusted worker.
+            by_file.append([
+                {**item, "config_file": verified_path}
+                for item in discover(config)[:MAX_CHECKS]
+            ])
         except Exception:
             # No parser trace or input excerpts: they can contain credentials.
             read_failed += 1
     base["config_files_failed"] = read_failed
+    # Spread the fixed probe budget across verified files. Otherwise one
+    # config with six endpoints can starve the failing dependency in another.
+    known: list[dict] = []
+    seen: set[tuple[str, str, int]] = set()
+    for index in range(MAX_CHECKS):
+        for group in by_file:
+            if index >= len(group):
+                continue
+            item = group[index]
+            identity = (item["kind"], item["host"], item["port"])
+            if identity not in seen:
+                seen.add(identity)
+                known.append(item)
+            if len(known) >= MAX_CHECKS:
+                break
+        if len(known) >= MAX_CHECKS:
+            break
     if not known:
         base["status"] = ("dependency_not_discovered" if base["config_files_checked"]
+                          else "config_parse_failed" if base["config_files_parse_failed"]
                           else "config_read_unavailable")
         base["limitations"] = ["no_static_dependency_endpoint_verified"]
         return base
@@ -112,6 +143,9 @@ async def investigate(connector: Any, target: str, service: str) -> dict:
         record = dict(dependency)
         try:
             if record["probe"] == "http_head":
+                # Only the configured origin is probed. We do not send tokens,
+                # URI paths or parameters to the destination or the LLM.
+                record["probe_scope"] = "origin_root_head"
                 http = await http_head(
                     connector, target, host=record["host"],
                     port=record["port"], scheme=record["kind"],
@@ -124,6 +158,7 @@ async def investigate(connector: Any, target: str, service: str) -> dict:
                     "unsupported" if not http["supported"] else "unavailable"
                 )
             else:
+                record["probe_scope"] = "transport_tcp_connect"
                 tcp = await connector.tcp_check(target, record["host"], record["port"])
                 record["probe_supported"] = (tcp.get("success") is True
                                              and tcp.get("supported") is True)

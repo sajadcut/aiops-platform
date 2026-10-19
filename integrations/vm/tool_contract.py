@@ -51,6 +51,11 @@ _DEPENDENCY_ROW = {
         "port_inferred": {"type": "boolean"},
         "probe": {"type": "string", "enum": ["http_head", "tcp"]},
         "config_verified": {"type": "boolean"},
+        "config_file": {"type": "string", "maxLength": 255},
+        "config_key": {"type": "string", "maxLength": 160},
+        "probe_scope": {"type": "string", "enum": [
+            "origin_root_head", "transport_tcp_connect",
+        ]},
         "probe_supported": {"type": "boolean"},
         "probe_status": {"type": "string"},
         "tcp_reachable": {"type": ["boolean", "null"]},
@@ -71,6 +76,8 @@ def output_schema(tool: str) -> dict[str, Any]:
         schema["properties"]["dependencies"] = {
             "type": "array", "maxItems": 6, "items": _DEPENDENCY_ROW,
         }
+        schema["properties"]["config_files_read"] = {"type": "integer"}
+        schema["properties"]["config_files_parse_failed"] = {"type": "integer"}
         schema["properties"]["config_files_checked"] = {"type": "integer"}
         schema["properties"]["checks_executed"] = {"type": "integer"}
         schema["properties"]["execution_authority"] = {"type": "boolean"}
@@ -106,6 +113,7 @@ def validate_vm_observation(tool: str, target: str, payload: Any) -> dict[str, A
             "success", "target", "service", "status", "diagnostic", "read_only",
             "execution_authority", "root_cause_confirmed", "application_health_verified",
             "protocol_health_verified", "config_contents_exposed", "secrets_exposed",
+            "config_files_read", "config_files_parse_failed",
             "config_files_checked", "config_files_failed", "checks_executed",
             "dependencies", "limitations", "error", "observed_at",
         }
@@ -120,9 +128,31 @@ def validate_vm_observation(tool: str, target: str, payload: Any) -> dict[str, A
         if not isinstance(rows, list) or len(rows) > 6:
             raise ValueError("vm_mcp_dependency_inventory_invalid")
         safe_fields = set(_DEPENDENCY_ROW["properties"])
+        from integrations.vm.dependency_discovery import safe_config_key
+        from integrations.vm.general_config_review import checked_config_path
         for row in rows:
             if not isinstance(row, dict) or not set(row) <= safe_fields:
                 raise ValueError("vm_mcp_dependency_field_invalid")
+            source_file = row.get("config_file")
+            if source_file is not None:
+                try:
+                    if checked_config_path(source_file) != source_file:
+                        raise ValueError("noncanonical_dependency_config_path")
+                except (TypeError, ValueError):
+                    raise ValueError("vm_mcp_dependency_config_path_invalid") from None
+            source_key = row.get("config_key")
+            if source_key is not None and (
+                not isinstance(source_key, str)
+                or safe_config_key(tuple(source_key.split("."))) != source_key
+            ):
+                raise ValueError("vm_mcp_dependency_config_key_invalid")
+            scope = row.get("probe_scope")
+            if scope is not None and (
+                (scope == "origin_root_head" and row.get("probe") != "http_head")
+                or (scope == "transport_tcp_connect" and row.get("probe") != "tcp")
+                or scope not in {"origin_root_head", "transport_tcp_connect"}
+            ):
+                raise ValueError("vm_mcp_dependency_probe_scope_invalid")
             if (not isinstance(row.get("kind"), str)
                     or not isinstance(row.get("host"), str)
                     or type(row.get("port")) is not int

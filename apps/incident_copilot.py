@@ -292,7 +292,8 @@ def fallback_intent(message: str) -> str:
     if re.search(r"redis|ردیس", text, re.I) and re.search(
         r"اتصال|بررسی زنده|تست کن|چک کن|connectivity|test redis|check redis", text, re.I
     ):
-        return "redis_dependency_check"
+        # Redis is one dependency kind, not a separate investigation design.
+        return "dependency_investigation"
     if (re.search(r"چرا|علت|عیب.?یابی|\bdiagnos|\btroubleshoot", text, re.I)
             and re.search(r"سرویس|service|failed|بالا\s*نمی|استارت\s*نمی|down", text, re.I)
             and not re.search(r"(?:ریستارت|استارت|restart|start|اعمال|اصلاح).{0,12}(?:کن|بزن)", text, re.I)):
@@ -383,17 +384,44 @@ def dependency_investigation_answer(value: dict, *, persian: bool = True) -> str
         return ("بررسی وابستگی‌ها اجرا نشد یا مسیر کانفیگ قابل تأیید نبود."
                 if persian else "Dependency probe was unavailable or not verified.")
     facts = []
+    labels = {
+        "tcp_reachable": "اتصال TCP برقرار شد",
+        "tcp_unreachable": "اتصال TCP برقرار نشد",
+        "http_responded": "پاسخ HTTP دریافت شد",
+        "unsupported": "ابزار آزمون موجود نیست",
+        "unavailable": "نتیجهٔ آزمون نامشخص است",
+        "unverified": "آزمون تأیید نشده",
+        "check_unavailable": "اجرای آزمون ممکن نشد",
+    }
     for row in (value.get("dependencies") or [])[:6]:
         if not isinstance(row, dict):
             continue
-        kind, host, port = str(row.get("kind") or "")[:25], str(row.get("host") or "")[:100], row.get("port")
+        kind = redact_text(str(row.get("kind") or ""))[:25]
+        host = redact_text(str(row.get("host") or ""))[:100]
+        port = row.get("port")
         if not kind or not host or type(port) is not int:
             continue
-        state = str(row.get("probe_status") or "unverified")[:45]
+        raw_state = str(row.get("probe_status") or "unverified")[:45]
+        state = labels.get(raw_state, raw_state) if persian else raw_state
         if type(row.get("http_status")) is int:
-            state += " HTTP " + str(row["http_status"])
-        facts.append(f"{kind} {host}:{port} — {state}")
-    pre = ("نتیجهٔ بررسی وابستگی‌ها" if persian else "Downstream dependency checks")
+            state += " (HTTP " + str(row["http_status"]) + ")"
+        file = row.get("config_file")
+        key = row.get("config_key")
+        sources = []
+        if isinstance(file, str) and file.startswith("/"):
+            sources.append(("فایل: " if persian else "file: ") + redact_text(file)[:255])
+        if isinstance(key, str):
+            sources.append(("کلید: " if persian else "key: ") + redact_text(key)[:160])
+        if row.get("port_inferred") is True:
+            sources.append("پورت پیش‌فرض" if persian else "inferred default port")
+        if row.get("probe_scope") == "origin_root_head":
+            sources.append("HEAD / فقط روی مبدأ URL" if persian else "HEAD / at URL origin only")
+        fact = f"{kind} {host}:{port} — {state}"
+        facts.append(fact + (" | " + "؛ ".join(sources) if sources else ""))
+    service = redact_text(str(value.get("service") or ""))[:90]
+    pre = ("نتیجهٔ بررسی وابستگی‌های سرویس " + service if service and persian
+           else "Downstream dependency checks for " + service if service
+           else "نتیجهٔ بررسی وابستگی‌ها" if persian else "Downstream dependency checks")
     status = str(value.get("status") or "unavailable")[:55]
     note = ("این نتایج فقط پاسخ HTTP یا امکان اتصال TCP را گزارش می‌کنند؛ سلامت "
             "پروتکل، احراز هویت، عملکرد برنامه یا علت ریشه‌ای تأیید نشده است."
@@ -401,6 +429,9 @@ def dependency_investigation_answer(value: dict, *, persian: bool = True) -> str
             "authentication, business availability, or root cause.")
     absent = ("هیچ مقصد تأییدشده‌ای در کانفیگ برنامه پیدا نشد."
               if persian else "No verified endpoint found in service config.")
+    if status == "config_parse_failed" and persian:
+        absent = ("فایل تنظیمات قابل خواندن بود اما Parse آن موفق نشد؛ "
+                  "اعتبارسنجی Syntax با service_config_review لازم است.")
     return pre + ": " + status + "\n" + ("\n".join(facts) if facts else absent) + "\n" + note
 
 
@@ -427,7 +458,8 @@ def public_result(action: str, value: Any) -> dict:
         "service_runtime_discovery": ("service", "target", "runtime",
                                       "entrypoint", "publish_directory", "unit_file"),
         "dependency_investigation": ("service", "target", "status", "dependencies",
-                                     "config_files_checked", "config_files_failed",
+                                     "config_files_read", "config_files_checked",
+                                     "config_files_parse_failed", "config_files_failed",
                                      "checks_executed", "limitations", "read_only",
                                      "root_cause_confirmed", "application_health_verified",
                                      "protocol_health_verified", "secrets_exposed"),
@@ -800,6 +832,11 @@ async def llm_plan(message: str, summary: dict, turns: list[dict],
         intent = str(parsed.get("intent") or "answer")
         if intent not in READ_ACTIONS | set(WRITE_SUGGESTIONS) | {"answer"}:
             intent = "answer"
+        # Preserve the legacy diagnostic only when explicitly addressed by
+        # its tool identifier; ordinary Redis questions use the same generic
+        # provenance-aware engine as SQL, AMQP and HTTP questions.
+        if intent == "redis_dependency_check" and "redis_dependency_check" not in message:
+            intent = "dependency_investigation"
         return {
             "intent": intent,
             "answer": redact_text(str(parsed.get("answer") or ""))[:3400],
