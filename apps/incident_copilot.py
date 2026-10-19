@@ -304,6 +304,10 @@ def fallback_intent(message: str) -> str:
         text, re.I,
     ):
         return "nginx_config_review"
+    if re.search(r"redis|ردیس", text, re.I) and re.search(
+        r"اتصال|بررسی زنده|تست کن|چک کن|connectivity|test redis|check redis", text, re.I
+    ):
+        return "redis_dependency_check"
     if "service_config_discovery" in text:
         return "service_config_discovery"
     if "service_config_review" in text:
