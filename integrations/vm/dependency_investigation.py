@@ -202,10 +202,17 @@ async def investigate(connector: Any, target: str, service: str) -> dict:
                         if "review_network_path" not in followups:
                             followups.append("review_network_path")
                 elif record["tcp_reachable"] is True and record["kind"] == "redis":
-                    protocol = await redis_unauthenticated_ping(
-                        connector, target, record["host"], record["port"],
-                        tls=record.get("tls_requested") is True,
-                    )
+                    try:
+                        protocol = await redis_unauthenticated_ping(
+                            connector, target, record["host"], record["port"],
+                            tls=record.get("tls_requested") is True,
+                        )
+                    except Exception:
+                        protocol = {
+                            "protocol_status": "probe_unavailable",
+                            "protocol_supported": False,
+                            "protocol_health_verified": False,
+                        }
                     record.update(protocol)
                     if protocol["protocol_status"] in {
                         "authentication_required", "access_denied",
