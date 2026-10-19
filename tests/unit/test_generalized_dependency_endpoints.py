@@ -119,8 +119,9 @@ async def test_llm_cannot_invent_a_kafka_port_or_unlisted_endpoint():
     result = await resolve_llm_bindings(config, adapter=model)
     assert result["status"] == "llm_unsubstantiated_selection"
     assert not result["endpoints"]
-    assert "19092" in model.calls[0][0][1]["content"]
-    assert "9092" not in model.calls[0][0][1]["content"]
+    inline = json.loads(model.calls[0][0][1]["content"])["inline_endpoint_fields"]
+    assert [entry["port"] for entry in inline] == [19092]
+    assert all(entry["port"] != 9092 for entry in inline)
 
 
 def test_missing_or_dns_srv_ports_are_not_confirmed():
