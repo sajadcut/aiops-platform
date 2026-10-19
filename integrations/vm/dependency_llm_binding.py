@@ -86,9 +86,11 @@ def _projection(config: object) -> tuple[list[dict], list[dict], dict]:
                                       "port": port, "family": family})
                         values[token] = (current, port, family, scope)
         elif isinstance(node, list):
-            for item in node[:10]:
+            for index, item in enumerate(node[:10]):
                 if isinstance(item, (dict, list)):
-                    walk(item, path)
+                    # Distinguish members of endpoint arrays so the LLM
+                    # cannot cross-wire Port from item 1 with Host from item 0.
+                    walk(item, path + (f"Item_{index}",))
 
     walk(config)
     return hosts, ports, values
