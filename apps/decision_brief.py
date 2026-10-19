@@ -1099,6 +1099,12 @@ def build_decision_brief(
         }),
         "checkpoint_version": checkpoint.get("version"),
     }
+    # An alert-scoped interpretation is mandatory, even with no LLM or
+    # zero matching MCP checks. It cannot change the approval policy.
+    from apps.incident_alert_focused_report import build_alert_focused_report
+    recorded["alert_focused_report"] = build_alert_focused_report(
+        incident=incident, evidence=evidence, brief=recorded,
+    )
     from apps.incident_remediation_opportunities import build_remediation_opportunities
     recorded["remediation_opportunities"] = build_remediation_opportunities(
         incident=incident, evidence=evidence, report=recorded,
