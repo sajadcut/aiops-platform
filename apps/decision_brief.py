@@ -460,6 +460,9 @@ def _mcp(rows: Iterable[dict], now: datetime) -> tuple[list[dict], list[dict]]:
                              "tls_verified"):
                     check[flag] = dep.get(flag) if type(dep.get(flag)) is bool else None
                 checks.append(check)
+            evidence_item["llm_field_binding_status"] = safe(
+                observed.get("llm_field_binding_status"), 80,
+            )
             evidence_item["dependency_checks"] = checks
             evidence_item["dependency_probe_count"] = (
                 observed.get("checks_executed")
