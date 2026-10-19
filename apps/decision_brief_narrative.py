@@ -13,6 +13,7 @@ from collections import OrderedDict
 
 from domain.contracts.config import settings
 from domain.contracts.redaction import redact
+from domain.contracts.logging import logger
 from integrations.llm.openai_compatible import configured_llm_adapter
 
 SECTIONS = (
@@ -402,8 +403,23 @@ async def generate_narrative(brief: dict, lang: str = "fa") -> dict:
         }
     except asyncio.TimeoutError:
         result = fallback(brief, lang, "model_timeout")
-    except ValueError:
+    except ValueError as exc:
+        # Preserve the *reason class*, not raw model output, prompts,
+        # config bytes or any fabricated citation. JSON decoding errors
+        # are also ValueError; previously all such failures collapsed into
+        # an opaque model_output_invalid status.
+        known = {
+            "narrative_too_large", "narrative_schema", "narrative_order",
+            "narrative_length", "narrative_command", "narrative_reference",
+            "narrative_not_persian", "narrative_incomplete",
+            "narrative_conflicts_with_live_config_validator",
+        }
+        code = ("narrative_json_invalid" if isinstance(exc, json.JSONDecodeError)
+                else str(exc) if str(exc) in known else "narrative_validation_error")
+        logger.warning("decision_brief_narrative_validation_rejected",
+                       code=code, language=lang)
         result = fallback(brief, lang, "model_output_invalid")
+        result["validation_code"] = code
     except Exception:
         # Never expose gateway errors or model prompts through operator responses.
         result = fallback(brief, lang, "model_unavailable_or_invalid")

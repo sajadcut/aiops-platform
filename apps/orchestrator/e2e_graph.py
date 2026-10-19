@@ -94,6 +94,7 @@ def retain_incident_evidence_for_followup(rows: List[Dict[str, Any]], limit: int
     priority = (
         "config_validate", "nginx_config_review", "nginx_config_inspect",
         "service_config_discovery", "service_config_review",
+        "dependency_investigation",
     )
     selected_indices: set[int] = set()
     for diagnostic in priority:
@@ -426,7 +427,9 @@ class E2EOrchestrator:
             item for item in seed_rows
             if isinstance(item, dict) and item.get("source") == "vm_mcp"
             and isinstance(item.get("raw_data"), dict)
-            and item["raw_data"].get("diagnostic") == "service_status"
+            and item["raw_data"].get("diagnostic") in {
+                "service_status", "dependency_investigation",
+            }
             and item["raw_data"].get("success") is True
         ]
         try:

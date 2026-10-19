@@ -10,6 +10,7 @@ from typing import Any
 
 from integrations.vm.dependency_discovery import discover, load_config
 from integrations.vm.general_config_review import checked_config_path, remote_config_read_command
+from integrations.vm.protocol_diagnostics import redis_unauthenticated_ping
 
 MAX_FILES = 4
 MAX_CHECKS = 6
@@ -61,6 +62,7 @@ async def investigate(connector: Any, target: str, service: str) -> dict:
         "config_files_read": 0, "config_files_checked": 0,
         "config_files_parse_failed": 0, "checks_executed": 0, "dependencies": [],
         "limitations": ["network_probe_not_equal_protocol_health"],
+        "investigation_status": "not_started", "next_checks": [],
     }
     try:
         discovered = await connector.service_config_discovery(target, service)
@@ -139,6 +141,9 @@ async def investigate(connector: Any, target: str, service: str) -> dict:
                           else "config_read_unavailable")
         base["limitations"] = ["no_static_dependency_endpoint_verified"]
         return base
+    followups: list[str] = []
+    saw_unreachable = False
+    saw_protocol_response = False
     for dependency in known:
         record = dict(dependency)
         try:
@@ -169,10 +174,81 @@ async def investigate(connector: Any, target: str, service: str) -> dict:
                     "tcp_unreachable" if record["tcp_reachable"] is False else
                     "unverified"
                 )
+                if record["tcp_reachable"] is False:
+                    saw_unreachable = True
+                    # The consumer VM is the right vantage point. Only a
+                    # config-verified endpoint, never an LLM-selected host,
+                    # is passed to bounded DNS and routing tools.
+                    try:
+                        dns = await connector.dns_check(target, record["host"])
+                        record["dns_resolved"] = (
+                            dns.get("resolved") if dns.get("success") is True
+                            and type(dns.get("resolved")) is bool else None
+                        )
+                    except Exception:
+                        record["dns_resolved"] = None
+                    if record["dns_resolved"] is False:
+                        if "review_dns_configuration" not in followups:
+                            followups.append("review_dns_configuration")
+                    else:
+                        try:
+                            route = await connector.route_check(target, record["host"])
+                            record["route_found"] = (
+                                route.get("route_found") if route.get("success") is True
+                                and type(route.get("route_found")) is bool else None
+                            )
+                        except Exception:
+                            record["route_found"] = None
+                        if "review_network_path" not in followups:
+                            followups.append("review_network_path")
+                elif record["tcp_reachable"] is True and record["kind"] == "redis":
+                    try:
+                        protocol = await redis_unauthenticated_ping(
+                            connector, target, record["host"], record["port"],
+                            tls=record.get("tls_requested") is True,
+                        )
+                    except Exception:
+                        protocol = {
+                            "protocol_status": "probe_unavailable",
+                            "protocol_supported": False,
+                            "protocol_health_verified": False,
+                        }
+                    record.update(protocol)
+                    if protocol["protocol_status"] in {
+                        "authentication_required", "access_denied",
+                    }:
+                        saw_protocol_response = True
+                        if "compare_application_auth_settings" not in followups:
+                            followups.append("compare_application_auth_settings")
+                    elif protocol["protocol_status"] == "unauthenticated_ping_ok":
+                        saw_protocol_response = True
+                        if "inspect_client_timeouts_pool_and_errors" not in followups:
+                            followups.append("inspect_client_timeouts_pool_and_errors")
+                    elif protocol["protocol_status"] == "tls_handshake_unverified":
+                        if "review_tls_mode_and_certificates" not in followups:
+                            followups.append("review_tls_mode_and_certificates")
+                    else:
+                        if "protocol_check_unavailable" not in followups:
+                            followups.append("protocol_check_unavailable")
+                elif record["tcp_reachable"] is True:
+                    if "protocol_check_unavailable" not in followups:
+                        followups.append("protocol_check_unavailable")
         except Exception:
             record["probe_supported"] = False
             record["probe_status"] = "check_unavailable"
         base["checks_executed"] += 1
         base["dependencies"].append(record)
     base["status"] = "checks_completed"
+    base["next_checks"] = followups[:6]
+    base["investigation_status"] = (
+        "transport_failure_observed" if saw_unreachable else
+        "redis_protocol_responded" if saw_protocol_response else
+        "dependency_endpoint_checked"
+    )
+    base["protocol_health_verified"] = any(
+        row.get("protocol_health_verified") is True
+        for row in base["dependencies"]
+    )
+    # Even a PONG is not proof that the application's credentials, DB
+    # selection, pool, timeouts or full business transactions are healthy.
     return base

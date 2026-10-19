@@ -307,6 +307,13 @@ def tool_observation_summary(raw: dict) -> str | None:
                         f"{row.get('port')}={safe(row.get('probe_status'), 35)}"
                         + (f"(HTTP {row.get('http_status')})"
                            if type(row.get("http_status")) is int else ""))
+            protocol = safe(row.get("protocol_status"), 65)
+            if protocol:
+                endpoint += f" protocol={protocol}"
+            if type(row.get("dns_resolved")) is bool:
+                endpoint += f" DNS={'ok' if row['dns_resolved'] else 'failed'}"
+            if type(row.get("route_found")) is bool:
+                endpoint += f" route={'found' if row['route_found'] else 'missing'}"
             # Show the structural source of the evidence, never a setting value.
             config_path = safe(row.get("config_file"), 160)
             config_key = safe(row.get("config_key"), 100)

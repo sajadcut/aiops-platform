@@ -21,6 +21,7 @@ from apps.execution_service.tools.registry import tool_registry
 from apps.orchestrator.e2e_graph import E2EOrchestrator, E2EState
 from apps.remediation_planner import RemediationPlanner
 from apps.orchestrator.dynamic_investigation import DynamicInvestigationPlanner
+from apps.orchestrator.verified_dependency_followup import run_verified_dependency_followup
 from apps.orchestrator.recovery_advice import build_vm_recovery_advisory
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
@@ -108,8 +109,21 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
                     "error_type": type(exc).__name__,
                 }
 
+        # Ingest may already have completed read-only dependency checks using
+        # the independently verified Elastic -> VM runtime binding. The generic
+        # collector does not inherit arbitrary log-host VM credentials; retain
+        # the exact source-bound MCP rows instead of discarding them here.
+        verified_dependency = [
+            item for item in initial_context.get("verified_dependency_evidence", [])
+            if isinstance(item, dict) and item.get("source") == "vm_mcp"
+            and isinstance(item.get("raw_data"), dict)
+            and item["raw_data"].get("diagnostic") == "dependency_investigation"
+            and item["raw_data"].get("success") is True
+            and item["raw_data"].get("binding") == "independent_vm_mcp_service_status"
+        ]
+
         merged: Dict[str, Dict[str, Any]] = {}
-        for item in trigger_evidence + collected:
+        for item in trigger_evidence + verified_dependency + collected:
             if not isinstance(item, dict):
                 continue
             key = str(
@@ -209,6 +223,37 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
                     candidate_hypotheses=[hypothesis],
                     live_service_verified=live_verified,
                 )
+        # The source label can be a business alias (e.g. GFP_Backend) while
+        # the independently verified systemd unit is gfpapi. Re-resolving
+        # identity after generic evidence collection must not undo that
+        # precise, same-incident, configured-alias binding. Never use a mere
+        # name similarity or model suggestion to promote a runtime name.
+        verified_runtime = ServiceIdentityResolver.runtime_name_from_verified_mapping(
+            source_service, initial_context, merged_evidence,
+        )
+        reported_name = str(source_service or "").strip()
+        incoming_runtime = str(state.get("service_name") or "").strip()
+        if (verified_runtime and reported_name and incoming_runtime
+                and verified_runtime.casefold() != reported_name.casefold()
+                and verified_runtime.casefold() == incoming_runtime.casefold()):
+            resolution["service"] = verified_runtime
+            resolved_identity = dict(resolution["service_identity"])
+            resolved_identity.update({
+                "service": verified_runtime, "status": "verified",
+                "verified": True,
+                "basis": "configured_runtime_alias_verified_by_vm_mcp",
+                "reported_service": reported_name,
+                "requires_more_evidence": False,
+            })
+            resolution["service_identity"] = resolved_identity
+            resolution["asset_context"] = {
+                **resolution["asset_context"],
+                "service": verified_runtime,
+                "service_identity_status": "verified",
+                "service_identity_basis": "configured_runtime_alias_verified_by_vm_mcp",
+                "service_identity_unverified": False,
+            }
+
         topology_context = resolution["topology_context"]
         asset_context = resolution["asset_context"]
         state["service_name"] = resolution["service"]
@@ -222,6 +267,12 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
         live["knowledge_topology"] = knowledge_topology
         live["topology_context"] = topology_context
         context["evidence"] = merged_evidence
+        # Keep only the original live-verified binding, not the candidate
+        # hostname from a later untrusted model or source log.
+        if isinstance(initial_context.get("host_discovery"), dict):
+            context["host_discovery"] = initial_context["host_discovery"]
+        if isinstance(initial_context.get("verified_runtime_mapping"), dict):
+            context["verified_runtime_mapping"] = initial_context["verified_runtime_mapping"]
         context["live_evidence"] = live
         context["asset_context"] = asset_context
         context["live_asset_context"] = live_asset_context
@@ -355,7 +406,32 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
                 has_service=bool(state.get("service_name")),
                 has_port=bool((state.get("live_evidence") or {}).get("vm_port")),
             )
-            if requests and await self._additional_evidence_round(state, requests):
+            # The ingestion path already independently verified the VM and
+            # actual systemd unit. Use that proof for LLM-selected read-only
+            # followups; do not let the generic collector guess a VM from logs.
+            bound_rows = await run_verified_dependency_followup(
+                getattr(self, "vm_connector", None), state,
+                proposal.get("checks") or [],
+            )
+            if bound_rows:
+                context = state.setdefault("context", {})
+                context["evidence"] = (
+                    list(context.get("evidence") or []) + bound_rows
+                )[-200:]
+                live = state.setdefault("live_evidence", {})
+                live["evidence"] = (
+                    list(live.get("evidence") or []) + bound_rows
+                )[-200:]
+                state["evidence_rounds"] = int(state.get("evidence_rounds") or 1) + 1
+                proposal["verified_followup_checks"] = [
+                    str(row["raw_data"]["diagnostic"]) for row in bound_rows
+                ]
+                self._audit(
+                    "verified_dependency_followup_completed", state,
+                    tools=proposal["verified_followup_checks"],
+                    evidence_count=len(bound_rows), execution_authority=False,
+                )
+            if bound_rows or (requests and await self._additional_evidence_round(state, requests)):
                 self._publish_peer_context(state, findings, coordination)
                 findings = await self._run_specialists(selected, state)
                 coordination = self.coordinator.synthesize(findings)

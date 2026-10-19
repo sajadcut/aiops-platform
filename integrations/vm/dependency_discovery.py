@@ -45,7 +45,8 @@ SCHEMES = {
 ENDPOINT_FIELDS = {"host", "hostname", "server", "endpoint", "endpoints",
                    "address", "nodes", "url", "uri", "baseurl", "brokerurl",
                    "connection", "connectionstring", "configuration",
-                   "bootstrapservers", "servers", "brokers"}
+                   "bootstrapservers", "servers", "brokers", "primary", "secondary",
+                   "master", "replica", "connectionstring"}
 
 
 _CONFIG_KEY_PART = re.compile(r"^[A-Za-z_][A-Za-z0-9_-]{0,49}$")
@@ -147,7 +148,7 @@ def discover(config: object, limit: int = MAX_ENDPOINTS) -> list[dict]:
     output, seen = [], set()
     limit = min(MAX_ENDPOINTS, max(1, limit))
 
-    def put(kind, hostname, port, inferred=False, source_key=None):
+    def put(kind, hostname, port, inferred=False, source_key=None, tls_requested=False):
         name, number = safe_host(hostname), safe_port(port)
         if not name or not number or kind in {"unknown", "database"}:
             return
@@ -162,6 +163,8 @@ def discover(config: object, limit: int = MAX_ENDPOINTS) -> list[dict]:
             }
             if source_key:
                 record["config_key"] = source_key
+            if kind == "redis":
+                record["tls_requested"] = tls_requested is True
             output.append(record)
 
     def parse(value, hint, source_key=None):
@@ -170,6 +173,8 @@ def discover(config: object, limit: int = MAX_ENDPOINTS) -> list[dict]:
         ):
             return
         value = value.strip().strip('"').strip("'")
+        # StackExchange.Redis option ssl=true is a hint, not proof of TLS.
+        redis_tls = bool(re.search(r"(?:^|,)\s*ssl\s*=\s*true(?:,|$)", value, re.I))
         if value.lower().startswith("jdbc:"):
             value = value[5:]
         # Oracle JDBC Thin has a vendor-specific prefix rather than a URI.
@@ -212,7 +217,8 @@ def discover(config: object, limit: int = MAX_ENDPOINTS) -> list[dict]:
                         default = 8883
                     port = uri.port
                     put(kind, uri.hostname, port if port is not None else default,
-                        inferred=port is None, source_key=source_key)
+                        inferred=port is None, source_key=source_key,
+                        tls_requested=(kind == "redis" and scheme == "rediss"))
             except ValueError:
                 return
             return
@@ -220,10 +226,12 @@ def discover(config: object, limit: int = MAX_ENDPOINTS) -> list[dict]:
             token = item.strip()
             match = HOSTPORT.fullmatch(token)
             if match:
-                put(hint, match.group(1), match.group(2), source_key=source_key)
+                put(hint, match.group(1), match.group(2), source_key=source_key,
+                    tls_requested=(hint == "redis" and redis_tls))
             elif hint in {v[0] for v in KINDS.values()} and "=" not in token:
                 default = next((p for k, p in KINDS.values() if k == hint), None)
-                put(hint, token, default, inferred=True, source_key=source_key)
+                put(hint, token, default, inferred=True, source_key=source_key,
+                    tls_requested=(hint == "redis" and redis_tls))
 
     def walk(node, hint=None, depth=0, keypath=()):
         if depth > 8 or len(output) >= limit:

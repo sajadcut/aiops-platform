@@ -405,6 +405,23 @@ def dependency_investigation_answer(value: dict, *, persian: bool = True) -> str
         state = labels.get(raw_state, raw_state) if persian else raw_state
         if type(row.get("http_status")) is int:
             state += " (HTTP " + str(row["http_status"]) + ")"
+        protocol = str(row.get("protocol_status") or "")[:65]
+        protocol_labels = {
+            "unauthenticated_ping_ok": "PING پاسخ PONG داد؛ سلامت برنامه اثبات نشده",
+            "authentication_required": "Redis پاسخ NOAUTH داد؛ اعتبار رمز برنامه هنوز تست نشده",
+            "access_denied": "دسترسی بدون احراز هویت مجاز نیست",
+            "client_not_installed": "redis-cli روی میزبان برنامه وجود ندارد",
+            "tls_handshake_unverified": "TLS قابل تأیید نبود",
+            "protocol_unverified": "تست پروتکل نامشخص",
+            "probe_unavailable": "تست پروتکل در دسترس نبود",
+        }
+        if protocol:
+            state += "؛ " + (protocol_labels.get(protocol, protocol) if persian else protocol)
+        if row.get("tcp_reachable") is False:
+            if row.get("dns_resolved") is False:
+                state += "؛ DNS ناموفق" if persian else "; DNS failed"
+            elif row.get("route_found") is False:
+                state += "؛ مسیر شبکه پیدا نشد" if persian else "; no route"
         file = row.get("config_file")
         key = row.get("config_key")
         sources = []
@@ -423,10 +440,15 @@ def dependency_investigation_answer(value: dict, *, persian: bool = True) -> str
            else "Downstream dependency checks for " + service if service
            else "نتیجهٔ بررسی وابستگی‌ها" if persian else "Downstream dependency checks")
     status = str(value.get("status") or "unavailable")[:55]
-    note = ("این نتایج فقط پاسخ HTTP یا امکان اتصال TCP را گزارش می‌کنند؛ سلامت "
-            "پروتکل، احراز هویت، عملکرد برنامه یا علت ریشه‌ای تأیید نشده است."
-            if persian else "HTTP/TCP responses do not establish protocol health, "
-            "authentication, business availability, or root cause.")
+    note = (
+        "PING بدون احراز هویت فقط پاسخ اولیهٔ Redis را بررسی می‌کند؛ "
+        "درستی رمز و DB انتخاب‌شدهٔ اپلیکیشن، وضعیت Connection Pool، "
+        "عملکرد تجاری و سایر موارد هنوز روشن نیستند؛ علت ریشه‌ای تأیید نشده است."
+        if persian else
+        "Unauthenticated Redis PING verifies only a limited protocol response; "
+        "application credentials, database selection, pooling, business "
+        "availability and root cause remain unverified."
+    )
     absent = ("هیچ مقصد تأییدشده‌ای در کانفیگ برنامه پیدا نشد."
               if persian else "No verified endpoint found in service config.")
     if status == "config_parse_failed" and persian:
@@ -462,7 +484,8 @@ def public_result(action: str, value: Any) -> dict:
                                      "config_files_parse_failed", "config_files_failed",
                                      "checks_executed", "limitations", "read_only",
                                      "root_cause_confirmed", "application_health_verified",
-                                     "protocol_health_verified", "secrets_exposed"),
+                                     "protocol_health_verified", "secrets_exposed",
+                                      "investigation_status", "next_checks"),
         "redis_dependency_check": ("service", "target", "status", "endpoints",
                                    "checked_files", "file_failures", "read_only",
                                    "config_contents_exposed", "secrets_exposed",

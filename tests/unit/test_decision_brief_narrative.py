@@ -371,3 +371,26 @@ def test_fallback_does_not_invent_configuration_failure_without_evidence():
     brief = sample_brief()
     result = service.fallback(brief, "fa", "model_timeout")
     assert result["summary"] == brief["localized_narrative"]["fa"]
+
+
+@pytest.mark.asyncio
+async def test_bad_llm_narrative_reports_safe_specific_validation_code(monkeypatch):
+    brief = sample_brief()
+    brief["snapshot_id"] = "bad-json-safe-code"
+    monkeypatch.setattr(settings, "LLM_PROVIDER", "dotin-general-chatbot")
+    monkeypatch.setattr(settings, "LLM_BASE_URL", "https://llm.example.invalid")
+    monkeypatch.setattr(settings, "LLM_MODEL", "internal-model")
+
+    class InvalidProvider:
+        async def generate_with_messages(self, messages, **kwargs):
+            return SimpleNamespace(content="not-json PRIVATE_DO_NOT_EXPOSE",
+                                   finish_reason="stop")
+
+    monkeypatch.setattr(service, "configured_llm_adapter",
+                        lambda: InvalidProvider())
+    result = await service.generate_narrative(brief, "fa")
+    assert result["status"] == "fallback"
+    assert result["reason"] == "model_output_invalid"
+    assert result["validation_code"] == "narrative_json_invalid"
+    assert "PRIVATE_DO_NOT_EXPOSE" not in str(result)
+    assert result["authorizes_execution"] is False

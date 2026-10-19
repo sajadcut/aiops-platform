@@ -21,7 +21,7 @@ from apps.rag_service import KnowledgeRAGService
 from apps.signal_gateway.correlation import build_correlation_identity
 from apps.signal_gateway.received_signal import capture_received_signal
 from integrations.zabbix.webhook_contract import normalize_zabbix_payload, zabbix_event_time, zabbix_tags
-from integrations.vm.mcp_client import vm_transport_configured
+from integrations.vm.mcp_client import VMEdgeMCPClient, vm_transport_configured
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
 
@@ -364,6 +364,100 @@ class SignalGateway:
                     logger.debug("elastic_host_vm_client_close_failed")
 
     @staticmethod
+    async def _investigate_verified_alert_dependency(
+        signal: OperationalSignal,
+        trigger_evidence: Dict[str, Any],
+        host_discovery: Dict[str, Any],
+        verification_rows: list[Dict[str, Any]],
+        runtime_service: str,
+    ) -> tuple[list[Dict[str, Any]], Dict[str, Any]]:
+        """Read-only dependency investigation after *independent* VM identity verification.
+
+        Elastic log hostnames and arbitrary signal fields cannot supply VM targets.
+        A verified service_status with matching runtime/target is mandatory.
+        No LLM, Cognia document, alert-provided path or alert-provided endpoint
+        ever becomes an MCP argument.
+        """
+        from apps.context_service.dependency_signals import dependency_signals
+
+        classes = dependency_signals([trigger_evidence])
+        if not classes:
+            return [], {"status": "not_needed"}
+        target = str(host_discovery.get("verified_target") or "").strip()
+        unit = str(host_discovery.get("verified_runtime_service") or "").strip()
+        if not (
+            signal.source in {"elasticsearch", "zabbix", "prometheus"}
+            and host_discovery.get("status") == "verified_by_vm_mcp"
+            and target and unit and runtime_service
+            and unit.casefold().removesuffix(".service")
+                == runtime_service.casefold().removesuffix(".service")
+            and vm_transport_configured()
+        ):
+            return [], {"status": "verified_runtime_target_required", "classes": classes}
+        verified = any(
+            isinstance(row, dict) and row.get("source") == "vm_mcp"
+            and isinstance(row.get("raw_data"), dict)
+            and row["raw_data"].get("diagnostic") == "service_status"
+            and row["raw_data"].get("success") is True
+            and row["raw_data"].get("load_state") == "loaded"
+            and str(row["raw_data"].get("service") or "").casefold().removesuffix(".service")
+                == unit.casefold().removesuffix(".service")
+            and str(row["raw_data"].get("target") or "").casefold() == target.casefold()
+            for row in verification_rows
+        )
+        if not verified:
+            return [], {"status": "independent_vm_proof_missing", "classes": classes}
+
+        client = None
+        try:
+            client = VMEdgeMCPClient()
+            result = await asyncio.wait_for(
+                client.dependency_investigation(target, unit),
+                timeout=max(8.0, min(45.0, float(settings.MCP_TIMEOUT_SECONDS) * 3)),
+            )
+            if not isinstance(result, dict) or result.get("success") is not True:
+                return [], {
+                    "status": "probe_failed", "classes": classes,
+                    "reason": str(result.get("status") if isinstance(result, dict) else "invalid_result")[:70],
+                }
+            # The VM worker returns only bounded, secret-redacted structural
+            # provenance and network checks. Keep its explicit limitations.
+            row = {
+                "type": "telemetry", "source": "vm_mcp",
+                "reference": f"verified-dependency:{signal.source}:{signal.source_id[:120]}",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "raw_data": {
+                    **result,
+                    "diagnostic": "dependency_investigation",
+                    "service": unit, "target": target,
+                    "binding": "independent_vm_mcp_service_status",
+                },
+            }
+            logger.info(
+                "verified_dependency_investigation_completed",
+                service=unit,
+                status=str(result.get("status") or "unknown")[:60],
+                config_files_checked=result.get("config_files_checked"),
+                checks_executed=result.get("checks_executed"),
+                read_only=True,
+            )
+            return [row], {"status": str(result.get("status") or "unknown")[:70],
+                           "classes": classes, "probe_recorded": True}
+        except Exception as exc:
+            logger.warning(
+                "verified_dependency_investigation_failed",
+                service=unit, error_type=type(exc).__name__,
+            )
+            return [], {"status": "probe_unavailable", "classes": classes,
+                        "reason": type(exc).__name__}
+        finally:
+            if client is not None:
+                try:
+                    await client.close()
+                except Exception:
+                    logger.debug("verified_dependency_client_close_failed")
+
+    @staticmethod
     async def _knowledge_assisted_asset(signal: OperationalSignal, trigger_evidence: Dict[str, Any]) -> Dict[str, Any]:
         live_asset = AssetIdentityResolver.resolve([trigger_evidence], signal.service)
         incident = {
@@ -612,8 +706,80 @@ class SignalGateway:
                 verification_method=(sole_candidate or {}).get("verification_method"),
                 verification_status=(sole_candidate or {}).get("verification_status"),
             )
+        # Zabbix/Prometheus asset labels are also hypotheses, never remote
+        # execution authority. Promote only a uniquely specified, pre-allowlisted
+        # host whose exact service unit was independently read using VM MCP.
+        # This is deliberately not a general inventory scan.
+        if (signal.source in {"zabbix", "prometheus"}
+                and ServiceIdentityResolver.known(signal.service)):
+            raw_ips = live_asset.get("ip_addresses") or []
+            raw_host = str(live_asset.get("hostname") or "").strip()
+            if raw_ips or raw_host:
+                host_discovery = {
+                    "status": "candidates_found",
+                    "candidates": [{
+                        "hostname": raw_host,
+                        "ip_addresses": list(raw_ips)[:6] if isinstance(raw_ips, list) else [],
+                    }],
+                    "result_count": 1,
+                    "origin": "source_asset_metadata_pending_vm_verification",
+                }
+                host_verification_evidence = await SignalGateway._verify_elastic_host_candidate(
+                    str(signal.service), host_discovery,
+                )
+                verified_unit = str(host_discovery.get("verified_runtime_service") or "")
+                source_label = str(signal.service or "").strip()
+                if (host_verification_evidence and verified_unit and source_label
+                        and verified_unit.casefold() != source_label.casefold()):
+                    candidate_mapping = {
+                        "source_service": source_label,
+                        "runtime_service": verified_unit,
+                        "target": host_discovery.get("verified_target"),
+                        "evidence_reference": host_verification_evidence[0].get("reference"),
+                        "verification": "vm_mcp_service_status",
+                    }
+                    blocking, _ = ServiceIdentityResolver.split_conflicts(
+                        (resolution.get("service_identity") or {}).get("conflicts"))
+                    if not blocking and ServiceIdentityResolver.verified_runtime_alias_matches(
+                            source_label, verified_unit,
+                            {"verified_runtime_mapping": candidate_mapping},
+                            host_verification_evidence):
+                        verified_runtime_mapping = candidate_mapping
+                        original_identity = dict(resolution["service_identity"])
+                        original_identity.update({
+                            "service": verified_unit,
+                            "status": "verified", "verified": True,
+                            "basis": "configured_source_alias_verified_by_vm_mcp",
+                            "reported_service": source_label,
+                            "requires_more_evidence": False,
+                        })
+                        resolution["service_identity"] = original_identity
+                        resolution["asset_context"] = {
+                            **resolution["asset_context"],
+                            "service": verified_unit,
+                            "service_identity_status": "verified",
+                            "service_identity_basis": "configured_source_alias_verified_by_vm_mcp",
+                            "service_identity_unverified": False,
+                        }
+                        host_discovery["mapping_status"] = "verified_runtime_promoted"
+                    else:
+                        host_discovery["mapping_status"] = "mapping_conflict_or_unverified"
+
+        # For explicit dependency alerts, the verified Elasticsearch -> VM
+        # mapping is already available here, *before* triage. Do not lose this
+        # trusted binding in the generic evidence collector (which intentionally
+        # does not infer VM targets from free-form log hosts).
+        runtime_service = str((resolution.get("service_identity") or {}).get("service") or "")
+        dependency_evidence, dependency_followup = (
+            await SignalGateway._investigate_verified_alert_dependency(
+                signal, trigger_evidence, host_discovery,
+                host_verification_evidence, runtime_service,
+            )
+        )
         return {
             "asset_context": resolution["asset_context"],
+            "dependency_evidence": dependency_evidence,
+            "dependency_followup": dependency_followup,
             "host_discovery": host_discovery,
             "verified_runtime_mapping": verified_runtime_mapping,
             "host_verification_evidence": host_verification_evidence,
@@ -625,6 +791,55 @@ class SignalGateway:
             "knowledge_orientation": orientation,
             "knowledge_discovery_query": query,
         }
+
+    @staticmethod
+    async def _persist_duplicate_dependency_evidence(
+        checkpoints: WorkflowCheckpointStore,
+        incident_id: str,
+        state: Dict[str, Any],
+        discovery: Dict[str, Any],
+    ) -> None:
+        """Keep fresh, source-bound read-only MCP facts on repeated alerts.
+
+        A repeated source ID must not duplicate the incident or rerun its
+        execution stages. The verified check itself is independently performed
+        at ingress; this only updates the existing incident's evidence ledger.
+        """
+        verified_rows = [
+            row for row in (discovery.get("dependency_evidence") or [])
+            if isinstance(row, dict) and row.get("source") == "vm_mcp"
+            and isinstance(row.get("raw_data"), dict)
+            and row["raw_data"].get("diagnostic") == "dependency_investigation"
+            and row["raw_data"].get("success") is True
+            and row["raw_data"].get("binding") == "independent_vm_mcp_service_status"
+        ]
+        if not verified_rows or not state:
+            return
+        checkpoint = await checkpoints.load(incident_id)
+        if not checkpoint:
+            return
+
+        def merged(previous: Any) -> list[Dict[str, Any]]:
+            rows = [row for row in (previous or []) if isinstance(row, dict)]
+            replacing = {str(row.get("reference") or "") for row in verified_rows}
+            rows = [row for row in rows if str(row.get("reference") or "") not in replacing]
+            return (rows + verified_rows)[-200:]
+
+        context = state.setdefault("context", {})
+        context["evidence"] = merged(context.get("evidence"))
+        context["verified_dependency_evidence"] = merged(
+            context.get("verified_dependency_evidence"))
+        context["dependency_followup"] = discovery.get("dependency_followup", {})
+        if (discovery.get("host_discovery") or {}).get("status") == "verified_by_vm_mcp":
+            context["host_discovery"] = discovery["host_discovery"]
+        if discovery.get("verified_runtime_mapping"):
+            context["verified_runtime_mapping"] = discovery["verified_runtime_mapping"]
+        live = state.setdefault("live_evidence", {})
+        live["evidence"] = merged(live.get("evidence"))
+        # Preserve completed/paused workflow status and never replay write nodes.
+        await checkpoints.save(
+            incident_id, state, status=str(checkpoint.get("status") or "paused"),
+        )
 
     @staticmethod
     async def ingest(session, signal: OperationalSignal) -> Dict[str, Any]:
@@ -648,6 +863,9 @@ class SignalGateway:
         existing_incident_id = await incidents.find_incident_by_evidence_reference(source=signal.source, reference=signal.source_id)
         if existing_incident_id:
             state = await SignalGateway._existing_state(checkpoints, existing_incident_id)
+            await SignalGateway._persist_duplicate_dependency_evidence(
+                checkpoints, existing_incident_id, state, discovery,
+            )
             state.update({
                 "trigger_source": signal.source,
                 "trigger_signal_type": signal.signal_type,
@@ -664,6 +882,9 @@ class SignalGateway:
         existing_incident_id = await incidents.find_incident_by_evidence_reference(source=signal.source, reference=signal.source_id)
         if existing_incident_id:
             state = await SignalGateway._existing_state(checkpoints, existing_incident_id)
+            await SignalGateway._persist_duplicate_dependency_evidence(
+                checkpoints, existing_incident_id, state, discovery,
+            )
             state.update({
                 "trigger_source": signal.source,
                 "trigger_signal_type": signal.signal_type,
@@ -705,6 +926,9 @@ class SignalGateway:
                     await checkpoints.save(existing_incident_id, state, status=str((checkpoint or {}).get("status") or "paused"))
                 else:
                     await incidents.commit()
+                await SignalGateway._persist_duplicate_dependency_evidence(
+                    checkpoints, existing_incident_id, state, discovery,
+                )
                 state.update({
                     "incident_id": existing_incident_id,
                     "trigger_source": signal.source,
@@ -744,12 +968,17 @@ class SignalGateway:
             "service_name": resolved_service,
             "evidence_summary": f"Trigger source={signal.source}; type={signal.signal_type}; severity={signal.severity}; {signal.summary}",
             # Persist the independent VM read before the graph can overwrite its live collection.
-            "live_evidence": {"evidence": list(discovery.get("host_verification_evidence") or [])},
+            "live_evidence": {"evidence": (
+                list(discovery.get("host_verification_evidence") or [])
+                + list(discovery.get("dependency_evidence") or [])
+            )},
             "context": {
                 "incident": incident_context,
                 "service": resolved_service,
                 "asset_context": asset,
                 "host_discovery": discovery.get("host_discovery", {}),
+                "dependency_followup": discovery.get("dependency_followup", {}),
+                "verified_dependency_evidence": discovery.get("dependency_evidence", []),
                 "verified_runtime_mapping": discovery.get("verified_runtime_mapping"),
                 "service_identity": discovery["service_identity"],
                 "live_asset_context": discovery.get("live_asset_context"),
@@ -762,7 +991,9 @@ class SignalGateway:
                 "related_signals": [],
                 "trigger_signal": signal.model_dump(mode="json"),
                 "trigger_evidence": [trigger_evidence],
-                "evidence": [trigger_evidence] + list(discovery.get("host_verification_evidence") or []),
+                "evidence": ([trigger_evidence]
+                             + list(discovery.get("host_verification_evidence") or [])
+                             + list(discovery.get("dependency_evidence") or [])),
             },
             "messages": [],
             "findings": [],
