@@ -445,7 +445,7 @@
     document.querySelectorAll('[data-lang]').forEach(el=>el.setAttribute('aria-pressed',String(el.dataset.lang===state.language)));
     try{localStorage.setItem('aiops.decision-brief.language',state.language);}catch(_){}
     render();
-    if(state.report && !state.historic) void loadNarrative();
+    if(state.report && !state.historic){void loadNarrative();void loadInvestigationReport();}
   }
   const progressStageFa={
     context:'جمع‌آوری شواهد و اطلاعات دارایی',
@@ -4321,6 +4321,7 @@
       const checkpointStatus=low(lifecycle.checkpoint_status);
       const detailReady=['completed','paused','failed'].includes(checkpointStatus);
       if(detailReady){
+        void loadInvestigationReport();
         if(!report.memory_investigation){void loadServiceStatus();void loadServiceProfile();}
         void loadConfigResponse(token);
         void loadIncidentChat(token);
