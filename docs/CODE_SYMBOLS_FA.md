@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 600 | Dashboard JS files scanned: 8 | Symbols indexed: 6853**
+**Python files scanned: 600 | Dashboard JS files scanned: 8 | Symbols indexed: 6859**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -4167,22 +4167,28 @@
 | `tests/unit/test_decision_brief_narrative.py` | `test_configured_llm_generates_grounded_prose_once` | 95 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_decision_brief_narrative.py` | `test_configured_llm_generates_grounded_prose_once.Provider` | 103 | class | کلاس | test_configured_llm_generates_grounded_prose_once |
 | `tests/unit/test_decision_brief_narrative.py` | `test_configured_llm_generates_grounded_prose_once.Provider.generate_with_messages` | 104 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_configured_llm_generates_grounded_prose_once.Provider |
-| `tests/unit/test_decision_brief_narrative.py` | `test_llm_failure_leaves_structured_brief_available` | 125 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_decision_brief_narrative.py` | `test_llm_failure_leaves_structured_brief_available.Provider` | 132 | class | کلاس | test_llm_failure_leaves_structured_brief_available |
-| `tests/unit/test_decision_brief_narrative.py` | `test_llm_failure_leaves_structured_brief_available.Provider.generate_with_messages` | 133 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_llm_failure_leaves_structured_brief_available.Provider |
-| `tests/unit/test_decision_brief_narrative.py` | `test_large_realistic_incident_has_bounded_grounded_narrative_projection` | 143 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_decision_brief_narrative.py` | `test_large_incident_calls_llm_instead_of_unconditional_size_fallback` | 187 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_decision_brief_narrative.py` | `test_large_incident_calls_llm_instead_of_unconditional_size_fallback.Provider` | 207 | class | کلاس | test_large_incident_calls_llm_instead_of_unconditional_size_fallback |
-| `tests/unit/test_decision_brief_narrative.py` | `test_large_incident_calls_llm_instead_of_unconditional_size_fallback.Provider.generate_with_messages` | 208 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_large_incident_calls_llm_instead_of_unconditional_size_fallback.Provider |
-| `tests/unit/test_decision_brief_narrative.py` | `test_llm_cannot_override_verified_invalid_appsettings_as_healthy` | 224 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_decision_brief_narrative.py` | `test_ai_narrative_receives_stop_attribution_and_conditional_start_options` | 245 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_decision_brief_narrative.py` | `test_narrative_accepts_fenced_json_without_relaxing_citation_validation` | 283 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_decision_brief_narrative.py` | `test_live_sized_config_review_retains_approval_blocker_and_exact_target` | 297 | function | Regression: 40+ observations and long citations must not hide the RCA. | module |
-| `tests/unit/test_decision_brief_narrative.py` | `test_invalid_configuration_is_explicit_in_fallback_without_llm` | 350 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_decision_brief_narrative.py` | `test_fallback_does_not_invent_configuration_failure_without_evidence` | 370 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_decision_brief_narrative.py` | `test_bad_llm_narrative_reports_safe_specific_validation_code` | 377 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_decision_brief_narrative.py` | `test_bad_llm_narrative_reports_safe_specific_validation_code.InvalidProvider` | 384 | class | کلاس | test_bad_llm_narrative_reports_safe_specific_validation_code |
-| `tests/unit/test_decision_brief_narrative.py` | `test_bad_llm_narrative_reports_safe_specific_validation_code.InvalidProvider.generate_with_messages` | 385 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_bad_llm_narrative_reports_safe_specific_validation_code.InvalidProvider |
+| `tests/unit/test_decision_brief_narrative.py` | `test_wrong_section_count_is_repaired_once_without_changing_validators` | 125 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_decision_brief_narrative.py` | `test_wrong_section_count_is_repaired_once_without_changing_validators.Provider` | 133 | class | کلاس | test_wrong_section_count_is_repaired_once_without_changing_validators |
+| `tests/unit/test_decision_brief_narrative.py` | `test_wrong_section_count_is_repaired_once_without_changing_validators.Provider.generate_with_messages` | 134 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_wrong_section_count_is_repaired_once_without_changing_validators.Provider |
+| `tests/unit/test_decision_brief_narrative.py` | `test_citation_policy_violation_does_not_get_retried` | 154 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_decision_brief_narrative.py` | `test_citation_policy_violation_does_not_get_retried.Provider` | 162 | class | کلاس | test_citation_policy_violation_does_not_get_retried |
+| `tests/unit/test_decision_brief_narrative.py` | `test_citation_policy_violation_does_not_get_retried.Provider.generate_with_messages` | 163 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_citation_policy_violation_does_not_get_retried.Provider |
+| `tests/unit/test_decision_brief_narrative.py` | `test_llm_failure_leaves_structured_brief_available` | 180 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_decision_brief_narrative.py` | `test_llm_failure_leaves_structured_brief_available.Provider` | 187 | class | کلاس | test_llm_failure_leaves_structured_brief_available |
+| `tests/unit/test_decision_brief_narrative.py` | `test_llm_failure_leaves_structured_brief_available.Provider.generate_with_messages` | 188 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_llm_failure_leaves_structured_brief_available.Provider |
+| `tests/unit/test_decision_brief_narrative.py` | `test_large_realistic_incident_has_bounded_grounded_narrative_projection` | 198 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_decision_brief_narrative.py` | `test_large_incident_calls_llm_instead_of_unconditional_size_fallback` | 242 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_decision_brief_narrative.py` | `test_large_incident_calls_llm_instead_of_unconditional_size_fallback.Provider` | 262 | class | کلاس | test_large_incident_calls_llm_instead_of_unconditional_size_fallback |
+| `tests/unit/test_decision_brief_narrative.py` | `test_large_incident_calls_llm_instead_of_unconditional_size_fallback.Provider.generate_with_messages` | 263 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_large_incident_calls_llm_instead_of_unconditional_size_fallback.Provider |
+| `tests/unit/test_decision_brief_narrative.py` | `test_llm_cannot_override_verified_invalid_appsettings_as_healthy` | 279 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_decision_brief_narrative.py` | `test_ai_narrative_receives_stop_attribution_and_conditional_start_options` | 300 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_decision_brief_narrative.py` | `test_narrative_accepts_fenced_json_without_relaxing_citation_validation` | 338 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_decision_brief_narrative.py` | `test_live_sized_config_review_retains_approval_blocker_and_exact_target` | 352 | function | Regression: 40+ observations and long citations must not hide the RCA. | module |
+| `tests/unit/test_decision_brief_narrative.py` | `test_invalid_configuration_is_explicit_in_fallback_without_llm` | 405 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_decision_brief_narrative.py` | `test_fallback_does_not_invent_configuration_failure_without_evidence` | 425 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_decision_brief_narrative.py` | `test_bad_llm_narrative_reports_safe_specific_validation_code` | 432 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_decision_brief_narrative.py` | `test_bad_llm_narrative_reports_safe_specific_validation_code.InvalidProvider` | 439 | class | کلاس | test_bad_llm_narrative_reports_safe_specific_validation_code |
+| `tests/unit/test_decision_brief_narrative.py` | `test_bad_llm_narrative_reports_safe_specific_validation_code.InvalidProvider.generate_with_messages` | 440 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_bad_llm_narrative_reports_safe_specific_validation_code.InvalidProvider |
 | `tests/unit/test_dependency_causal_engine.py` | `trace` | 11 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_dependency_causal_engine.py` | `metric` | 25 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_dependency_causal_engine.py` | `service_log` | 36 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
