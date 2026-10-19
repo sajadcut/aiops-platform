@@ -223,6 +223,37 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
                     candidate_hypotheses=[hypothesis],
                     live_service_verified=live_verified,
                 )
+        # The source label can be a business alias (e.g. GFP_Backend) while
+        # the independently verified systemd unit is gfpapi. Re-resolving
+        # identity after generic evidence collection must not undo that
+        # precise, same-incident, configured-alias binding. Never use a mere
+        # name similarity or model suggestion to promote a runtime name.
+        verified_runtime = ServiceIdentityResolver.runtime_name_from_verified_mapping(
+            source_service, initial_context, merged_evidence,
+        )
+        reported_name = str(source_service or "").strip()
+        incoming_runtime = str(state.get("service_name") or "").strip()
+        if (verified_runtime and reported_name and incoming_runtime
+                and verified_runtime.casefold() != reported_name.casefold()
+                and verified_runtime.casefold() == incoming_runtime.casefold()):
+            resolution["service"] = verified_runtime
+            resolved_identity = dict(resolution["service_identity"])
+            resolved_identity.update({
+                "service": verified_runtime, "status": "verified",
+                "verified": True,
+                "basis": "configured_runtime_alias_verified_by_vm_mcp",
+                "reported_service": reported_name,
+                "requires_more_evidence": False,
+            })
+            resolution["service_identity"] = resolved_identity
+            resolution["asset_context"] = {
+                **resolution["asset_context"],
+                "service": verified_runtime,
+                "service_identity_status": "verified",
+                "service_identity_basis": "configured_runtime_alias_verified_by_vm_mcp",
+                "service_identity_unverified": False,
+            }
+
         topology_context = resolution["topology_context"]
         asset_context = resolution["asset_context"]
         state["service_name"] = resolution["service"]
@@ -236,6 +267,12 @@ class SignalAwareE2EOrchestrator(E2EOrchestrator):
         live["knowledge_topology"] = knowledge_topology
         live["topology_context"] = topology_context
         context["evidence"] = merged_evidence
+        # Keep only the original live-verified binding, not the candidate
+        # hostname from a later untrusted model or source log.
+        if isinstance(initial_context.get("host_discovery"), dict):
+            context["host_discovery"] = initial_context["host_discovery"]
+        if isinstance(initial_context.get("verified_runtime_mapping"), dict):
+            context["verified_runtime_mapping"] = initial_context["verified_runtime_mapping"]
         context["live_evidence"] = live
         context["asset_context"] = asset_context
         context["live_asset_context"] = live_asset_context
