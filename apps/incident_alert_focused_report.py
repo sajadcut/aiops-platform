@@ -74,7 +74,27 @@ def _kind_matches(family: str, checks: list[dict]) -> bool:
                for row in checks if isinstance(row, dict))
 
 
-def _is_relevant(family: str, tool: str, finding: str, checks: list[dict]) -> bool:
+_GENERIC_WORDS = frozenset({
+    "service", "server", "error", "errors", "failed", "failure", "unknown",
+    "unavailable", "status", "incident", "warning", "critical", "alert",
+    "problem", "events", "system", "check", "query", "result", "observed",
+    "application", "monitoring", "production", "host", "metric",
+})
+
+
+def _topic_tokens(text: str) -> set[str]:
+    return {
+        token for token in re.findall(r"[a-z][a-z0-9_.-]{5,}", text.lower())
+        if token not in _GENERIC_WORDS and not token.isdigit()
+    }
+
+
+def _shares_alert_topic(alert: str, text: str) -> bool:
+    return bool(_topic_tokens(alert) & _topic_tokens(text))
+
+
+def _is_relevant(family: str, tool: str, finding: str, checks: list[dict],
+                 alert: str) -> bool:
     # A dependency investigation mentioning a *different* endpoint is not
     # evidence for a Redis/database/broker alarm on the same shared VM.
     if family in {"redis", "database", "messaging", "http"}:
@@ -93,9 +113,12 @@ def _is_relevant(family: str, tool: str, finding: str, checks: list[dict]) -> bo
     if tool in _TOOL_FAMILIES.get(family, set()):
         return True
     if family == "other":
-        # Prefer only diagnostics mentioning meaningful alert-specific tokens
-        # over unrelated host telemetry.
-        return False
+        # Open-ended technology families (Hazelcast, custom runtimes, etc.)
+        # can still match *explicit* unusual tokens in a diagnostic, without
+        # turning unrelated systemd checks into verification of the alert.
+        return bool(tool in {"dependency_investigation", "service_logs",
+                             "system_logs", "source_observation"}
+                    and finding and _shares_alert_topic(alert, finding))
     return False
 
 
@@ -127,6 +150,7 @@ def build_alert_focused_report(incident: dict, evidence: list[dict],
     family = _family(message + " " + _text(selected.get("signal_type"), 120)
                      if selected else message)
     observations = []
+    expected_service = _text(incident.get("service"), 120).lower().removesuffix(".service")
     for row in (brief.get("mcp_evidence") or [])[:100]:
         if not isinstance(row, dict):
             continue
@@ -135,7 +159,12 @@ def build_alert_focused_report(incident: dict, evidence: list[dict],
         checks = (row.get("dependency_checks") or [])
         if not isinstance(checks, list):
             checks = []
-        if not _is_relevant(family, tool, finding, checks):
+        observed_service = _text(row.get("observed_service"), 120).lower().removesuffix(".service")
+        if expected_service and observed_service and observed_service != expected_service:
+            # A different named service on the same host is NOT evidence for
+            # this one. Explicitly mapped aliases require separate live identity.
+            continue
+        if not _is_relevant(family, tool, finding, checks, message):
             continue
         # Only matching dependency endpoints are displayed as direct tests.
         matched_checks = [
@@ -169,6 +198,36 @@ def build_alert_focused_report(incident: dict, evidence: list[dict],
         if len(observations) >= 6:
             break
 
+    agent_interpretations = []
+    for agent in (brief.get("agent_findings") or [])[:35]:
+        if not isinstance(agent, dict) or agent.get("status") in {"failed", "skipped"}:
+            continue
+        candidates = agent.get("hypotheses") or []
+        if not isinstance(candidates, list):
+            continue
+        for hypothesis in candidates[:5]:
+            if not isinstance(hypothesis, dict):
+                continue
+            text = _text(hypothesis.get("text"), 260)
+            if not text or not (
+                _shares_alert_topic(message, text) if family == "other"
+                else _family(text) == family
+            ):
+                continue
+            agent_interpretations.append({
+                "agent": _text(agent.get("agent"), 65),
+                "hypothesis": text,
+                "evidence_refs": [
+                    _text(ref, 160) for ref in (hypothesis.get("evidence_refs") or [])[:4]
+                    if isinstance(ref, str)
+                ],
+                "status": "unverified_agent_hypothesis",
+            })
+            if len(agent_interpretations) >= 3:
+                break
+        if len(agent_interpretations) >= 3:
+            break
+
     source_ref = _text(selected.get("evidence_id"), 180) if selected else ""
     source_name = _text(selected.get("source_name"), 100) if selected else ""
     observed = len(observations)
@@ -192,6 +251,7 @@ def build_alert_focused_report(incident: dict, evidence: list[dict],
         "source_basis": "received_signal" if selected else "incident_summary_fallback",
         "family": family,
         "related_checks": observations,
+        "agent_interpretations": agent_interpretations,
         "assessment_fa": conclusion_fa,
         "next_check_fa": _FOLLOWUPS_FA[family],
         "root_cause_confirmed": False,
