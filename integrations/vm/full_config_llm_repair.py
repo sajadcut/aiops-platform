@@ -112,7 +112,7 @@ def _parse_bounded_edit_plan(source: str, content: str,
 def _safe_structure(value: str) -> str:
     """Use value-free glyphs; never reflect secret values into MCP/UI/audit."""
     # No words, digits or byte values from config survive.
-    masked = re.sub(r"[^{};=,#()\\[\\]\\s]", "x", value.rstrip("\\n"))[:180]
+    masked = re.sub(r"[^{};=,#()\[\]\s]", "x", value.rstrip("\n"))[:180]
     # Do not accidentally mirror hundreds of masked source bytes (or leak
     # original length-patterns) into the MCP result or durable incident audit.
     return re.sub(r"x{32,}", "[redacted]", masked)
