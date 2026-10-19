@@ -1814,6 +1814,10 @@
     const alertChecks=alertObserved.map(row=>
       '<li><strong>'+txt(row.tool||'MCP')+'</strong> — '+txt(row.result)+
       ' <small>('+txt(row.status||'unknown')+')</small>'+
+      (row.llm_field_binding_status
+        ?'<small>'+esc(fa?'تحلیل ساختار کانفیگ با LLM: ':
+          'LLM config field matching: ')+txt(row.llm_field_binding_status)+'</small>'
+        :'')+
       (row.scope==='service_identity_not_recorded'
         ?'<small>'+esc(fa
           ?'هویت سرویس در همین مشاهده ثبت نشده؛ انتساب به این آلارم هنوز نیازمند تأیید است.'
