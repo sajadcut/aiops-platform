@@ -279,6 +279,16 @@ def fallback_intent(message: str) -> str:
     from apps.incident_elastic import is_elastic_question, wants_live_elastic
     if is_elastic_question(text):
         return "elastic_logs" if wants_live_elastic(text) else "elastic_recorded"
+    if re.search(
+        r"dependency_investigation|وابستگی|پایگاه.داده|دیتابیس|postgres|"
+        r"mysql|mssql|sqlserver|mongodb|activemq|rabbitmq|kafka|"
+        r"message.?broker|rabbit.?mq|http|https|api خارجی|upstream|downstream",
+        text, re.I,
+    ) and re.search(
+        r"بررسی|چک|تست|تحقیق|تشخیص|اتصال|وضعیت|check|test|investigat|connectiv|diagnos",
+        text, re.I,
+    ):
+        return "dependency_investigation"
     if re.search(r"redis|ردیس", text, re.I) and re.search(
         r"اتصال|بررسی زنده|تست کن|چک کن|connectivity|test redis|check redis", text, re.I
     ):
@@ -365,6 +375,33 @@ def redis_dependency_answer(result: dict, *, persian: bool = True) -> str:
     return ("Redis check: " + state + "\n" +
             ("\n".join(facts) if facts else "No verified endpoint could be tested.") +
             "\nTCP reachability does not establish Redis protocol health, authentication, latency, or root cause.")
+
+
+def dependency_investigation_answer(value: dict, *, persian: bool = True) -> str:
+    """Grounded network observations, never a claim of dependency health."""
+    if not isinstance(value, dict) or value.get("success") is not True:
+        return ("بررسی وابستگی‌ها اجرا نشد یا مسیر کانفیگ قابل تأیید نبود."
+                if persian else "Dependency probe was unavailable or not verified.")
+    facts = []
+    for row in (value.get("dependencies") or [])[:6]:
+        if not isinstance(row, dict):
+            continue
+        kind, host, port = str(row.get("kind") or "")[:25], str(row.get("host") or "")[:100], row.get("port")
+        if not kind or not host or type(port) is not int:
+            continue
+        state = str(row.get("probe_status") or "unverified")[:45]
+        if type(row.get("http_status")) is int:
+            state += " HTTP " + str(row["http_status"])
+        facts.append(f"{kind} {host}:{port} — {state}")
+    pre = ("نتیجهٔ بررسی وابستگی‌ها" if persian else "Downstream dependency checks")
+    status = str(value.get("status") or "unavailable")[:55]
+    note = ("این نتایج فقط پاسخ HTTP یا امکان اتصال TCP را گزارش می‌کنند؛ سلامت "
+            "پروتکل، احراز هویت، عملکرد برنامه یا علت ریشه‌ای تأیید نشده است."
+            if persian else "HTTP/TCP responses do not establish protocol health, "
+            "authentication, business availability, or root cause.")
+    absent = ("هیچ مقصد تأییدشده‌ای در کانفیگ برنامه پیدا نشد."
+              if persian else "No verified endpoint found in service config.")
+    return pre + ": " + status + "\n" + ("\n".join(facts) if facts else absent) + "\n" + note
 
 
 def public_result(action: str, value: Any) -> dict:
