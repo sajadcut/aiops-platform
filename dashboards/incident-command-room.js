@@ -1811,6 +1811,31 @@
       ' <small>'+esc(fa?'صرفاً فرضیهٔ ایجنت؛ نه علت تأییدشده':
         'Unverified agent hypothesis, not a confirmed cause')+'</small>'+
       refs(item.evidence_refs)+'</li>');
+    const extraction=arr(alert.dependency_extraction_diagnostics).slice(0,3);
+    const extractionLines=extraction.flatMap(item=>{
+      const facts=arr(item.files).slice(0,4);
+      const head=(fa?'وضعیت بررسی کانفیگ: ':'Config review status: ')+
+        (item.status||'unknown')+' · LLM: '+(item.binding_status||'not_recorded')+
+        ' · '+(fa?'فایل خوانده‌شده: ':'Files read: ')+
+        String(item.config_files_read??'?')+
+        ' · '+(fa?'خطای Parse: ':'Parse failures: ')+
+        String(item.config_files_parse_failed??'?');
+      const rows=facts.map(f=>
+        '<li><code dir="ltr">'+txt(f.path||'unknown')+'</code> — '+
+        txt(f.status||'unknown')+
+        ' · Host='+txt(String(f.host_fields??'?'))+
+        ' · Port='+txt(String(f.port_fields??'?'))+
+        ' · matched='+txt(String(f.verified_pairs??'?'))+'</li>');
+      return ['<p>'+txt(head)+'</p>'+(rows.length?list(rows):
+        '<p>'+esc(fa?'نتیجهٔ تطبیق فیلدهای فایل ثبت نشده است.':
+          'Per-file field matching was not recorded.')+'</p>')+
+        refs([item.evidence_ref].filter(Boolean))];
+    });
+    const extractionMarkup=extractionLines.length?
+      '<div class="ic-ir-alert-explanation"><strong>'+
+      esc(fa?'عیب‌یابی استخراج Endpoint از کانفیگ':
+        'Endpoint extraction diagnostics')+'</strong>'+
+      extractionLines.join('')+'</div>':'';
     const alertChecks=alertObserved.map(row=>
       '<li><strong>'+txt(row.tool||'MCP')+'</strong> — '+txt(row.result)+
       ' <small>('+txt(row.status||'unknown')+')</small>'+
@@ -1835,6 +1860,7 @@
         (fa?'از خلاصه رخداد؛ متن اصلی سیگنال موجود نیست':'Incident summary fallback; original alert unavailable'))+
       '</p>'+refs([alert.alert_evidence_ref].filter(Boolean))+
       focusedMarkup+
+      extractionMarkup+
       (focusedMarkup?'':'<p class="ic-ir-caution"><strong>'+
        esc(fa?'نتیجه اولیه بررسی: ':'Initial assessment: ')+'</strong>'+
        txt(alert.assessment_fa||'')+'</p>')+
