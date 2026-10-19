@@ -10,11 +10,11 @@ _PATTERNS = (
     ("cache", re.compile(r"\bredis\b|\bmemcached\b|ردیس|cache (?:timeout|error|unavailable)", re.I)),
     ("database", re.compile(
         r"\bpostgres(?:ql)?\b|\bpgpool\b|\bmysql\b|\bmariadb\b|\bsqlserver\b|"
-        r"\bmssql\b|\boracle\b|\bORA-\d+\b|\bmongodb\b|"
+        r"\bmssql\b|\boracle\b|\bORA-\d+\b|\bmongodb\b|\bdb2\b|\bcassandra\b|\bneo4j\b|"
         r"(?:database|jdbc|db connection|connection pool).{0,60}"
         r"(?:timeout|failed|refused|exhausted|unavailable|error)", re.I)),
     ("message_broker", re.compile(
-        r"\bactivemq\b|\bartemis\b|\brabbitmq\b|\bamqp\b|\bkafka\b|"
+        r"\bactivemq\b|\bartemis\b|\brabbitmq\b|\bamqp\b|\bkafka\b|\bnats\b|\bmqtt\b|\bjms\b|"
         r"(?:message broker|message queue).{0,60}"
         r"(?:timeout|failed|refused|unavailable|error)", re.I)),
     # Vendor-neutral transport failures still warrant bounded config discovery.
