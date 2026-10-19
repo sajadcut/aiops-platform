@@ -773,6 +773,10 @@ async def incident_chat_message(
             intent = requested
         elif requested != "answer" and intent == "answer" and not explanation_only:
             intent = requested
+        # Multi-step live investigation is expensive and must be explicitly
+        # requested; model narration cannot initiate this composite read.
+        if intent == "vm_investigate" and requested != "vm_investigate":
+            intent = "answer"
         # Raw configuration disclosure is a separate, SRE-only trust boundary.
         intent = authorize_complete_file_disclosure(
             intent, requested, identity.roles,
