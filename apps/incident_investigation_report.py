@@ -158,7 +158,13 @@ async def explain(brief: dict, lang: str = "fa", *, llm: Any = None) -> dict:
         reply = await asyncio.wait_for(
             (llm or configured_llm_adapter()).generate_with_messages(
                 [{"role": "system", "content": prompt},
-                 {"role": "user", "content": json.dumps(redact(facts), ensure_ascii=False)}],
+                 {"role": "user", "content": json.dumps(redact({
+                     "incident": {
+                         "service": _safe((brief.get("incident_summary") or {}).get("service"), 100),
+                         "alert_summary": _safe((brief.get("incident_summary") or {}).get("summary"), 260),
+                     },
+                     "documented_checks": facts,
+                 }), ensure_ascii=False)}],
                 temperature=0, max_tokens=1100, stage="incident_investigation_ledger"),
             timeout=18,
         )
