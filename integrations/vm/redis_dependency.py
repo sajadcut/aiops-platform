@@ -144,11 +144,8 @@ async def check_redis_config(connector: Any, target: str, service: str) -> dict:
              or (x["path"].rsplit("/", 1)[-1].startswith("appsettings.")
                  and x["path"].endswith(".json")))
     ]
-    if not files and discovered.get("runtime") == "dotnet":
-        runtime = await connector.service_runtime_discovery(target, service)
-        publish = runtime.get("publish_directory")
-        if isinstance(publish, str) and publish.startswith(("/opt/", "/srv/", "/data/")):
-            files.append(publish.rstrip("/") + "/appsettings.json")
+    # Do not guess or read an unverified publish path: service_config_discovery
+    # must prove the exact file before the worker can inspect its contents.
     if not files:
         return {**base, "status": "no_systemd_bound_appsettings"}
     found: list[dict] = []
