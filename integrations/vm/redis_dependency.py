@@ -158,6 +158,9 @@ async def check_redis_config(connector: Any, target: str, service: str) -> dict:
                 failures += 1
                 continue
             encoded = str(result.get("stdout") or "").strip()
+            if not (1 <= len(encoded) <= 349528):
+                failures += 1
+                continue
             binary = base64.b64decode(encoded, validate=True)
             if not (1 <= len(binary) <= 262_144):
                 failures += 1
@@ -181,7 +184,8 @@ async def check_redis_config(connector: Any, target: str, service: str) -> dict:
         entry = dict(endpoint)
         try:
             reach = await connector.tcp_check(target, entry["host"], entry["port"])
-            entry["tcp_supported"] = reach.get("supported") is True
+            entry["tcp_supported"] = (reach.get("success") is True and
+                                       reach.get("supported") is True)
             entry["tcp_reachable"] = reach.get("reachable") if entry["tcp_supported"] else None
             entry["tcp_status"] = (
                 "reachable" if entry["tcp_reachable"] is True else
