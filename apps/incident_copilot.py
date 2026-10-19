@@ -429,6 +429,9 @@ def dependency_investigation_answer(value: dict, *, persian: bool = True) -> str
             "authentication, business availability, or root cause.")
     absent = ("هیچ مقصد تأییدشده‌ای در کانفیگ برنامه پیدا نشد."
               if persian else "No verified endpoint found in service config.")
+    if status == "config_parse_failed" and persian:
+        absent = ("فایل تنظیمات قابل خواندن بود اما Parse آن موفق نشد؛ "
+                  "اعتبارسنجی Syntax با service_config_review لازم است.")
     return pre + ": " + status + "\n" + ("\n".join(facts) if facts else absent) + "\n" + note
 
 
@@ -455,7 +458,8 @@ def public_result(action: str, value: Any) -> dict:
         "service_runtime_discovery": ("service", "target", "runtime",
                                       "entrypoint", "publish_directory", "unit_file"),
         "dependency_investigation": ("service", "target", "status", "dependencies",
-                                     "config_files_checked", "config_files_failed",
+                                     "config_files_read", "config_files_checked",
+                                     "config_files_parse_failed", "config_files_failed",
                                      "checks_executed", "limitations", "read_only",
                                      "root_cause_confirmed", "application_health_verified",
                                      "protocol_health_verified", "secrets_exposed"),
