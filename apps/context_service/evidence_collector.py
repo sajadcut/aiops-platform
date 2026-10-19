@@ -556,7 +556,13 @@ class EvidenceCollector:
                 try:
                     if action == "dependency_investigation":
                         from integrations.vm.central_dependency import investigate_from_aiops
-                        signal_classes = dependency_signals(evidence)
+                        monitored_alerts = [
+                            item for item in evidence
+                            if isinstance(item, dict)
+                            and item.get("type") == "alert"
+                            and item.get("source") in {"zabbix", "prometheus", "elasticsearch"}
+                        ]
+                        signal_classes = dependency_signals(monitored_alerts or evidence)
                         priority = next((
                             match for match in (
                                 "database", "message_broker", "cache",
@@ -642,6 +648,33 @@ class EvidenceCollector:
                             )
                         rows = self._vm_evidence(action, vm_target, effective_service, vm_port, result, since)
                         evidence.extend(rows)
+                        if action == "dependency_investigation":
+                            # Correlate the EXACT alert family against
+                            # service-scoped ELK/journal error signatures
+                            # and actual config-derived TCP checks. Model
+                            # stays in the AIOps API, never on a VM.
+                            from apps.context_service.dependency_log_analysis import (
+                                analyze_dependency_logs,
+                            )
+                            signal_alerts = [
+                                item for item in evidence
+                                if isinstance(item, dict)
+                                and item.get("type") == "alert"
+                                and item.get("source") in {"zabbix", "prometheus", "elasticsearch"}
+                            ]
+                            scoped_classes = dependency_signals(signal_alerts or evidence)
+                            scoped_family = next((
+                                family for family in ("database", "message_broker", "cache")
+                                if family in scoped_classes
+                            ), "")
+                            if scoped_family:
+                                analysis = await analyze_dependency_logs(
+                                    service=effective_service,
+                                    family=scoped_family,
+                                    evidence=evidence,
+                                    probe=result,
+                                )
+                                evidence.append(analysis)
                         evidence.append(self._observation("vm_mcp", f"vm-observation:{vm_target}:{action}:{since.isoformat()}", status="queried", result_count=len(rows), service=effective_service, detail=f"target={vm_target};diagnostic={action}"))
                         # Deterministic read-only follow-up after a confirmed
                         # Nginx syntax failure. Does not depend on the optional
