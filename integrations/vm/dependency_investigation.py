@@ -122,6 +122,7 @@ async def investigate(connector: Any, target: str, service: str) -> dict:
                 "status": llm["status"],
                 "candidate_host_count": llm["candidate_host_count"],
                 "candidate_port_count": llm["candidate_port_count"],
+                "candidate_inline_endpoint_count": llm["candidate_inline_endpoint_count"],
                 "verified_pair_count": len(llm["endpoints"]),
             })
             selected = llm["endpoints"]
