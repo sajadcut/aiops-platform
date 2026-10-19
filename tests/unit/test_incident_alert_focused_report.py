@@ -45,6 +45,7 @@ def test_redis_alarm_is_primary_even_when_unrelated_systemd_is_active():
             "checks_executed": 1,
             "dependencies": [{
                 "kind": "redis", "host": "cache.internal", "port": 6379,
+                "port_inferred": False,
                 "probe_status": "tcp_reachable", "tcp_reachable": True,
                 "protocol_status": "client_not_installed",
                 "config_key": "Redis.Endpoints.Host",
@@ -196,6 +197,7 @@ def test_duplicate_same_redis_endpoint_collapses_and_preserves_both_evidences():
             "mcp_server": "vm_mcp", "tool_name": "dependency_investigation",
             "success": True, "dependencies": [{
                 "kind": "redis", "host": "10.248.34.221", "port": 6379,
+                "port_inferred": False,
                 "probe_status": "tcp_reachable", "tcp_reachable": True,
                 "protocol_status": "client_not_installed",
             }],
