@@ -1823,6 +1823,19 @@
           ?'کد اجرایی روی میزبان باید به‌روزرسانی شود. تست TCP روی پورت پیش‌فرض، اعتبارسنجی پورت برنامه نیست.'
           :'Upgrade the on-host VM agent. A TCP test on an inferred vendor-default port does not verify the application endpoint.')+
         '</p>':'';
+      const unchecked=Number(item.matching_endpoint_count)===0 &&
+        arr(item.other_dependency_kinds).length>0;
+      const familyWarning=unchecked
+        ?'<p class="ic-ir-caution"><strong>'+
+          esc(fa?'وابستگی موضوع آلارم بررسی نشده است: ':
+            'Alert dependency was not tested: ')+
+          '</strong>'+esc(fa?'تست‌های ثبت‌شده فقط برای ':
+            'Recorded probes concern only ')+
+          txt(arr(item.other_dependency_kinds).join(', '))+
+          esc(fa?' هستند؛ برای '+String(item.alert_family||'unknown')+
+            ' هیچ Endpoint مستندی آزمایش نشده است.':
+            '; no verified endpoint was tested for '+String(item.alert_family||'unknown')+'.')+
+          '</p>' : '';
       const head=(fa?'وضعیت بررسی کانفیگ: ':'Config review status: ')+
         (item.status||'unknown')+' · LLM: '+(item.binding_status||'not_recorded')+
         ' · '+(fa?'فایل خوانده‌شده: ':'Files read: ')+
@@ -1837,7 +1850,7 @@
         ' · '+esc(fa?'مقاصد صریح در URL/Connection String: ':'Literal URI/DSN endpoints: ')+
         txt(String(f.inline_endpoint_fields??'?'))+
         ' · matched='+txt(String(f.verified_pairs??'?'))+'</li>');
-      return [compatibility+'<p>'+txt(head)+'</p>'+(rows.length?list(rows):
+      return [compatibility+familyWarning+'<p>'+txt(head)+'</p>'+(rows.length?list(rows):
         '<p>'+esc(fa?'نتیجهٔ تطبیق فیلدهای فایل ثبت نشده است.':
           'Per-file field matching was not recorded.')+'</p>')+
         refs([item.evidence_ref].filter(Boolean))];
