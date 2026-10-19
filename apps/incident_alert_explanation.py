@@ -51,13 +51,18 @@ def _verified_endpoints(alert: dict) -> list[dict]:
             if not host or type(port) is not int or not 1 <= port <= 65535:
                 continue
             kind = _clean(ep.get("kind"), 30)
+            # Historical evidence may lack a persisted explicit/inferred flag.
+            # It cannot certify an application's effective port.
+            inferred = (ep.get("port_inferred")
+                        if type(ep.get("port_inferred")) is bool else None)
             key = (kind, host, port, ep.get("tcp_reachable"),
-                   _clean(ep.get("protocol_status"), 60))
+                   _clean(ep.get("protocol_status"), 60), inferred)
             if key in seen:
                 continue
             seen.add(key)
             output.append({
                 "kind": kind, "host": host, "port": port,
+                "port_inferred": inferred,
                 "tcp_reachable": ep.get("tcp_reachable")
                     if type(ep.get("tcp_reachable")) is bool else None,
                 "protocol_status": _clean(ep.get("protocol_status"), 60),
@@ -78,6 +83,15 @@ def _prefix(alert: dict, endpoints: list[dict], lang: str) -> str:
     for ep in endpoints[:3]:
         service = ep["kind"].upper() if ep["kind"] else "وابستگی"
         endpoint = f"{ep['host']}:{ep['port']}"
+        if ep.get("port_inferred") is not False:
+            parts.append(
+                f"میزبان {service} با آدرس {ep['host']} کشف شده، اما پورت "
+                "واقعی و مؤثر برنامه از تنظیمات تأیید نشده است. "
+                "عدد پورت پیشنهادی یا قدیمی نباید به‌عنوان مقصد تأییدشده "
+                "برنامه در نظر گرفته شود؛ تست TCP معتبر روی مقصد واقعی "
+                "در شواهد وجود ندارد."
+            )
+            continue
         if ep["tcp_reachable"] is True:
             statement = f"در بررسی {service} در آدرس {endpoint}، اتصال TCP موفق بوده است."
         elif ep["tcp_reachable"] is False:
@@ -117,6 +131,12 @@ def _response_safe(text: str, endpoints: list[dict], family: str) -> bool:
         if ip not in allowed_hosts:
             return False
     if any(int(p) not in allowed_ports for p in _PORT_PATTERN.findall(text)):
+        return False
+    # With no proven application destination, a model claiming that the
+    # program's Redis connection succeeded is contradicted by provenance.
+    if family == "redis" and endpoints and not any(
+        ep.get("port_inferred") is False for ep in endpoints
+    ) and re.search(r"(?:TCP|اتصال|ارتباط).{0,30}(?:موفق|برقرار)", text):
         return False
     if family == "redis" and _REDIS_HEALTH_OVERCLAIM.search(text):
         return False
@@ -161,13 +181,22 @@ async def explain_alert(brief: dict, lang: str = "fa") -> dict | None:
         "alert_message": _clean(alert.get("alert_message"), 400),
         "alert_source": _clean(alert.get("alert_source"), 80),
         "family": _clean(alert.get("family"), 30),
-        "endpoints": endpoints,
+        # Do not expose an inferred/legacy port as an approved test target
+        # for the LLM to repeat confidently.
+        "endpoints": [
+            {**ep, "port": ep["port"] if ep.get("port_inferred") is False else None,
+             "tcp_reachable": ep["tcp_reachable"]
+                 if ep.get("port_inferred") is False else None}
+            for ep in endpoints
+        ],
         "relevant_checks": [
             {
                 "tool": _clean(row.get("tool"), 80),
                 "status": _clean(row.get("status"), 30),
                 "scope": _clean(row.get("scope"), 65),
-                "result": _clean(row.get("result"), 330),
+                "result": (_clean(row.get("result"), 330)
+                           if row.get("scope") != "dependency_port_not_verified"
+                           else "port_not_verified; previous TCP result does not confirm application endpoint"),
             }
             for row in (alert.get("related_checks") or [])[:6]
             if isinstance(row, dict)

@@ -440,6 +440,10 @@ def _mcp(rows: Iterable[dict], now: datetime) -> tuple[list[dict], list[dict]]:
                     continue
                 check = {
                     "kind": kind, "host": host, "port": port,
+                    # None = legacy record lacking proof of port provenance.
+                    # True = explicitly inferred fallback, never app target.
+                    "port_inferred": (dep.get("port_inferred")
+                                      if type(dep.get("port_inferred")) is bool else None),
                     "config_file": safe(dep.get("config_file"), 180),
                     "config_key": safe(dep.get("config_key"), 120),
                     "probe_scope": safe(dep.get("probe_scope"), 50),

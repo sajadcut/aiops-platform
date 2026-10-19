@@ -44,12 +44,17 @@ def parse_redis_endpoints(value: Any) -> list[dict]:
     endpoints: list[dict] = []
     seen = set()
 
-    def add(host: Any, port: Any = 6379) -> None:
+    def add(host: Any, port: Any = None) -> None:
         clean = _safe_host(host)
         number = _port(port)
-        if clean and number and (clean, number) not in seen and len(endpoints) < _MAX_ENDPOINTS:
+        if clean and (clean, number) not in seen and len(endpoints) < _MAX_ENDPOINTS:
             seen.add((clean, number))
-            endpoints.append({"host": clean, "port": number})
+            if number is None:
+                endpoints.append({
+                    "host": clean, "port": None, "port_inferred": True,
+                })
+            else:
+                endpoints.append({"host": clean, "port": number})
 
     def parse_string(raw: str) -> None:
         text = raw.strip()
@@ -58,7 +63,7 @@ def parse_redis_endpoints(value: Any) -> list[dict]:
         if text.lower().startswith(("redis://", "rediss://")):
             try:
                 uri = urlsplit(text)
-                add(uri.hostname, uri.port or 6379)
+                add(uri.hostname, uri.port)
             except ValueError:
                 return
             return
@@ -74,30 +79,33 @@ def parse_redis_endpoints(value: Any) -> list[dict]:
             elif _safe_host(part) and "=" not in part:
                 add(part)
 
-    def walk(node: Any, redis_scope: bool = False, depth: int = 0) -> None:
+    def walk(node: Any, redis_scope: bool = False, depth: int = 0,
+             inherited_port: int | None = None) -> None:
         if depth > 6 or len(endpoints) >= _MAX_ENDPOINTS:
             return
         if isinstance(node, dict):
             scoped = redis_scope
+            # Preserve parent-level Redis.Port when Endpoints.Host is nested.
+            local_port = _port(node.get("Port") or node.get("port")) or inherited_port
             if scoped:
                 host = node.get("Host") or node.get("host") or node.get("Hostname") or node.get("hostname")
                 if host is not None:
-                    add(host, node.get("Port") or node.get("port") or 6379)
+                    add(host, local_port)
             for k, v in list(node.items())[:75]:
                 key = str(k).lower().replace("_", "").replace("-", "")
                 key_redis = "redis" in key
                 if key_redis:
-                    walk(v, True, depth + 1)
+                    walk(v, True, depth + 1, local_port)
                 elif key in {"configuration", "connectionstring", "connectionstrings",
                              "endpoint", "endpoints", "servers", "nodes", "primary",
                              "cache"}:
                     # ConnectionStrings is not itself a Redis hint. Only a
                     # nested Redis key can enter the Redis parsing scope.
                     # assumes a random SQL/TCP connection string means Redis.
-                    walk(v, scoped, depth + 1)
+                    walk(v, scoped, depth + 1, local_port)
         elif isinstance(node, list):
             for entry in node[:8]:
-                walk(entry, redis_scope, depth + 1)
+                walk(entry, redis_scope, depth + 1, inherited_port)
         elif isinstance(node, str) and redis_scope:
             parse_string(node)
 
@@ -182,6 +190,11 @@ async def check_redis_config(connector: Any, target: str, service: str) -> dict:
             "file_failures": failures}
     for endpoint in found:
         entry = dict(endpoint)
+        if entry.get("port") is None or entry.get("port_inferred") is True:
+            entry.update({"tcp_supported": False, "tcp_reachable": None,
+                          "tcp_status": "port_unverified"})
+            base["endpoints"].append(entry)
+            continue
         try:
             reach = await connector.tcp_check(target, entry["host"], entry["port"])
             entry["tcp_supported"] = (reach.get("success") is True and
