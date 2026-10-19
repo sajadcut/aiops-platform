@@ -219,6 +219,7 @@ def build_alert_focused_report(incident: dict, evidence: list[dict],
             "evidence_ref": _text(row.get("evidence_ref"), 180),
             "collected_at": _text(row.get("collected_at"), 60),
             "endpoints": endpoints,
+            "llm_field_binding_status": _text(row.get("llm_field_binding_status"), 80),
             "evidence_refs": [_text(row.get("evidence_ref"), 180)] if row.get("evidence_ref") else [],
             "scope": (
                 "dependency_port_not_verified" if any(
