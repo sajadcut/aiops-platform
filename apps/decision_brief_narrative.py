@@ -130,6 +130,9 @@ def projection(brief: dict) -> dict:
             "relevant_checks": [_field_view(row, (
                 "tool", "status", "result", "evidence_ref", "scope",
             ), limit=240) for row in (alert.get("related_checks") or [])[:6]],
+            "unverified_agent_hypotheses": [_field_view(row, (
+                "agent", "hypothesis", "evidence_refs", "status",
+            ), limit=240) for row in (alert.get("agent_interpretations") or [])[:3]],
         },
         "incident": _field_view(incident, (
             "incident_id", "service", "severity", "status", "started_at",
