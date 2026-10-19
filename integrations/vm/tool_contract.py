@@ -126,9 +126,41 @@ def validate_vm_observation(tool: str, target: str, payload: Any) -> dict[str, A
             "config_files_checked", "config_files_failed", "checks_executed",
             "dependencies", "limitations", "error", "observed_at",
             "investigation_status", "next_checks",
+            "llm_field_binding_status", "llm_field_binding_files",
         }
         if not set(payload) <= safe_top:
             raise ValueError("vm_mcp_dependency_unexpected_payload")
+        llm_status = payload.get("llm_field_binding_status")
+        allowed_llm = {
+            "not_requested", "no_safe_host_port_candidates",
+            "trusted_llm_not_configured", "verified",
+            "llm_response_invalid", "llm_response_incomplete",
+            "llm_unsubstantiated_selection", "llm_cross_dependency_selection",
+            "llm_binding_unavailable", "no_model_match",
+        }
+        if llm_status is not None and llm_status not in allowed_llm:
+            raise ValueError("vm_mcp_dependency_llm_status_invalid")
+        metadata = payload.get("llm_field_binding_files", [])
+        if not isinstance(metadata, list) or len(metadata) > 4:
+            raise ValueError("vm_mcp_dependency_llm_metadata_invalid")
+        from integrations.vm.general_config_review import checked_config_path
+        for entry in metadata:
+            if not isinstance(entry, dict) or set(entry) != {
+                "config_file", "status", "candidate_host_count",
+                "candidate_port_count", "verified_pair_count",
+            }:
+                raise ValueError("vm_mcp_dependency_llm_metadata_invalid")
+            try:
+                if checked_config_path(entry["config_file"]) != entry["config_file"]:
+                    raise ValueError("noncanonical")
+            except (KeyError, TypeError, ValueError):
+                raise ValueError("vm_mcp_dependency_llm_file_invalid") from None
+            if entry["status"] not in allowed_llm or any(
+                type(entry.get(k)) is not int or not 0 <= entry[k] <= 16
+                for k in ("candidate_host_count", "candidate_port_count",
+                          "verified_pair_count")
+            ):
+                raise ValueError("vm_mcp_dependency_llm_metadata_invalid")
         if any(payload.get(k) is not False for k in (
             "execution_authority", "root_cause_confirmed",
             "config_contents_exposed", "secrets_exposed",
@@ -140,6 +172,7 @@ def validate_vm_observation(tool: str, target: str, payload: Any) -> dict[str, A
             "compare_application_auth_settings",
             "inspect_client_timeouts_pool_and_errors",
             "review_tls_mode_and_certificates", "protocol_check_unavailable",
+            "verify_effective_dependency_port",
         }
         if (not isinstance(checks, list) or len(checks) > 6
                 or any(hint not in permitted_hints for hint in checks)):
@@ -166,6 +199,17 @@ def validate_vm_observation(tool: str, target: str, payload: Any) -> dict[str, A
                 or safe_config_key(tuple(source_key.split("."))) != source_key
             ):
                 raise ValueError("vm_mcp_dependency_config_key_invalid")
+            port_key = row.get("config_port_key")
+            if port_key is not None and (
+                not isinstance(port_key, str)
+                or safe_config_key(tuple(port_key.split("."))) != port_key
+            ):
+                raise ValueError("vm_mcp_dependency_port_key_invalid")
+            source = row.get("endpoint_source")
+            if source is not None and source not in {
+                "llm_binding_independently_verified",
+            }:
+                raise ValueError("vm_mcp_dependency_endpoint_source_invalid")
             if row.get("protocol_status") is not None and row["kind"] != "redis":
                 raise ValueError("vm_mcp_dependency_protocol_mismatch")
             if row.get("tls_requested") is not None and row["kind"] != "redis":
@@ -174,7 +218,8 @@ def validate_vm_observation(tool: str, target: str, payload: Any) -> dict[str, A
             if scope is not None and (
                 (scope == "origin_root_head" and row.get("probe") != "http_head")
                 or (scope == "transport_tcp_connect" and row.get("probe") != "tcp")
-                or scope not in {"origin_root_head", "transport_tcp_connect"}
+                or scope not in {"origin_root_head", "transport_tcp_connect",
+                                 "not_executed_inferred_port"}
             ):
                 raise ValueError("vm_mcp_dependency_probe_scope_invalid")
             if (not isinstance(row.get("kind"), str)
