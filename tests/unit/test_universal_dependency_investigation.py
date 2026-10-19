@@ -357,3 +357,16 @@ def test_public_dependency_answer_identifies_provenance_not_business_health():
     assert "/srv/gfp/appsettings.json" in answer
     assert "PaymentAdapter.Host" in answer
     assert "علت ریشه‌ای تأیید نشده" in answer
+
+
+def test_toml_and_cnf_config_dependency_sources():
+    toml = '[payment]\nurl = "https://pay.internal:8443/charge?secret=NEVER_COPY"\n'
+    cnf = 'broker.url=tcp://broker.internal:61616\n'
+    toml_rows = discover(load_config(toml, "settings.toml"))
+    assert any(r["kind"] == "https" and r["host"] == "pay.internal"
+               and r["config_key"] == "payment.url" for r in toml_rows)
+    assert "NEVER_COPY" not in repr(toml_rows)
+    # A generic broker URL must not be classified as ActiveMQ on its own.
+    cnf_rows = discover(load_config(cnf, "settings.cnf"))
+    assert any(r["kind"] == "custom_tcp" and r["host"] == "broker.internal"
+               for r in cnf_rows)
