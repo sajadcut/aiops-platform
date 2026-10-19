@@ -292,7 +292,8 @@ def fallback_intent(message: str) -> str:
     if re.search(r"redis|ردیس", text, re.I) and re.search(
         r"اتصال|بررسی زنده|تست کن|چک کن|connectivity|test redis|check redis", text, re.I
     ):
-        return "redis_dependency_check"
+        # Redis is one dependency kind, not a separate investigation design.
+        return "dependency_investigation"
     if (re.search(r"چرا|علت|عیب.?یابی|\bdiagnos|\btroubleshoot", text, re.I)
             and re.search(r"سرویس|service|failed|بالا\s*نمی|استارت\s*نمی|down", text, re.I)
             and not re.search(r"(?:ریستارت|استارت|restart|start|اعمال|اصلاح).{0,12}(?:کن|بزن)", text, re.I)):
@@ -827,6 +828,11 @@ async def llm_plan(message: str, summary: dict, turns: list[dict],
         intent = str(parsed.get("intent") or "answer")
         if intent not in READ_ACTIONS | set(WRITE_SUGGESTIONS) | {"answer"}:
             intent = "answer"
+        # Preserve the legacy diagnostic only when explicitly addressed by
+        # its tool identifier; ordinary Redis questions use the same generic
+        # provenance-aware engine as SQL, AMQP and HTTP questions.
+        if intent == "redis_dependency_check" and "redis_dependency_check" not in message:
+            intent = "dependency_investigation"
         return {
             "intent": intent,
             "answer": redact_text(str(parsed.get("answer") or ""))[:3400],
