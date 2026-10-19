@@ -506,6 +506,7 @@ def _mcp(rows: Iterable[dict], now: datetime) -> tuple[list[dict], list[dict]]:
                     "status": safe(entry.get("status"), 70),
                     "host_fields": entry.get("candidate_host_count"),
                     "port_fields": entry.get("candidate_port_count"),
+                    "inline_endpoint_fields": entry.get("candidate_inline_endpoint_count"),
                     "verified_pairs": entry.get("verified_pair_count"),
                 }
                 for entry in arr(observed.get("llm_field_binding_files"))[:4]
