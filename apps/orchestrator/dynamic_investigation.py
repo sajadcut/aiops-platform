@@ -24,7 +24,7 @@ READ_ONLY_CHECKS = frozenset({
     "service_status", "service_logs", "process_status", "config_validate",
     "collect_vm_metrics", "memory_diagnostics", "process_snapshot", "disk_status", "host_info", "network_status",
     "port_listener_status", "tcp_check",
-    "service_runtime_discovery", "service_config_discovery", "service_config_review", "dotnet_config_syntax", "nginx_config_review", "nginx_config_inspect",
+    "service_runtime_discovery", "service_config_discovery", "redis_dependency_check", "service_config_review", "dotnet_config_syntax", "nginx_config_review", "nginx_config_inspect",
 })
 _CHECK_TO_REQUEST = {
     "service_status": ("telemetry", "service status"),
