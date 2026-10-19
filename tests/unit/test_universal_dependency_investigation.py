@@ -142,3 +142,46 @@ def test_incident_chat_generic_intents_are_read_only():
                           "probe_status": "tcp_reachable"}]})
     assert "pg.internal:5432" in answer
     assert "علت ریشه‌ای تأیید نشده" in answer
+
+
+def test_tomcat_context_xml_and_dotnet_app_config_are_only_structural_sources():
+    tomcat = """
+    <Context>
+      <Resource name="jdbc/billing" type="javax.sql.DataSource"
+                url="jdbc:postgresql://pg.internal:5432/billing"
+                password="DO_NOT_LOG"/>
+      <Connector protocol="tcp" uri="tcp://mq.internal:61616"/>
+    </Context>
+    """
+    config = """
+    <configuration><connectionStrings>
+      <add name="Billing" connectionString="Server=sql.internal,1433;Database=B;Password=SECRET"/>
+    </connectionStrings></configuration>
+    """
+    t = discover(load_config(tomcat, "context.xml"))
+    n = discover(load_config(config, "app.config"))
+    assert ("postgresql", "pg.internal", 5432) in {
+        (x["kind"], x["host"], x["port"]) for x in t}
+    assert ("activemq", "mq.internal", 61616) in {
+        (x["kind"], x["host"], x["port"]) for x in t}
+    assert ("mssql", "sql.internal", 1433) in {
+        (x["kind"], x["host"], x["port"]) for x in n}
+    assert "SECRET" not in repr(n)
+    with pytest.raises(ValueError):
+        load_config("<!DOCTYPE x [<!ENTITY a 'unsafe'>]><x>&a;</x>", "context.xml")
+
+
+def test_unknown_vendor_explicit_host_port_uses_generic_tcp_without_guessing():
+    result = discover({"PaymentAdapter": {
+        "Host": "payment.internal", "Port": "60001",
+        "Password": "SHOULD_NOT_LEAK",
+    }})
+    assert result == [{
+        "kind": "custom_tcp", "host": "payment.internal", "port": 60001,
+        "port_inferred": False, "probe": "tcp", "config_verified": True,
+    }]
+    assert discover({"PaymentAdapter": {"Host": "payment.internal"}}) == []
+    assert ("nats", "bus.internal", 4222) in {
+        (x["kind"], x["host"], x["port"]) for x in
+        discover({"Messaging": {"Url": "nats://bus.internal:4222"}})
+    }
