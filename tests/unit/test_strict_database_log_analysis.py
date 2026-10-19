@@ -28,7 +28,8 @@ def test_only_explicit_matching_service_logs_can_support_database_rca():
     codes = {row["error_signature"] for row in signatures}
     assert codes == {"connection_refused"}
     assert all(row["evidence_ref"] == "log-GFP_Backend" for row in signatures)
-    assert diag["log_records_inspected"] == 4
+    # Only two records belong to the exact, independently named alert service.
+    assert diag["log_records_inspected"] == 2
 
 
 class Model:
