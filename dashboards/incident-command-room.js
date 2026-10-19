@@ -2882,6 +2882,10 @@
         esc(fa?'اعمال فعلاً متوقف است: توکن MCP در API برای امضای اجرا تنظیم نشده یا ضعیف است.':
           'Apply blocked: MCP bearer is missing or too weak for approval signing.')+
       '</p>':'';
+    const stagedCode=stagedFailed&&stageFailure?
+      '<p class="ic-config-banner-warning" role="status">'+
+      esc(fa?'کد خطای اعتبارسنجی کاندید: ':'Candidate validator error code: ')+
+      txt(stageFailure.slice(0,80))+'</p>':'';
     const liveStatus=state.configPreviewPending?
       '<p role="status" aria-live="polite">'+
       esc(fa?'در حال بررسی مجدد فایل کانفیگ…':'Rechecking the configuration…')+'</p>':
@@ -2898,7 +2902,7 @@
       '</p>':'';
     node.innerHTML='<div class="ic-config-banner-copy"><strong style="font-size:1.2rem;">'+esc(title)+'</strong>'+urgentExplanation+
       '<p class="ic-config-banner-summary">'+summary+'</p>'+
-      '<p>'+esc(instruction)+'</p>'+repairWarning+warning+liveStatus+technical+
+      '<p>'+esc(instruction)+'</p>'+stagedCode+repairWarning+warning+liveStatus+technical+
       '</div><div class="ic-config-banner-actions">'+primary+secondary+extraLLMButton+'</div>';
   }
 
