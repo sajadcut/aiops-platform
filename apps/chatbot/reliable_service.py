@@ -66,7 +66,7 @@ def _looks_like_nonterminal_tool_preamble(response: LLMResponse, *, tools_availa
 _LIVE_OPERATIONAL_QUERY_RE = re.compile(
     r"(?:"
     r"وضعیت|وضعیته|چقدره|چنده|مصرف|فعال|غیرفعال|خاموش|روشن|"
-    r"لاگ|لاگ‌ها|متریک|cpu|memory|ram|"
+    r"لاگ|لاگ‌ها|متریک|cpu|memory|ram|دیسک|فضای\s*خالی|پارتیشن|\bdisk\b|"
     r"\bstatus\b|\bhealth\b|\bmetrics?\b|\blogs?\b|\bpods?\b|"
     r"\brunning\b|\bactive\b|\binactive\b"
     r")",
@@ -229,11 +229,37 @@ def _deterministic_vm_service_read_call(
         return None
 
     target = _resolve_vm_target_from_turns(turns)
-    service = _resolve_service_from_turns(turns)
-    if not target or not service:
+    if not target:
         return None
 
     available = _available_tool_names(tools)
+    # Disk, filesystems and mount paths are NOT systemd service names.
+    # Route them before the one-turn service-referent carry-over; a prior
+    # nginx request must never turn "وضعیت دیسک" into service_status(nginx).
+    disk_request = bool(re.search(
+        r"(?:دیسک|فضای\s*ذخیره|فضای\s*خالی|پارتیشن|فایل\s*سیستم|"
+        r"\bdisk\b|\bfilesystem\b|\bmount\b|\bdf\b|"
+        r"(?<![\w/])/(?:var|app|home|opt|data|tmp|usr|root)(?:/|\b))",
+        current, re.IGNORECASE,
+    ))
+    if disk_request and "vm_diagnostics" not in available:
+        return None  # Never coerce a disk request into a stale systemd service.
+    if disk_request:
+        return {
+            "id": "deterministic-vm-disk-read",
+            "type": "function",
+            "function": {
+                "name": "vm_diagnostics",
+                "arguments": json.dumps(
+                    {"target": target, "diagnostic": "disk_status"},
+                    ensure_ascii=False, separators=(",", ":"),
+                ),
+            },
+        }
+
+    service = _resolve_service_from_turns(turns)
+    if not service:
+        return None
     wants_logs = bool(re.search(r"(?:لاگ|log|logs)", current, re.IGNORECASE))
     tool_name = "vm_service_logs" if wants_logs else "vm_service_status"
     if tool_name not in available:

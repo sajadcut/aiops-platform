@@ -419,3 +419,35 @@ def test_deterministic_vm_service_read_never_routes_mutation_language():
 
     assert call is None
 
+
+
+@pytest.mark.parametrize("turns, expected", [
+    (["وضعیت cpu 10.248.16.82 بگو", "وضعیت دیسک سرور 10.248.16.82 بگو"], "10.248.16.82"),
+    (["وضعیت nginx روی 10.248.16.82", "وضعیت /var/log بگو"], "10.248.16.82"),
+    (["وضعیت cpu 10.248.16.82", "disk usage"], "10.248.16.82"),
+    (["وضعیت nginx روی 10.248.16.82", "فضای خالی /app چقدره"], "10.248.16.82"),
+])
+def test_chatbot_disk_and_mount_not_misrouted_to_systemd(turns, expected):
+    import json
+    available = [
+        {"function": {"name": name}} for name in
+        ("vm_service_status", "vm_service_logs", "vm_diagnostics")
+    ]
+    call = _deterministic_vm_service_read_call(
+        [{"role": "user", "content": turn} for turn in turns],
+        tools=available,
+    )
+    assert call is not None
+    assert call["function"]["name"] == "vm_diagnostics"
+    args = json.loads(call["function"]["arguments"])
+    assert args == {"target": expected, "diagnostic": "disk_status"}
+
+
+def test_chatbot_disk_request_never_forces_old_service_when_diagnostics_missing():
+    tools = [{"function": {"name": "vm_service_status"}}]
+    call = _deterministic_vm_service_read_call(
+        [{"role": "user", "content": "nginx روی 10.248.16.82 چطوره"},
+         {"role": "user", "content": "وضعیت دیسک 10.248.16.82"}],
+        tools=tools,
+    )
+    assert call is None
