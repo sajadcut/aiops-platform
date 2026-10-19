@@ -252,7 +252,14 @@ async def investigate(connector: Any, target: str, service: str) -> dict:
             record["probe_status"] = "check_unavailable"
         base["checks_executed"] += 1
         base["dependencies"].append(record)
-    base["status"] = "checks_completed"
+    # A decoded configuration with only inferred ports is not a completed
+    # connectivity test. Explicitly distinguish discovery from probe evidence.
+    base["status"] = (
+        "port_unverified" if not base["checks_executed"] and
+        any(row.get("probe_status") == "port_unverified"
+            for row in base["dependencies"])
+        else "checks_completed"
+    )
     base["next_checks"] = followups[:6]
     base["investigation_status"] = (
         "transport_failure_observed" if saw_unreachable else
