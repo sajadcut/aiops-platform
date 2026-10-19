@@ -155,9 +155,25 @@ async def investigate(connector: Any, target: str, service: str) -> dict:
                 if not (row.get("port_inferred") is True and
                         (row["kind"], row["host"]) in selected_targets)
             ]
+            # Preserve one confirmed destination per technology before
+            # filling the per-file budget with additional peers. Without
+            # diversity, six Redis endpoints can consume the entire budget
+            # and hide a configured SQL database or Kafka broker in the same
+            # service config. Every candidate remains independently parsed.
+            candidates = selected + static
+            kinds: set[str] = set()
+            representatives: list[dict] = []
+            peers: list[dict] = []
+            for item in candidates:
+                kind = item["kind"]
+                if kind not in kinds:
+                    representatives.append(item)
+                    kinds.add(kind)
+                else:
+                    peers.append(item)
             by_file.append([
                 {**item, "config_file": verified_path}
-                for item in (selected + static)[:MAX_CHECKS]
+                for item in (representatives + peers)[:MAX_CHECKS]
             ])
         except Exception:
             # No parser trace or input excerpts: they can contain credentials.
