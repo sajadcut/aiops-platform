@@ -5,11 +5,13 @@ provide targets. No config values, credentials, raw logs or HTTP bodies escape.
 """
 from __future__ import annotations
 import base64
+import hashlib
+import re
 import shlex
 from typing import Any
 
 from integrations.vm.dependency_discovery import discover, load_config
-from integrations.vm.dependency_llm_binding import resolve_llm_bindings
+from integrations.vm.dependency_llm_binding import resolve_llm_bindings, safe_candidate_fields
 from integrations.vm.general_config_review import checked_config_path, remote_config_read_command
 from integrations.vm.protocol_diagnostics import redis_unauthenticated_ping
 
@@ -51,9 +53,53 @@ async def http_head(connector: Any, target: str, *, host: str, port: int, scheme
         return {"supported": False, "http_status": None, "tls_verified": None}
 
 
-async def investigate(connector: Any, target: str, service: str) -> dict:
+_DB_KINDS = {
+    "database_tcp", "postgres", "postgresql", "mysql", "mariadb",
+    "mssql", "sqlserver", "oracle", "mongodb", "cassandra", "db2", "neo4j",
+}
+_MQ_KINDS = {"activemq", "rabbitmq", "kafka", "amqp", "nats", "mqtt", "zookeeper"}
+
+
+def _matches_priority(kind: str, family: str) -> bool:
+    return (
+        kind in _DB_KINDS if family == "database" else
+        kind in _MQ_KINDS if family in {"messaging", "message_broker"} else
+        kind in {"redis", "valkey", "keydb"} if family in {"redis", "cache"} else
+        kind in {"http", "https", "grpc"} if family in {"http", "http_dependency"} else
+        False
+    )
+
+
+async def investigate(
+    connector: Any, target: str, service: str, *,
+    mode: str = "probe", selections: list[dict] | None = None,
+    priority_family: str = "",
+) -> dict:
     connector._validate_target(target)
     connector._validate_service(service)
+    if mode not in {"probe", "discover"}:
+        raise ValueError("vm_dependency_mode_invalid")
+    if priority_family not in {"", "database", "messaging", "message_broker",
+                               "redis", "cache", "http", "http_dependency"}:
+        raise ValueError("vm_dependency_priority_invalid")
+    if selections is not None and (mode != "probe" or not isinstance(selections, list)
+                                   or len(selections) > MAX_FILES):
+        raise ValueError("vm_dependency_selections_invalid")
+    choices: dict[int, dict] = {}
+    for item in selections or []:
+        if not isinstance(item, dict) or set(item) != {
+            "file_index", "sha256", "pairs", "endpoint_ids"
+        }:
+            raise ValueError("vm_dependency_selection_shape_invalid")
+        idx, digest = item["file_index"], item["sha256"]
+        if (type(idx) is not int or not 0 <= idx < MAX_FILES or idx in choices
+                or not isinstance(digest, str)
+                or re.fullmatch(r"[a-f0-9]{64}", digest) is None
+                or not isinstance(item["pairs"], list)
+                or not isinstance(item["endpoint_ids"], list)
+                or len(item["pairs"]) > 6 or len(item["endpoint_ids"]) > 6):
+            raise ValueError("vm_dependency_selection_fields_invalid")
+        choices[idx] = item
     baseline = {
         "success": False, "target": target, "service": service,
         "status": "not_verified", "diagnostic": "dependency_investigation",
@@ -86,7 +132,9 @@ async def investigate(connector: Any, target: str, service: str) -> dict:
                 "limitations": ["systemd_config_path_not_verified"]}
     by_file: list[list[dict]] = []
     read_failed = 0
-    for path in list(dict.fromkeys(filenames))[:MAX_FILES]:
+    if mode == "discover":
+        base["binding_candidates"] = []
+    for file_index, path in enumerate(list(dict.fromkeys(filenames))[:MAX_FILES]):
         try:
             verified_path = checked_config_path(path)
             cmd = remote_config_read_command(verified_path)
@@ -111,12 +159,51 @@ async def investigate(connector: Any, target: str, service: str) -> dict:
                 base["config_files_parse_failed"] += 1
                 continue
             base["config_files_checked"] += 1
+            fingerprint = hashlib.sha256(raw).hexdigest()
+            if mode == "discover":
+                facts = safe_candidate_fields(config)
+                # Worker returns only whitelisted structural Host/Port IDs.
+                # Never raw config, DSN text, passwords or arbitrary values.
+                base["binding_candidates"].append({
+                    "file_index": file_index,
+                    "config_file": verified_path,
+                    "sha256": fingerprint,
+                    **facts,
+                })
+                base["llm_field_binding_files"].append({
+                    "config_file": verified_path,
+                    "status": "central_llm_required" if (
+                        (facts["host_fields"] and facts["port_fields"])
+                        or facts["inline_endpoint_fields"]
+                    ) else "no_safe_host_port_candidates",
+                    "candidate_host_count": len(facts["host_fields"]),
+                    "candidate_port_count": len(facts["port_fields"]),
+                    "candidate_inline_endpoint_count": len(facts["inline_endpoint_fields"]),
+                    "verified_pair_count": 0,
+                })
+                continue
+            provided = choices.get(file_index)
+            if provided is not None and provided["sha256"] != fingerprint:
+                # Config changed between central selection and the worker's
+                # independent reread. Do not probe a stale LLM binding.
+                base["llm_field_binding_files"].append({
+                    "config_file": verified_path, "status": "config_changed",
+                    "candidate_host_count": 0, "candidate_port_count": 0,
+                    "candidate_inline_endpoint_count": 0, "verified_pair_count": 0,
+                })
+                base["llm_field_binding_status"] = "config_changed"
+                continue
             # Preserve the exact verified source file and structural setting
             # key; only selected endpoint facts leave the trusted worker.
             # The entire verified document is parsed on the trusted worker.
             # LLM receives only host/port field IDs, paths and safe literal
             # values; never source bytes, secrets, or arbitrary config strings.
-            llm = await resolve_llm_bindings(config)
+            llm = (await resolve_llm_bindings(
+                config, selection={
+                    "pairs": provided["pairs"],
+                    "endpoint_ids": provided["endpoint_ids"],
+                },
+            ) if provided is not None else await resolve_llm_bindings(config))
             base["llm_field_binding_files"].append({
                 "config_file": verified_path,
                 "status": llm["status"],
@@ -140,6 +227,9 @@ async def investigate(connector: Any, target: str, service: str) -> dict:
                 "llm_response_invalid": 6,
                 "llm_unsubstantiated_selection": 7,
                 "llm_cross_dependency_selection": 7,
+                "central_llm_required": 3,
+                "central_llm_unavailable": 4,
+                "config_changed": 9,
                 "verified": 8,
             }
             current = str(base["llm_field_binding_status"])
@@ -171,14 +261,33 @@ async def investigate(connector: Any, target: str, service: str) -> dict:
                     kinds.add(kind)
                 else:
                     peers.append(item)
+            ordered = representatives + peers
+            if priority_family:
+                ordered.sort(key=lambda item: not _matches_priority(
+                    str(item.get("kind") or ""), priority_family))
             by_file.append([
                 {**item, "config_file": verified_path}
-                for item in (representatives + peers)[:MAX_CHECKS]
+                for item in ordered[:MAX_CHECKS]
             ])
         except Exception:
             # No parser trace or input excerpts: they can contain credentials.
             read_failed += 1
     base["config_files_failed"] = read_failed
+    if mode == "discover":
+        base["status"] = "binding_candidates_ready"
+        base["llm_field_binding_status"] = (
+            "central_llm_required" if any(
+                f["status"] == "central_llm_required"
+                for f in base["llm_field_binding_files"]
+            ) else "no_safe_host_port_candidates"
+        )
+        base["investigation_status"] = "awaiting_central_llm"
+        return base
+    if priority_family:
+        by_file.sort(key=lambda group: not any(
+            _matches_priority(str(row.get("kind") or ""), priority_family)
+            for row in group
+        ))
     # Never persist the complete parsed config or prompt in incident evidence.
     # Only bounded field counts, path provenance, and transport outcomes leave.
     # Spread the fixed probe budget across verified files. Otherwise one
