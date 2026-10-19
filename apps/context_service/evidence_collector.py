@@ -448,8 +448,19 @@ class EvidenceCollector:
             elif await self._healthy(self.elasticsearch):
                 try:
                     logs = await self.elasticsearch.get_logs(effective_service, since, until)
-                    elastic_logs_available = True
-                    observation = self._observation("elasticsearch", f"elastic-observation:{effective_service}:{since.isoformat()}", status="queried", result_count=len(logs), service=effective_service, detail="matching_logs")
+                    last_query = dict(getattr(
+                        self.elasticsearch, "_last_esql_query_diagnostics", {},
+                    ) or {})
+                    decode_failed = (
+                        not logs and int(last_query.get("unrecognized_envelopes") or 0) > 0
+                    )
+                    elastic_logs_available = not decode_failed
+                    observation = self._observation(
+                        "elasticsearch", f"elastic-observation:{effective_service}:{since.isoformat()}",
+                        status="error" if decode_failed else "queried",
+                        result_count=len(logs), service=effective_service,
+                        detail="response_format_unrecognized" if decode_failed else "matching_logs",
+                    )
                     # The Elastic interface currently filters on service, not
                     # explicitly on VM host. Preserve scope, never imply a host
                     # correlation that the provider did not execute.
@@ -458,6 +469,14 @@ class EvidenceCollector:
                         "query_since": since.isoformat(),
                         "query_until": until.isoformat() if until else None,
                         "host_filter_applied": False,
+                        "error_code": "response_format_unrecognized" if decode_failed else None,
+                        "unrecognized_envelopes": (
+                            int(last_query.get("unrecognized_envelopes") or 0)
+                            if decode_failed else 0
+                        ),
+                        "recognized_empty_envelopes": int(
+                            last_query.get("recognized_empty_envelopes") or 0
+                        ),
                     })
                     evidence.append(observation)
                 except Exception as exc:
