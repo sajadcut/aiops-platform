@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 604 | Dashboard JS files scanned: 8 | Symbols indexed: 6899**
+**Python files scanned: 605 | Dashboard JS files scanned: 8 | Symbols indexed: 6915**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1173,9 +1173,9 @@
 | `apps/decision_brief.py` | `_agents` | 202 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/decision_brief.py` | `tool_observation_summary` | 272 | function | Only bounded, whitelisted scalar facts: never dump journals or tool JSON. | module |
 | `apps/decision_brief.py` | `_mcp` | 362 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/decision_brief.py` | `_knowledge` | 466 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/decision_brief.py` | `_memory` | 581 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/decision_brief.py` | `build_decision_brief` | 606 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `apps/decision_brief.py` | `_knowledge` | 470 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/decision_brief.py` | `_memory` | 585 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/decision_brief.py` | `build_decision_brief` | 610 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
 | `apps/decision_brief_history.py` | `archive_decision_brief` | 22 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/decision_brief_history.py` | `list_decision_brief_history` | 62 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/decision_brief_history.py` | `read_decision_brief_snapshot` | 83 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
@@ -1266,10 +1266,10 @@
 | `apps/execution_service/tools/vm_telemetry.py` | `VMTelemetryTool.execute` | 52 | async method | مسیر اجرای عملیات را از boundary مربوطه عبور می‌دهد | VMTelemetryTool |
 | `apps/incident_alert_explanation.py` | `_clean` | 33 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_alert_explanation.py` | `_verified_endpoints` | 39 | function | Allow only explicit bounded fields from previously persisted evidence. | module |
-| `apps/incident_alert_explanation.py` | `_prefix` | 73 | function | Ground the answer in exact endpoints even if the model omits them. | module |
-| `apps/incident_alert_explanation.py` | `_response_safe` | 105 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/incident_alert_explanation.py` | `fallback_explanation` | 128 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/incident_alert_explanation.py` | `explain_alert` | 149 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/incident_alert_explanation.py` | `_prefix` | 78 | function | Ground the answer in exact endpoints even if the model omits them. | module |
+| `apps/incident_alert_explanation.py` | `_response_safe` | 119 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/incident_alert_explanation.py` | `fallback_explanation` | 148 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/incident_alert_explanation.py` | `explain_alert` | 169 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_alert_focused_report.py` | `_text` | 61 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_alert_focused_report.py` | `_family` | 67 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_alert_focused_report.py` | `_kind_matches` | 72 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -2573,7 +2573,7 @@
 | `integrations/vm/dependency_discovery.py` | `discover` | 147 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/dependency_discovery.py` | `discover.put` | 151 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | discover |
 | `integrations/vm/dependency_discovery.py` | `discover.parse` | 170 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | discover |
-| `integrations/vm/dependency_discovery.py` | `discover.walk` | 236 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | discover |
+| `integrations/vm/dependency_discovery.py` | `discover.walk` | 237 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | discover |
 | `integrations/vm/dependency_investigation.py` | `http_head` | 21 | async function | HEAD '/' only, no auth, redirects, proxy, body or user-provided URL path. | module |
 | `integrations/vm/dependency_investigation.py` | `investigate` | 53 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/dotnet_json_repair.py` | `_parse_strict` | 31 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -2679,9 +2679,9 @@
 | `integrations/vm/redis_dependency.py` | `_port` | 32 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/redis_dependency.py` | `parse_redis_endpoints` | 42 | function | Extract only network host/port, with no password, user or URL output. | module |
 | `integrations/vm/redis_dependency.py` | `parse_redis_endpoints.add` | 47 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | parse_redis_endpoints |
-| `integrations/vm/redis_dependency.py` | `parse_redis_endpoints.parse_string` | 54 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | parse_redis_endpoints |
-| `integrations/vm/redis_dependency.py` | `parse_redis_endpoints.walk` | 77 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | parse_redis_endpoints |
-| `integrations/vm/redis_dependency.py` | `check_redis_config` | 115 | async function | Systemd-bound read-only Redis TCP diagnostics; never return config values. | module |
+| `integrations/vm/redis_dependency.py` | `parse_redis_endpoints.parse_string` | 59 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | parse_redis_endpoints |
+| `integrations/vm/redis_dependency.py` | `parse_redis_endpoints.walk` | 82 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | parse_redis_endpoints |
+| `integrations/vm/redis_dependency.py` | `check_redis_config` | 123 | async function | Systemd-bound read-only Redis TCP diagnostics; never return config values. | module |
 | `integrations/vm/runtime_discovery.py` | `safe_absolute_path` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/runtime_discovery.py` | `_candidate_path` | 34 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/runtime_discovery.py` | `systemd_config_candidates` | 38 | function | Unit-sourced path hypotheses; neither presence nor validity implied. | module |
@@ -2764,8 +2764,8 @@
 | `integrations/vm/target_context.py` | `bind_vm_port` | 80 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/target_context.py` | `reset_vm_port` | 84 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/target_context.py` | `current_vm_port` | 88 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/tool_contract.py` | `output_schema` | 74 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/tool_contract.py` | `validate_vm_observation` | 101 | function | Subset of the output schema validated on both modern and legacy responses. | module |
+| `integrations/vm/tool_contract.py` | `output_schema` | 75 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/tool_contract.py` | `validate_vm_observation` | 102 | function | Subset of the output schema validated on both modern and legacy responses. | module |
 | `integrations/vm/windows_secure_acl.py` | `_worker_sid` | 12 | function | Obtain the actual worker token SID without pywin32 or guessing user names. | module |
 | `integrations/vm/windows_secure_acl.py` | `_worker_sid.SID_AND_ATTRIBUTES` | 17 | class | کلاس | _worker_sid |
 | `integrations/vm/windows_secure_acl.py` | `harden_private_windows_acl` | 68 | function | Protect only the dedicated candidate directory from inherited broad ACEs. | module |
@@ -4221,6 +4221,22 @@
 | `tests/unit/test_dependency_causal_engine.py` | `CapturingDependencyLLM.generate_with_messages` | 191 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingDependencyLLM |
 | `tests/unit/test_dependency_causal_engine.py` | `test_dependency_agent_exposes_graph_and_caps_confidence_for_incomplete_traces` | 196 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_dependency_contract.py` | `test_sqlalchemy_asyncio_runtime_extra_is_declared` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dependency_port_provenance.py` | `test_nested_redis_port_6389_overrides_vendor_default` | 13 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dependency_port_provenance.py` | `test_host_without_port_is_tentative_never_configured_endpoint` | 24 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dependency_port_provenance.py` | `test_investigation_only_probes_proven_port` | 38 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dependency_port_provenance.py` | `test_investigation_only_probes_proven_port.Stub` | 42 | class | کلاس | test_investigation_only_probes_proven_port |
+| `tests/unit/test_dependency_port_provenance.py` | `test_investigation_only_probes_proven_port.Stub._validate_target` | 43 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_investigation_only_probes_proven_port.Stub |
+| `tests/unit/test_dependency_port_provenance.py` | `test_investigation_only_probes_proven_port.Stub._validate_service` | 44 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_investigation_only_probes_proven_port.Stub |
+| `tests/unit/test_dependency_port_provenance.py` | `test_investigation_only_probes_proven_port.Stub.service_config_discovery` | 45 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_investigation_only_probes_proven_port.Stub |
+| `tests/unit/test_dependency_port_provenance.py` | `test_investigation_only_probes_proven_port.Stub._run` | 49 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_investigation_only_probes_proven_port.Stub |
+| `tests/unit/test_dependency_port_provenance.py` | `test_investigation_only_probes_proven_port.Stub.tcp_check` | 51 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_investigation_only_probes_proven_port.Stub |
+| `tests/unit/test_dependency_port_provenance.py` | `test_specialist_redis_probe_also_refuses_guessed_port` | 74 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_dependency_port_provenance.py` | `test_specialist_redis_probe_also_refuses_guessed_port.Stub` | 78 | class | کلاس | test_specialist_redis_probe_also_refuses_guessed_port |
+| `tests/unit/test_dependency_port_provenance.py` | `test_specialist_redis_probe_also_refuses_guessed_port.Stub._validate_service` | 79 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_specialist_redis_probe_also_refuses_guessed_port.Stub |
+| `tests/unit/test_dependency_port_provenance.py` | `test_specialist_redis_probe_also_refuses_guessed_port.Stub.service_config_discovery` | 80 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_specialist_redis_probe_also_refuses_guessed_port.Stub |
+| `tests/unit/test_dependency_port_provenance.py` | `test_specialist_redis_probe_also_refuses_guessed_port.Stub._run` | 84 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_specialist_redis_probe_also_refuses_guessed_port.Stub |
+| `tests/unit/test_dependency_port_provenance.py` | `test_specialist_redis_probe_also_refuses_guessed_port.Stub.tcp_check` | 86 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_specialist_redis_probe_also_refuses_guessed_port.Stub |
+| `tests/unit/test_dependency_port_provenance.py` | `test_historical_6379_without_port_provenance_cannot_claim_app_success` | 95 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_direct_execution_runtime_guard.py` | `_Session` | 10 | class | کلاس | module |
 | `tests/unit/test_direct_execution_runtime_guard.py` | `_Session.__aenter__` | 11 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Session |
 | `tests/unit/test_direct_execution_runtime_guard.py` | `_Session.__aexit__` | 14 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Session |
@@ -4693,30 +4709,30 @@
 | `tests/unit/test_identity_reliability_engine.py` | `CapturingIdentityLLM.generate_with_messages` | 219 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CapturingIdentityLLM |
 | `tests/unit/test_identity_reliability_engine.py` | `test_identity_agent_exposes_chain_and_never_prompts_full_credentials` | 224 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_alert_explanation.py` | `_brief` | 12 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `tests/unit/test_incident_alert_explanation.py` | `test_focused_model_gets_real_endpoint_and_writes_persian` | 45 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_incident_alert_explanation.py` | `test_focused_model_gets_real_endpoint_and_writes_persian.Provider` | 53 | class | کلاس | test_focused_model_gets_real_endpoint_and_writes_persian |
-| `tests/unit/test_incident_alert_explanation.py` | `test_focused_model_gets_real_endpoint_and_writes_persian.Provider.generate_with_messages` | 54 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_focused_model_gets_real_endpoint_and_writes_persian.Provider |
-| `tests/unit/test_incident_alert_explanation.py` | `test_focused_model_cannot_invent_endpoint` | 75 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_incident_alert_explanation.py` | `test_focused_model_cannot_invent_endpoint.Provider` | 76 | class | کلاس | test_focused_model_cannot_invent_endpoint |
-| `tests/unit/test_incident_alert_explanation.py` | `test_focused_model_cannot_invent_endpoint.Provider.generate_with_messages` | 77 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_focused_model_cannot_invent_endpoint.Provider |
-| `tests/unit/test_incident_alert_explanation.py` | `test_model_failure_keeps_specific_readable_fallback` | 91 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_incident_alert_explanation.py` | `test_model_failure_keeps_specific_readable_fallback.Provider` | 92 | class | کلاس | test_model_failure_keeps_specific_readable_fallback |
-| `tests/unit/test_incident_alert_explanation.py` | `test_model_failure_keeps_specific_readable_fallback.Provider.generate_with_messages` | 93 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_model_failure_keeps_specific_readable_fallback.Provider |
-| `tests/unit/test_incident_alert_explanation.py` | `test_focused_llm_survives_main_narrative_reference_or_schema_failure` | 105 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_incident_alert_explanation.py` | `test_focused_llm_survives_main_narrative_reference_or_schema_failure.Provider` | 111 | class | کلاس | test_focused_llm_survives_main_narrative_reference_or_schema_failure |
-| `tests/unit/test_incident_alert_explanation.py` | `test_focused_llm_survives_main_narrative_reference_or_schema_failure.Provider.generate_with_messages` | 112 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_focused_llm_survives_main_narrative_reference_or_schema_failure.Provider |
-| `tests/unit/test_incident_alert_explanation.py` | `test_exact_tcp_success_never_becomes_verified_app_health` | 133 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_alert_explanation.py` | `test_focused_model_gets_real_endpoint_and_writes_persian` | 46 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_alert_explanation.py` | `test_focused_model_gets_real_endpoint_and_writes_persian.Provider` | 54 | class | کلاس | test_focused_model_gets_real_endpoint_and_writes_persian |
+| `tests/unit/test_incident_alert_explanation.py` | `test_focused_model_gets_real_endpoint_and_writes_persian.Provider.generate_with_messages` | 55 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_focused_model_gets_real_endpoint_and_writes_persian.Provider |
+| `tests/unit/test_incident_alert_explanation.py` | `test_focused_model_cannot_invent_endpoint` | 76 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_alert_explanation.py` | `test_focused_model_cannot_invent_endpoint.Provider` | 77 | class | کلاس | test_focused_model_cannot_invent_endpoint |
+| `tests/unit/test_incident_alert_explanation.py` | `test_focused_model_cannot_invent_endpoint.Provider.generate_with_messages` | 78 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_focused_model_cannot_invent_endpoint.Provider |
+| `tests/unit/test_incident_alert_explanation.py` | `test_model_failure_keeps_specific_readable_fallback` | 92 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_alert_explanation.py` | `test_model_failure_keeps_specific_readable_fallback.Provider` | 93 | class | کلاس | test_model_failure_keeps_specific_readable_fallback |
+| `tests/unit/test_incident_alert_explanation.py` | `test_model_failure_keeps_specific_readable_fallback.Provider.generate_with_messages` | 94 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_model_failure_keeps_specific_readable_fallback.Provider |
+| `tests/unit/test_incident_alert_explanation.py` | `test_focused_llm_survives_main_narrative_reference_or_schema_failure` | 106 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_alert_explanation.py` | `test_focused_llm_survives_main_narrative_reference_or_schema_failure.Provider` | 112 | class | کلاس | test_focused_llm_survives_main_narrative_reference_or_schema_failure |
+| `tests/unit/test_incident_alert_explanation.py` | `test_focused_llm_survives_main_narrative_reference_or_schema_failure.Provider.generate_with_messages` | 113 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_focused_llm_survives_main_narrative_reference_or_schema_failure.Provider |
+| `tests/unit/test_incident_alert_explanation.py` | `test_exact_tcp_success_never_becomes_verified_app_health` | 134 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_alert_focused_report.py` | `_record` | 12 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_incident_alert_focused_report.py` | `_brief` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_incident_alert_focused_report.py` | `test_redis_alarm_is_primary_even_when_unrelated_systemd_is_active` | 34 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_incident_alert_focused_report.py` | `test_database_alert_does_not_use_unrelated_redis_probe_as_proof` | 77 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_incident_alert_focused_report.py` | `test_http_alert_uses_http_endpoint_check_not_systemd_state` | 101 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_incident_alert_focused_report.py` | `test_original_problem_is_preserved_when_recovery_notification_arrives` | 121 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_incident_alert_focused_report.py` | `test_another_services_redis_evidence_cannot_verify_this_incident` | 138 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_incident_alert_focused_report.py` | `test_custom_dependency_is_supported_by_keyword_grounded_check` | 165 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_incident_alert_focused_report.py` | `test_duplicate_same_redis_endpoint_collapses_and_preserves_both_evidences` | 188 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_incident_alert_focused_report.py` | `test_incident_without_ingress_still_has_honest_alert_focused_answer` | 211 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
-| `tests/unit/test_incident_alert_focused_report.py` | `test_intelligence_report_has_mandatory_alert_section_before_systemd` | 221 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_alert_focused_report.py` | `test_database_alert_does_not_use_unrelated_redis_probe_as_proof` | 78 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_alert_focused_report.py` | `test_http_alert_uses_http_endpoint_check_not_systemd_state` | 102 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_alert_focused_report.py` | `test_original_problem_is_preserved_when_recovery_notification_arrives` | 122 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_alert_focused_report.py` | `test_another_services_redis_evidence_cannot_verify_this_incident` | 139 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_alert_focused_report.py` | `test_custom_dependency_is_supported_by_keyword_grounded_check` | 166 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_alert_focused_report.py` | `test_duplicate_same_redis_endpoint_collapses_and_preserves_both_evidences` | 189 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_alert_focused_report.py` | `test_incident_without_ingress_still_has_honest_alert_focused_answer` | 213 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_alert_focused_report.py` | `test_intelligence_report_has_mandatory_alert_section_before_systemd` | 223 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_incident_analysis_live_status.py` | `FakeResult` | 10 | class | کلاس | module |
 | `tests/unit/test_incident_analysis_live_status.py` | `FakeResult.__init__` | 11 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeResult |
 | `tests/unit/test_incident_analysis_live_status.py` | `FakeResult.mappings` | 12 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeResult |
