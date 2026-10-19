@@ -440,10 +440,15 @@ def dependency_investigation_answer(value: dict, *, persian: bool = True) -> str
            else "Downstream dependency checks for " + service if service
            else "نتیجهٔ بررسی وابستگی‌ها" if persian else "Downstream dependency checks")
     status = str(value.get("status") or "unavailable")[:55]
-    note = ("نتایج TCP، HTTP و PING بدون احراز هویت، سلامت Client، رمز برنامه و "
-            "پروتکل، احراز هویت، عملکرد برنامه یا علت ریشه‌ای تأیید نشده است."
-            if persian else "HTTP/TCP responses do not establish protocol health, "
-            "authentication, business availability, or root cause.")
+    note = (
+        "PING بدون احراز هویت فقط پاسخ اولیهٔ Redis را بررسی می‌کند؛ "
+        "درستی رمز و DB انتخاب‌شدهٔ اپلیکیشن، وضعیت Connection Pool، "
+        "عملکرد تجاری و علت ریشه‌ای همچنان تأیید نشده‌اند."
+        if persian else
+        "Unauthenticated Redis PING verifies only a limited protocol response; "
+        "application credentials, database selection, pooling, business "
+        "availability and root cause remain unverified."
+    )
     absent = ("هیچ مقصد تأییدشده‌ای در کانفیگ برنامه پیدا نشد."
               if persian else "No verified endpoint found in service config.")
     if status == "config_parse_failed" and persian:
