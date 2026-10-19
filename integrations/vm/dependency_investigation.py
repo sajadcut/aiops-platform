@@ -126,12 +126,26 @@ async def investigate(connector: Any, target: str, service: str) -> dict:
                 "verified_pair_count": len(llm["endpoints"]),
             })
             selected = llm["endpoints"]
-            if selected:
-                # A model-chosen pair is only accepted after independent
-                # resolution to the exact literal keys/values in THIS file.
-                base["llm_field_binding_status"] = "verified"
-            elif base["llm_field_binding_status"] != "verified":
-                base["llm_field_binding_status"] = llm["status"]
+            # Aggregate across files without letting later *empty* config
+            # files hide a meaningful failure on the application config.
+            # In particular, no_safe_host_port_candidates must not overwrite
+            # trusted_llm_not_configured from a file with 6 Host/Port fields.
+            binding_rank = {
+                "not_requested": 0,
+                "no_safe_host_port_candidates": 1,
+                "no_model_match": 2,
+                "trusted_llm_not_configured": 3,
+                "llm_binding_unavailable": 4,
+                "llm_response_incomplete": 5,
+                "llm_response_invalid": 6,
+                "llm_unsubstantiated_selection": 7,
+                "llm_cross_dependency_selection": 7,
+                "verified": 8,
+            }
+            current = str(base["llm_field_binding_status"])
+            candidate = "verified" if selected else str(llm["status"])
+            if binding_rank.get(candidate, 0) > binding_rank.get(current, 0):
+                base["llm_field_binding_status"] = candidate
             static = discover(config)
             selected_targets = {(item["kind"], item["host"]) for item in selected}
             # A vendor-default inference must not compete with a precisely
@@ -141,9 +155,25 @@ async def investigate(connector: Any, target: str, service: str) -> dict:
                 if not (row.get("port_inferred") is True and
                         (row["kind"], row["host"]) in selected_targets)
             ]
+            # Preserve one confirmed destination per technology before
+            # filling the per-file budget with additional peers. Without
+            # diversity, six Redis endpoints can consume the entire budget
+            # and hide a configured SQL database or Kafka broker in the same
+            # service config. Every candidate remains independently parsed.
+            candidates = selected + static
+            kinds: set[str] = set()
+            representatives: list[dict] = []
+            peers: list[dict] = []
+            for item in candidates:
+                kind = item["kind"]
+                if kind not in kinds:
+                    representatives.append(item)
+                    kinds.add(kind)
+                else:
+                    peers.append(item)
             by_file.append([
                 {**item, "config_file": verified_path}
-                for item in (selected + static)[:MAX_CHECKS]
+                for item in (representatives + peers)[:MAX_CHECKS]
             ])
         except Exception:
             # No parser trace or input excerpts: they can contain credentials.
