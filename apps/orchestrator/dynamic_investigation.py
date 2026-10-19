@@ -42,7 +42,7 @@ _CHECK_TO_REQUEST = {
     "service_runtime_discovery": ("telemetry", "systemd unit runtime discovery"),
     "dotnet_config_syntax": ("telemetry", "dotnet json syntax"),
     "service_config_discovery": ("telemetry", "config discovery"),
-    "redis_dependency_check": ("telemetry", "Redis TCP connectivity"),
+    "redis_dependency_check": ("telemetry", "redis TCP connectivity"),
     "service_config_review": ("telemetry", "config review"),
     "nginx_config_review": ("telemetry", "nginx config review"),
     "nginx_config_inspect": ("telemetry", "nginx config inspect"),
