@@ -16,6 +16,7 @@ from apps.audit_service.postgres import PostgreSQLAuditStore
 from apps.chatbot.models import ActionProposalView, ChatMessageRequest, ChatMessageResponse
 from apps.chatbot.store import ChatStore, HISTORY_LIMIT
 from apps.chatbot.tools import CHAT_TOOL_SCHEMAS, ToolIntent, max_tool_calls, normalize_tool_intent, parse_tool_call
+from apps.chatbot.vm_investigation import run_vm_investigation
 from apps.chat_answer_review import (
     allowed_hosts_answer, mismatched_answer_message,
     requests_vm_allowed_hosts, review_answer_coherence,
@@ -197,6 +198,12 @@ class ChatbotService:
         return "\n".join(recent[-4:])[:4000]
 
     async def _execute_read(self, intent: ToolIntent, session_id: str) -> dict[str, Any]:
+        if intent.tool_name == "vm_investigation":
+            result = await run_vm_investigation(
+                target=intent.target, scope=intent.action,
+                service=intent.parameters.get("service"),
+            )
+            return {"source": "governed_vm_mcp_investigation", "result": result}
         if intent.tool_name == "vm_telemetry":
             result = await ExecutionService.execute(
                 ExecutionRequest(
@@ -565,7 +572,16 @@ class ChatbotService:
                     self._llm, question=request.message, answer=answer,
                     context=recent_operator_context, stage="chatbot_answer_review",
                 )
-                if verdict == "mismatch":
+                if verdict == "mismatch" and not (
+                    len(results) == 1
+                    and (
+                        (results[0]["intent"].tool_name == "vm_telemetry"
+                         and results[0]["intent"].action in {"disk_status", "list_services", "search_services"})
+                        or results[0]["intent"].tool_name == "vm_investigation"
+                    )
+                ):
+                    # A review model cannot override deterministic, source-backed
+                    # disk values (or replace every numeric mount with a vague note).
                     answer = mismatched_answer_message(
                         request.message, persian=bool(re.search(r"[\u0600-\u06ff]", request.message))
                     ) + (" اطلاعات ساختاریافتهٔ ابزار در جزئیات پاسخ قابل بررسی است."

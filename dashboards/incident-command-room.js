@@ -2743,7 +2743,7 @@
         (esc(fa?'در فایل ':'In file ')+filename+
           esc(fullChangeActor)+
           fullChanged.map(num).join(', ')+
-          esc(fa?' را پیشنهاد داده است؛ شمارهٔ خط ثبت‌شدهٔ Validator ممکن است مربوط به تشخیص قدیمی باشد. هنوز تست روی فایل اصلاحی انجام نشده است.':
+          esc(fa?' را پیشنهاد داده است؛ شمارهٔ خط ثبت‌شدهٔ Validator ممکن است مربوط به تشخیص قدیمی باشد. هنوز تست مستقلی روی فایل اصلاحی انجام نشده است.':
             '. The recorded validator line may come from an older diagnostic. The revised file has not been tested.')):
         location+esc(fa?'، '+symptom+' گزارش شده است.':
           ': '+symptom+' was reported.');
@@ -2789,10 +2789,13 @@
     const blocked=state.historic||state.busy||state.chatBusy||
       state.configPreviewPending||state.lifecycle?.analysis_in_progress;
     const disabled=blocked?' disabled':'';
+    const nginxNeedsPreview=service==='nginx'&&originalFailed&&!candidate&&!hasDiff&&
+      !['approved','pending','pending_validation','consumed'].includes(approval);
     const previewButton='<button type="button" class="ic-btn ic-btn-primary" data-config-preview="'+
       previewKind+'" data-preview-open-diff="1"'+disabled+'>'+
-      esc(fa?'بررسی و مشاهده اصلاح':'Review proposed fix')+'</button>';
-    const diffLink='<a class="ic-btn ic-btn-primary" href="#ic-config-diff">'+
+      esc(nginxNeedsPreview?(fa?'ساخت پیش‌نمایش اصلاح':'Generate safe fix preview'):
+        (fa?'بررسی و مشاهده اصلاح':'Review proposed fix'))+'</button>';
+    const diffLink='<a class="ic-btn ic-btn-primary" href="#ic-ai-proposed-fix">'+
       esc(fa?'مشاهده اصلاح و Diff':'View fix and diff')+'</a>';
     const nextLink='<a class="ic-btn ic-btn-primary" href="#ic-action-controls">'+
       esc(fa?'مشاهده تأیید و اجرا':'View approval and execution')+'</a>';
@@ -2801,8 +2804,16 @@
     // A confirmed syntax failure without a candidate should offer the
     // deliberate COMPLETE-file repair as the primary action. The browser
     // always asks before sending any configuration secrets to the gateway.
+    // Prefer a bounded worker-side Nginx preview before disclosing any
+    // complete configuration file to a model.
     const needsCompleteRepair=originalFailed&&!candidate&&!hasDiff&&
+      service!=='nginx'&&
       !['approved','pending','pending_validation','consumed'].includes(approval);
+    if(nginxNeedsPreview){
+      summary=esc(fa?
+        'Diff هنوز ساخته نشده است؛ ابتدا ساخت پیش‌نمایش اصلاح با ابزار امن Nginx را اجرا کنید. این اقدام صرفاً خواندنی است و مجوز تغییر فایل نیست.':
+        'No diff exists yet; generate a bounded Nginx preview first. Read-only, no file change authority.');
+    }
     const fullLLMButton=action==='outcome'?'':(
       '<button type="button" class="ic-btn '+
       (needsCompleteRepair?'ic-btn-primary':'ic-btn-muted')+
@@ -2813,7 +2824,10 @@
       ['approved','pending','pending_validation'].includes(action)?nextLink:
       needsCompleteRepair?fullLLMButton:
       hasDiff?diffLink:previewButton;
-    const secondary=needsCompleteRepair?
+    const secondary=nginxNeedsPreview?
+      '<button type="button" class="ic-btn ic-btn-muted" data-config-preview="nginx"'+disabled+'>'+
+      esc(fa?'بررسی دوباره بدون جابه‌جایی صفحه':'Recheck without navigation')+'</button>':
+      needsCompleteRepair?
       '<button type="button" class="ic-btn ic-btn-muted" data-config-preview="'+
       previewKind+'"'+disabled+'>'+
       esc(fa?'بررسی امن بدون ارسال فایل به LLM':'Local review without sending the file to LLM')+
@@ -2852,6 +2866,10 @@
     if(stageFailure&&!['none','not_recorded','not_tested','—'].includes(stageFailure)){
       diagnosticRows.push(esc(fa?'مانع بررسی: ':'Check blocked: ')+txt(stageFailure));
     }
+    if(response.validation_pipeline_status==='not_implemented')diagnosticRows.push(
+      esc(fa?'تست مستقل نسخهٔ اصلاحی هنوز پیاده‌سازی یا اجرا نشده است؛ Approval اجرایی مجاز نیست.':
+        'Independent validation of the proposed file is not implemented or executed; execution approval is blocked.')
+    );
     if(response.validation_pipeline_status)diagnosticRows.push(
       esc(fa?'اعتبارسنجی مستقل: ':'Independent validation: ')+
       txt(response.validation_pipeline_status));
@@ -2873,11 +2891,21 @@
             'The model changed unrelated lines. Its patch was correctly rejected; rebuild and validate a minimal fix before queuing Approval.':
             'Reason: no complete acceptable candidate was produced or securely stored; approval cannot be queued.'))+
       '</p>':'';
+    const recordedRequest=state.configResponse?.approval_queue_registered===true&&
+      approval==='pending_validation'?
+      '<p role="status" data-config-request-status="recorded">'+
+      esc(fa?'درخواست تغییر در صف Approval ثبت شد؛ وضعیت: pending_validation، بدون مجوز اعمال فایل.':
+        'Configuration change queued for human Approval: pending_validation. No apply authority.')+
+      '</p>':'';
     const warning=signingBlocked?
       '<p class="ic-config-banner-warning" role="status">'+
         esc(fa?'اعمال فعلاً متوقف است: توکن MCP در API برای امضای اجرا تنظیم نشده یا ضعیف است.':
           'Apply blocked: MCP bearer is missing or too weak for approval signing.')+
       '</p>':'';
+    const stagedCode=stagedFailed&&stageFailure?
+      '<p class="ic-config-banner-warning" role="status">'+
+      esc(fa?'کد خطای اعتبارسنجی کاندید: ':'Candidate validator error code: ')+
+      txt(stageFailure.slice(0,80))+'</p>':'';
     const liveStatus=state.configPreviewPending?
       '<p role="status" aria-live="polite">'+
       esc(fa?'در حال بررسی مجدد فایل کانفیگ…':'Rechecking the configuration…')+'</p>':
@@ -2894,7 +2922,7 @@
       '</p>':'';
     node.innerHTML='<div class="ic-config-banner-copy"><strong style="font-size:1.2rem;">'+esc(title)+'</strong>'+urgentExplanation+
       '<p class="ic-config-banner-summary">'+summary+'</p>'+
-      '<p>'+esc(instruction)+'</p>'+repairWarning+warning+liveStatus+technical+
+      '<p>'+esc(instruction)+'</p>'+recordedRequest+stagedCode+repairWarning+warning+liveStatus+technical+
       '</div><div class="ic-config-banner-actions">'+primary+secondary+extraLLMButton+'</div>';
   }
 

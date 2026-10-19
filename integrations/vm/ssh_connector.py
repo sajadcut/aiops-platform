@@ -5,6 +5,7 @@ import json
 import re
 import shlex
 import time
+from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
 import asyncssh
@@ -12,6 +13,8 @@ import asyncssh
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
 from domain.contracts.redaction import redact_text
+from integrations.vm.service_inventory import parse_systemd_services
+from integrations.vm.block_devices import parse_block_devices, parse_mount_modes
 from integrations.vm.service_adapters import (
     get_service_adapter, discover_config_path, config_check_for_path,
     parse_config_diagnostic,
@@ -579,10 +582,20 @@ class SSHVMConnector:
         return {"success": True, "target": target, "host": data}
 
     async def disk_status(self, target: str) -> Dict[str, Any]:
-        result = await self._run(target, "LC_ALL=C; df -P -B1 2>/dev/null; printf '\\n__AIOPS_INODES__\\n'; df -Pi 2>/dev/null")
+        result = await self._run(target, (
+            "LC_ALL=C; df -P -B1 2>/dev/null; printf '\\n__AIOPS_INODES__\\n'; "
+            "df -Pi 2>/dev/null; printf '\\n__AIOPS_BLOCK_DEVICES__\\n'; "
+            "if command -v lsblk >/dev/null 2>&1; then "
+            "lsblk -b -P -o NAME,TYPE,SIZE,FSTYPE,MOUNTPOINT,RO 2>/dev/null; fi; "
+            "printf '\\n__AIOPS_MOUNT_MODES__\\n'; "
+            "if command -v findmnt >/dev/null 2>&1; then "
+            "findmnt -rn -o TARGET,OPTIONS 2>/dev/null; fi"
+        ))
         if not result.get("success"):
             return {"success": False, "target": target, "error": "disk_status_failed"}
-        disk_text, _, inode_text = str(result.get("stdout") or "").partition("__AIOPS_INODES__")
+        disk_text, _, remainder = str(result.get("stdout") or "").partition("__AIOPS_INODES__")
+        inode_text, block_marker, block_tail = remainder.partition("__AIOPS_BLOCK_DEVICES__")
+        block_text, mount_marker, mount_text = block_tail.partition("__AIOPS_MOUNT_MODES__")
 
         def parse_df(value: str) -> list[Dict[str, Any]]:
             rows: list[Dict[str, Any]] = []
@@ -592,7 +605,20 @@ class SSHVMConnector:
                 if len(parts) == 6:
                     rows.append({"filesystem": parts[0], "blocks": parts[1], "used": parts[2], "available": parts[3], "use_percent": parts[4], "mount": parts[5]})
             return rows
-        return {"success": True, "target": target, "filesystems": parse_df(disk_text), "inodes": parse_df(inode_text)}
+        filesystems = parse_df(disk_text)
+        if not filesystems:
+            return {"success": False, "target": target, "error": "disk_inventory_empty"}
+        mount_modes = parse_mount_modes(mount_text) if mount_marker else {}
+        for row in filesystems:
+            row["read_only"] = mount_modes.get(row["mount"])
+        devices = parse_block_devices(block_text) if block_marker else []
+        return {"success": True, "target": target, "filesystems": filesystems,
+                "block_devices": devices,
+                "block_devices_supported": bool(block_marker and block_text.strip()),
+                "mount_read_only_supported": bool(mount_marker and mount_text.strip()),
+                "inodes": parse_df(inode_text),
+                "observed_at": datetime.now(timezone.utc).isoformat(),
+                "source": self.source_name}
 
     async def disk_forensics(self, target: str) -> Dict[str, Any]:
         """Bounded read-only inventory; never read file contents or delete files.
@@ -764,6 +790,41 @@ class SSHVMConnector:
         except json.JSONDecodeError:
             return {"success": False, "target": target, "error": "invalid_network_payload"}
         return {"success": True, "supported": True, "target": target, "interfaces": interfaces, "routes": routes}
+
+    async def list_services(self, target: str, state: str | None = None,
+                            query: str | None = None, limit: int = 250) -> Dict[str, Any]:
+        """Fixed read-only systemctl inventory; display only policy-visible units."""
+        self._validate_target(target)
+        if state not in (None, "failed"):
+            raise ValueError("invalid_service_state_filter")
+        if query is not None and (not isinstance(query, str) or not query.strip()
+                                  or len(query) > 80 or any(ord(c) < 32 for c in query)):
+            raise ValueError("invalid_service_search_query")
+        limit = min(max(int(limit), 1), 500)
+        observed = await self._run(
+            target,
+            "LC_ALL=C systemctl list-units --type=service --all --no-pager --plain --full --no-legend",
+        )
+        if observed.get("success") is not True:
+            return {"success": False, "target": target, "services": [],
+                    "error": "service_inventory_command_failed"}
+        configured = (settings.VM_AGENT_ALLOWED_SERVICES if self.source_name == "vm_agent"
+                      else settings.SSH_ALLOWED_SERVICES)
+        allowed = {str(service).strip() for service in configured if str(service).strip()}
+        parsed = parse_systemd_services(str(observed.get("stdout") or ""),
+                                        allowed_services=allowed if allowed else None,
+                                        state=state, query=query, limit=limit)
+        for unit in parsed["services"]:
+            unit["description"] = redact_text(unit["description"])
+        return {"success": True, "target": target, **parsed,
+                "observed_at": datetime.now(timezone.utc).isoformat(),
+                "source": self.source_name}
+
+    async def search_services(self, target: str, query: str,
+                              state: str | None = None, limit: int = 250) -> Dict[str, Any]:
+        if not isinstance(query, str) or not query.strip():
+            raise ValueError("invalid_service_search_query")
+        return await self.list_services(target, query=query, state=state, limit=limit)
 
     async def service_status(self, target: str, service: str) -> Dict[str, Any]:
         """Read structured systemd properties and bounded 'systemctl status'.

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hmac
+import json
 import time
 from datetime import datetime
 from typing import Any, Dict
@@ -18,6 +19,7 @@ from integrations.vm.ssh_connector import SSHVMConnector
 from vmmcpagent.connector import LocalVMConnector
 from integrations.vm.governed_config_change import run_governed_change
 from apps.config_change_authorization import verify_claim
+from integrations.vm.tool_contract import output_schema
 
 
 class JsonRpcRequest(BaseModel):
@@ -69,6 +71,8 @@ _TOOL_SCHEMAS: Dict[str, Dict[str, Dict[str, Any]]] = {
         "disk_status": {"description": "Read filesystem capacity, inode usage and mount status", "inputSchema": {"type": "object", "required": ["target"], "properties": dict(_TARGET)}},
         "disk_forensics": {"description": "Read-only bounded high-pressure mount and large-file metadata; never delete or read contents", "inputSchema": {"type": "object", "required": ["target"], "additionalProperties": False, "properties": dict(_TARGET)}},
         "network_status": {"description": "Read interface addresses and routing table", "inputSchema": {"type": "object", "required": ["target"], "properties": dict(_TARGET)}},
+        "list_services": {"description": "Read bounded allowlist-scoped systemd unit inventory", "inputSchema": {"type": "object", "required": ["target"], "additionalProperties": False, "properties": {**_TARGET, "state": {"type": "string", "enum": ["failed"]}, "limit": {"type": "integer", "minimum": 1, "maximum": 500}}}},
+        "search_services": {"description": "Search allowlisted systemd unit names and descriptions with local filtering", "inputSchema": {"type": "object", "required": ["target", "query"], "additionalProperties": False, "properties": {**_TARGET, "query": {"type": "string", "minLength": 1, "maxLength": 80}, "state": {"type": "string", "enum": ["failed"]}, "limit": {"type": "integer", "minimum": 1, "maximum": 500}}}},
         "service_status": {"description": "Read normalized systemd service state", "inputSchema": {"type": "object", "required": ["target", "service"], "properties": {**_TARGET, **_SERVICE}}},
         "service_logs": {"description": "Read bounded journal logs for an allowlisted service", "inputSchema": {"type": "object", "required": ["target", "service"], "properties": {**_TARGET, **_SERVICE, "limit": {"type": "integer", "minimum": 1, "maximum": 200}}}},
         "system_logs": {"description": "Read bounded system journal logs", "inputSchema": {"type": "object", "required": ["target"], "properties": {**_TARGET, "limit": {"type": "integer", "minimum": 1, "maximum": 200}}}},
@@ -110,6 +114,35 @@ _TOOL_SCHEMAS: Dict[str, Dict[str, Dict[str, Any]]] = {
     },
 }
 
+
+
+
+# Older MCP clients used raw dictionaries as content blocks. Keep their exact
+# contract until the operator explicitly configures a compatible 2025-06-18+
+# protocol on both ends. The 2026-07-28 stateless revision is a separate migration.
+_MODERN_STRUCTURED_PROTOCOLS = frozenset({"2025-06-18", "2025-11-25"})
+
+
+def _vm_mcp_tool_metadata(name: str, schema: dict[str, Any]) -> dict[str, Any]:
+    if name in _WRITE_TOOLS:
+        annotations = {
+            "readOnlyHint": False, "destructiveHint": name == "config_change_apply",
+            "idempotentHint": False, "openWorldHint": False,
+        }
+    else:
+        annotations = {
+            "readOnlyHint": True, "destructiveHint": False,
+            "idempotentHint": True, "openWorldHint": False,
+        }
+    return {**schema, "annotations": annotations, "outputSchema": output_schema(name)}
+
+
+def _vm_mcp_wire_result(content: Any, *, protocol_version: str) -> dict[str, Any]:
+    if protocol_version in _MODERN_STRUCTURED_PROTOCOLS and isinstance(content, dict):
+        return {"structuredContent": content, "content": [
+            {"type": "text", "text": json.dumps(content, ensure_ascii=False, default=str)}
+        ]}
+    return {"content": content if isinstance(content, list) else [content]}
 
 # The on-host agent exposes the identical bounded VM MCP tool contract.
 # Never add a generic command/shell tool to either provider.
@@ -190,6 +223,8 @@ async def _call(provider: str, tool: str, args: Dict[str, Any]) -> Any:
     if tool == "memory_diagnostics": return await connector.memory_diagnostics(target)
     if tool == "host_info": return await connector.host_info(target)
     if tool == "disk_status": return await connector.disk_status(target)
+    if tool == "list_services": return await connector.list_services(target, state=args.get("state"), limit=_limit(args.get("limit"), 100, 500))
+    if tool == "search_services": return await connector.search_services(target, str(args.get("query") or ""), state=args.get("state"), limit=_limit(args.get("limit"), 100, 500))
     if tool == "disk_forensics": return await connector.disk_forensics(target)
     if tool == "network_status": return await connector.network_status(target)
     if tool == "process_snapshot": return await connector.process_snapshot(target)
@@ -300,7 +335,10 @@ async def mcp(
         return {"jsonrpc": "2.0", "id": rpc.id, "result": {}}
     if rpc.method == "tools/list":
         http_request.state.identity_subject = _authorize(authorization)
-        return {"jsonrpc": "2.0", "id": rpc.id, "result": {"tools": [{"name": name, **schema} for name, schema in _TOOL_SCHEMAS[provider].items()]}}
+        return {"jsonrpc": "2.0", "id": rpc.id, "result": {"tools": [
+            {"name": name, **(_vm_mcp_tool_metadata(name, schema)
+                             if provider in {"vm", "vm_agent"} else schema)}
+            for name, schema in _TOOL_SCHEMAS[provider].items()]}}
     if rpc.method != "tools/call":
         return {"jsonrpc": "2.0", "id": rpc.id, "error": {"code": -32601, "message": "method_not_found"}}
     tool = str(rpc.params.get("name") or "")
@@ -337,6 +375,7 @@ async def mcp(
         tool=tool,
         duration_ms=round((time.perf_counter() - tool_started) * 1000, 3),
     )
-    if not isinstance(content, list):
-        content = [content]
-    return {"jsonrpc": "2.0", "id": rpc.id, "result": {"content": content}}
+    wire = (_vm_mcp_wire_result(content, protocol_version=settings.MCP_PROTOCOL_VERSION)
+            if provider in {"vm", "vm_agent"} else
+            {"content": content if isinstance(content, list) else [content]})
+    return {"jsonrpc": "2.0", "id": rpc.id, "result": wire}

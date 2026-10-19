@@ -13,6 +13,7 @@ from sqlalchemy import desc, select, text
 from apps.api.incident_resources import load_decision_brief_for_incident
 from apps.api.remediation import RemediationRequest, create_remediation_request
 from apps.audit_service.postgres import PostgreSQLAuditStore
+from apps.chatbot.vm_result_formatter import render_vm_investigation
 from apps.incident_copilot import (
     READ_ACTIONS, WRITE_SUGGESTIONS, append_turn, fallback_intent, history,
     llm_plan, vm_binding, vm_read, is_recovery_comparison_question, asks_for_recorded_errors, recorded_error_facts,
@@ -772,9 +773,13 @@ async def incident_chat_message(
             intent = requested
         elif requested != "answer" and intent == "answer" and not explanation_only:
             intent = requested
+        # Multi-step live investigation is expensive and must be explicitly
+        # requested; model narration cannot initiate this composite read.
+        if intent == "vm_investigate" and requested != "vm_investigate":
+            intent = "answer"
         # Raw configuration disclosure is a separate, SRE-only trust boundary.
         intent = authorize_complete_file_disclosure(
-            intent, requested, identity.roles,
+            intent, requested, getattr(identity, "roles", ()),
         )
         vm_actions = READ_ACTIONS - {"knowledge_search", "elastic_logs", "elastic_recorded"}
         if intent in vm_actions or intent in WRITE_SUGGESTIONS:
@@ -834,7 +839,7 @@ async def incident_chat_message(
             # Cognia retrieval and free-form LLM prose remain auxiliary.
             if (
                 observation and observation.get("success") is True
-                and intent in (vm_actions | {"elastic_logs"})
+                and intent in ((vm_actions - {"vm_investigate"}) | {"elastic_logs"})
             ):
                 followup_integration = await persist_and_reassess(
                     db, incident_id=incident_id,
@@ -873,7 +878,7 @@ async def incident_chat_message(
                 # must not be resent to the chat LLM for redundant narration.
                 # That second call can exceed gateway context limits (HTTP 400)
                 # even though full-file repair succeeded.
-                if intent == "service_config_llm_repair":
+                if intent in {"service_config_llm_repair", "vm_investigate"}:
                     followup = {"model_status": "not_required", "answer": ""}
                 else:
                     followup = await llm_plan(payload.message, summary, previous,
@@ -965,6 +970,11 @@ async def incident_chat_message(
                     parts.append("LLM فقط بررسی مشورتی انجام داده است؛ اعتبارسنجی مستقل "
                                  "نسخهٔ موقت، پیش‌شرط Approval است و تا اینجا فایل اصلی تغییر نکرده است.")
                     answer = "\n".join(parts)
+                if intent == "vm_investigate":
+                    answer = render_vm_investigation(
+                        {"result": observation},
+                        persian=bool(re.search(r"[\u0600-\u06ff]", payload.message)),
+                    ) or "بررسی چندمرحله‌ای قابل تفسیر نبود؛ شواهد کافی نیست."
                 if intent == "service_status":
                     answer = vm_status_answer(
                         observation,
@@ -987,7 +997,12 @@ async def incident_chat_message(
                 reason = str(observation.get("status") or "mcp_unavailable")[:70]
                 if observation.get("binding_reason"):
                     reason += "/" + str(observation["binding_reason"])[:65]
-                if intent == "nginx_config_inspect":
+                if intent == "vm_investigate":
+                    answer = render_vm_investigation(
+                        {"result": observation},
+                        persian=bool(re.search(r"[\u0600-\u06ff]", payload.message)),
+                    ) or "بررسی چندمرحله‌ای ناموفق بود؛ MCP در دسترس نیست."
+                elif intent == "nginx_config_inspect":
                     answer = nginx_inspection_answer(
                         observation,
                         persian=bool(re.search(r"[\u0600-\u06ff]", payload.message)),

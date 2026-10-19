@@ -4,6 +4,7 @@ from typing import Any, Dict, Optional
 
 from domain.contracts.config import settings
 from integrations.mcp_client import MCPClient
+from integrations.vm.tool_contract import validate_vm_observation
 
 
 def vm_transport_configured() -> bool:
@@ -20,7 +21,7 @@ class VMEdgeMCPClient(MCPClient):
 
     READ_TOOLS = {
         "collect_vm_metrics", "memory_diagnostics", "host_info", "disk_status", "disk_forensics", "network_status",
-        "service_status", "service_logs", "system_logs", "process_snapshot",
+        "service_status", "service_logs", "list_services", "search_services", "system_logs", "process_snapshot",
         "process_status", "tcp_check", "port_listener_status", "dns_check",
         "route_check", "firewall_status", "config_validate", "nginx_config_review", "nginx_config_inspect",
         "service_runtime_discovery", "service_config_discovery", "service_config_review", "service_config_llm_repair", "dotnet_config_syntax",
@@ -143,10 +144,11 @@ class VMEdgeMCPClient(MCPClient):
     async def _invoke(self, name: str, target: str, **params: Any) -> Dict[str, Any]:
         if self._backend == "agent_pull":
             from apps.api.vm_agent_broker import broker
-            return await broker.dispatch(
+            result = await broker.dispatch(
                 target, name, {"target": target, **params},
                 timeout=self.tool_timeout_seconds.get(name, settings.MCP_TIMEOUT_SECONDS),
             )
+            return validate_vm_observation(name, target, result)
         if self._backend == "agent" and not self._endpoint_direct:
             # No target supplied by an alarm, chatbot or LLM can select its own
             # URL. Only this operator-managed target-to-endpoint map can route.
@@ -159,11 +161,21 @@ class VMEdgeMCPClient(MCPClient):
             finally:
                 await worker.close()
         result = await self.call_tool(name, {"target": target, **params})
+        structured = result.get("structuredContent")
+        if isinstance(structured, dict):
+            return validate_vm_observation(name, target, structured)
         if isinstance(result.get("content"), list) and result["content"]:
             first = result["content"][0]
             if isinstance(first, dict):
-                return first
-        return result
+                if first.get("type") == "text":
+                    import json
+                    try:
+                        decoded = json.loads(str(first.get("text") or ""))
+                    except json.JSONDecodeError as exc:
+                        raise ValueError("vm_mcp_invalid_text_content") from exc
+                    return validate_vm_observation(name, target, decoded)
+                return validate_vm_observation(name, target, first)
+        raise ValueError("vm_mcp_missing_tool_result")
 
     async def collect_vm_metrics(self, target: str) -> Dict[str, Any]: return await self._invoke("collect_vm_metrics", target)
     async def collect_metrics(self, target: str) -> Dict[str, Any]: return await self.collect_vm_metrics(target)
@@ -172,6 +184,8 @@ class VMEdgeMCPClient(MCPClient):
     async def disk_status(self, target: str) -> Dict[str, Any]: return await self._invoke("disk_status", target)
     async def disk_forensics(self, target: str) -> Dict[str, Any]: return await self._invoke("disk_forensics", target)
     async def network_status(self, target: str) -> Dict[str, Any]: return await self._invoke("network_status", target)
+    async def list_services(self, target: str, *, state: str | None = None, limit: int = 250) -> Dict[str, Any]: return await self._invoke("list_services", target, state=state, limit=limit)
+    async def search_services(self, target: str, query: str, *, state: str | None = None, limit: int = 250) -> Dict[str, Any]: return await self._invoke("search_services", target, query=query, state=state, limit=limit)
     async def service_status(self, target: str, service: str) -> Dict[str, Any]: return await self._invoke("service_status", target, service=service)
     async def service_logs(self, target: str, service: str, limit: int = 150) -> Dict[str, Any]: return await self._invoke("service_logs", target, service=service, limit=limit)
     async def system_logs(self, target: str, limit: int = 50) -> Dict[str, Any]: return await self._invoke("system_logs", target, limit=limit)

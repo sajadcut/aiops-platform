@@ -208,6 +208,16 @@ def local_config_review(encoded: str, *, path: str, validator_error_line: int | 
                     len(deterministic) == len(source) + 2
                     or len(deterministic) == len(source) - 1
                 ):
+                    # Never surface a candidate when multiple syntax errors
+                    # remain. One successful edit is not a full-file fix.
+                    try:
+                        json.loads(deterministic)
+                    except (json.JSONDecodeError, ValueError):
+                        deterministic = None
+                if deterministic is not None and (
+                    len(deterministic) == len(source) + 2
+                    or len(deterministic) == len(source) - 1
+                ):
                     updated = deterministic
                     is_key_quote = len(updated) == len(source) + 2
                     diff_at = next(

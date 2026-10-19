@@ -167,6 +167,7 @@ def test_approved_recovery_scope_is_immutable_in_intent_digest():
     )
     approval = {
         "status": "approved", "incident_id": intent["incident_id"],
+        "action": intent["action"],  # Real durable approvals persist action as a separate binding.
         "metadata": metadata,
     }
     assert_config_request_bound(approval, **intent)

@@ -26,6 +26,7 @@ SAMPLE = {
     "hostname": "localhost",
     "destination": "127.0.0.1",
     "limit": 25,
+    "query": "nginx",
     "config_file": "/etc/nginx/nginx.conf",
     "original_sha256": "a" * 64,
     "candidate_sha256": "b" * 64,

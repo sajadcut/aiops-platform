@@ -189,7 +189,13 @@ def main() -> None:
                     "metadata": {"target": "10.248.16.82", "binding_complete": True},
                 }, "checkpoint_status": "completed"}
                 if review_state.get("approval_queue_registered")
-                else {"approval": {"status": "not_pending"}})
+                else {"approval": {"status": "not_pending"},
+                      # Candidate preview is generated only after the
+                      # incident analysis checkpoint has completed; otherwise
+                      # the real UI correctly keeps Approval actions disabled.
+                      "checkpoint_status": ("completed" if
+                          brief_state["current"].get("incident_summary", {}).get("service") == "nginx"
+                          else "analyzing")})
             elif path.endswith("/configuration-review-response"):
                 data = review_state
             elif path.endswith("/progress/stream"):
