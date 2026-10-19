@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 574 | Dashboard JS files scanned: 8 | Symbols indexed: 6552**
+**Python files scanned: 574 | Dashboard JS files scanned: 8 | Symbols indexed: 6554**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -981,22 +981,22 @@
 | `apps/chatbot/reliable_service.py` | `_resolve_vm_target_from_turns` | 151 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/chatbot/reliable_service.py` | `_available_tool_names` | 196 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/chatbot/reliable_service.py` | `_deterministic_vm_service_read_call` | 211 | function | Build only an unambiguous governed VM service read; never infer a write. | module |
-| `apps/chatbot/reliable_service.py` | `_requires_live_operational_tool` | 253 | function | Fail closed for clear live-read requests before any governed tool has run. | module |
-| `apps/chatbot/reliable_service.py` | `_looks_obviously_incomplete` | 296 | function | Reject only strong incomplete-prefix signals for direct chatbot answers. | module |
-| `apps/chatbot/reliable_service.py` | `_is_timeout_error` | 311 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/chatbot/reliable_service.py` | `_is_connection_error` | 317 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/chatbot/reliable_service.py` | `_safe_policy_denial` | 324 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/chatbot/reliable_service.py` | `ReliableChatLLMAdapter` | 333 | class | Chat-stage reliability wrapper around the configured LLM adapter. | module |
-| `apps/chatbot/reliable_service.py` | `ReliableChatLLMAdapter.__init__` | 336 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ReliableChatLLMAdapter |
-| `apps/chatbot/reliable_service.py` | `ReliableChatLLMAdapter.provider_name` | 340 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ReliableChatLLMAdapter |
-| `apps/chatbot/reliable_service.py` | `ReliableChatLLMAdapter.generate` | 343 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ReliableChatLLMAdapter |
-| `apps/chatbot/reliable_service.py` | `ReliableChatLLMAdapter.generate_with_messages` | 364 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ReliableChatLLMAdapter |
-| `apps/chatbot/reliable_service.py` | `OperationsCopilotService` | 478 | class | ChatbotService reliability/UI adapter without changing governance boundaries. | module |
-| `apps/chatbot/reliable_service.py` | `OperationsCopilotService.__init__` | 481 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationsCopilotService |
-| `apps/chatbot/reliable_service.py` | `OperationsCopilotService._llm` | 485 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationsCopilotService |
-| `apps/chatbot/reliable_service.py` | `OperationsCopilotService.message` | 493 | async method | Preserve safe cause categories after the base service fail-closed wrapper. | OperationsCopilotService |
-| `apps/chatbot/reliable_service.py` | `OperationsCopilotService._execute_read` | 525 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationsCopilotService |
-| `apps/chatbot/reliable_service.py` | `OperationsCopilotService._summarize` | 537 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationsCopilotService |
+| `apps/chatbot/reliable_service.py` | `_requires_live_operational_tool` | 279 | function | Fail closed for clear live-read requests before any governed tool has run. | module |
+| `apps/chatbot/reliable_service.py` | `_looks_obviously_incomplete` | 322 | function | Reject only strong incomplete-prefix signals for direct chatbot answers. | module |
+| `apps/chatbot/reliable_service.py` | `_is_timeout_error` | 337 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/chatbot/reliable_service.py` | `_is_connection_error` | 343 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/chatbot/reliable_service.py` | `_safe_policy_denial` | 350 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/chatbot/reliable_service.py` | `ReliableChatLLMAdapter` | 359 | class | Chat-stage reliability wrapper around the configured LLM adapter. | module |
+| `apps/chatbot/reliable_service.py` | `ReliableChatLLMAdapter.__init__` | 362 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ReliableChatLLMAdapter |
+| `apps/chatbot/reliable_service.py` | `ReliableChatLLMAdapter.provider_name` | 366 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ReliableChatLLMAdapter |
+| `apps/chatbot/reliable_service.py` | `ReliableChatLLMAdapter.generate` | 369 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ReliableChatLLMAdapter |
+| `apps/chatbot/reliable_service.py` | `ReliableChatLLMAdapter.generate_with_messages` | 390 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ReliableChatLLMAdapter |
+| `apps/chatbot/reliable_service.py` | `OperationsCopilotService` | 504 | class | ChatbotService reliability/UI adapter without changing governance boundaries. | module |
+| `apps/chatbot/reliable_service.py` | `OperationsCopilotService.__init__` | 507 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationsCopilotService |
+| `apps/chatbot/reliable_service.py` | `OperationsCopilotService._llm` | 511 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationsCopilotService |
+| `apps/chatbot/reliable_service.py` | `OperationsCopilotService.message` | 519 | async method | Preserve safe cause categories after the base service fail-closed wrapper. | OperationsCopilotService |
+| `apps/chatbot/reliable_service.py` | `OperationsCopilotService._execute_read` | 551 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationsCopilotService |
+| `apps/chatbot/reliable_service.py` | `OperationsCopilotService._summarize` | 563 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationsCopilotService |
 | `apps/chatbot/service.py` | `_iso` | 84 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/chatbot/service.py` | `_has_permission` | 90 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/chatbot/service.py` | `_annotate_metric_units` | 97 | function | Annotate known VM percentages for LLM summarization without changing API data. | module |
@@ -3507,6 +3507,8 @@
 | `tests/unit/test_chatbot_reliable_service.py` | `test_deterministic_vm_service_read_uses_logs_tool_only_when_requested` | 380 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_reliable_service.py` | `test_deterministic_vm_service_read_does_not_reuse_stale_service_past_generic_server_turn` | 396 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_reliable_service.py` | `test_deterministic_vm_service_read_never_routes_mutation_language` | 408 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_reliable_service.py` | `test_chatbot_disk_and_mount_not_misrouted_to_systemd` | 430 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_chatbot_reliable_service.py` | `test_chatbot_disk_request_never_forces_old_service_when_diagnostics_missing` | 446 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_response_redaction.py` | `test_chatbot_response_redacts_inline_secrets_before_ui_serialization` | 7 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_response_redaction.py` | `test_chat_history_response_applies_same_redaction_defense_in_depth` | 22 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_chatbot_stop_regression.py` | `_script` | 4 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
