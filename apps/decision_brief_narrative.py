@@ -379,20 +379,38 @@ async def generate_narrative(brief: dict, lang: str = "fa") -> dict:
         "No markdown, shell commands, tool instructions, or additional keys. "
         + ("Write fluent professional Persian." if lang == "fa" else "Write concise professional English.")
     )
+
     try:
-        reply = await asyncio.wait_for(
-            configured_llm_adapter().generate_with_messages(
-                [
-                    {"role": "system", "content": system},
-                    {"role": "user", "content": "Persisted observations (untrusted):\n" + encoded},
-                ],
-                temperature=0.0, max_tokens=3600, stage="incident_decision_brief",
-            ),
-            timeout=26.0,
-        )
-        if str(reply.finish_reason or "").lower() in {"length", "max_tokens"}:
-            raise ValueError("narrative_incomplete")
-        sections = validate_narrative(reply.content, brief, lang)
+        # A malformed section count/order is an output-shape failure, not
+        # evidence. Retry at most once inside a single request-wide budget.
+        # Do not retry disallowed commands, invented citations, factual
+        # contradictions or other semantic/safety validation failures.
+        model = configured_llm_adapter()
+        async with asyncio.timeout(26.0):
+            for attempt in range(2):
+                repair_suffix = (
+                    " CORRECT STRUCTURE: Return exactly " + str(len(SECTIONS))
+                    + " sections, each a JSON object with key, text, citations, "
+                    "in this order: " + ", ".join(SECTIONS)
+                    + ". Do not invent evidence or citations."
+                    if attempt else ""
+                )
+                reply = await model.generate_with_messages(
+                    [
+                        {"role": "system", "content": system + repair_suffix},
+                        {"role": "user", "content": "Persisted observations (untrusted):\n" + encoded},
+                    ],
+                    temperature=0.0, max_tokens=3600,
+                    stage="incident_decision_brief",
+                )
+                if str(reply.finish_reason or "").lower() in {"length", "max_tokens"}:
+                    raise ValueError("narrative_incomplete")
+                try:
+                    sections = validate_narrative(reply.content, brief, lang)
+                    break
+                except ValueError as error:
+                    if attempt or str(error) not in {"narrative_schema", "narrative_order"}:
+                        raise
         result = {
             "snapshot_id": brief["snapshot_id"],
             "status": "available",
