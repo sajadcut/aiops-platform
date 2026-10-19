@@ -112,7 +112,10 @@ def _parse_bounded_edit_plan(source: str, content: str,
 def _safe_structure(value: str) -> str:
     """Use value-free glyphs; never reflect secret values into MCP/UI/audit."""
     # No words, digits or byte values from config survive.
-    return re.sub(r"[^{};=,#()\[\]\s]", "x", value.rstrip("\n"))[:180]
+    masked = re.sub(r"[^{};=,#()\\[\\]\\s]", "x", value.rstrip("\\n"))[:180]
+    # Do not accidentally mirror hundreds of masked source bytes (or leak
+    # original length-patterns) into the MCP result or durable incident audit.
+    return re.sub(r"x{32,}", "[redacted]", masked)
 
 
 def _profile(service: str, path: str) -> str:
@@ -218,6 +221,25 @@ def _bounded_exact_character_edits(before: str, after: str, maximum: int = 3) ->
     return previous.get(m, maximum + 1)
 
 
+def _single_adjacent_brace_spacing_edit(original: str, corrected: str) -> bool:
+    """Accept deleting an orphaned '{' or '}' plus its adjacent single space.
+
+    This is not permission to reindent or normalize unrelated configuration.
+    The edit must be one contiguous two-character deletion on one line.
+    """
+    if len(original) - len(corrected) != 2:
+        return False
+    start = 0
+    while start < len(corrected) and original[start] == corrected[start]:
+        start += 1
+    tail = 0
+    while (tail < len(corrected) - start and
+           original[-(tail + 1)] == corrected[-(tail + 1)]):
+        tail += 1
+    changed = original[start:len(original) - tail if tail else len(original)]
+    return changed in {" {", "{ ", " }", "} "}
+
+
 def _candidate_preview(original: str, corrected: str, *, diagnostic_line: int | None = None,
                        expanded_json_grammar: bool = False) -> dict:
     """Check completeness and bounded drift; emit *metadata*, never file lines."""
@@ -259,10 +281,22 @@ def _candidate_preview(original: str, corrected: str, *, diagnostic_line: int | 
         re.sub(r"[{};,]", "", corrected)
     )
     unchanged_value_tokens = _value_tokens(original) == _value_tokens(corrected)
+    adjacent_brace_space = _single_adjacent_brace_spacing_edit(original, corrected)
+    grammar_changed = (
+        re.sub(r"[^{};,]", "", original) !=
+        re.sub(r"[^{};,]", "", corrected)
+    )
+    # A syntactic fix accompanied by *unrelated* whitespace edits is not a
+    # minimal candidate. Distinguish it from pure reindentation (handled by
+    # the exact edit-distance bound below).
+    if (grammar_changed and not expanded_verified and not exact_json_key_quotes
+            and not unchanged_non_grammar and not adjacent_brace_space):
+        return {**base, "rejection_reason": "candidate_changes_unrelated_bytes"}
     for _, i1, i2, j1, j2 in differences:
         if any(_SENSITIVE.search(line) for line in before[i1:i2] + after[j1:j2]):
             if not (expanded_verified or exact_json_key_quotes or (
-                unchanged_non_grammar and unchanged_value_tokens
+                (unchanged_non_grammar or adjacent_brace_space)
+                and unchanged_value_tokens
             )):
                 return {**base, "rejection_reason": "candidate_changes_sensitive_line"}
     if not expanded_verified and not exact_json_key_quotes and not unchanged_value_tokens:
@@ -281,7 +315,8 @@ def _candidate_preview(original: str, corrected: str, *, diagnostic_line: int | 
     # identical documents, blocking reindentation, line-ending conversion,
     # comment cleanup and unrelated formatting even when only one brace
     # fixes the vendor error.
-    if not expanded_verified and not exact_json_key_quotes and not unchanged_non_grammar:
+    if (not expanded_verified and not exact_json_key_quotes
+            and not unchanged_non_grammar and not adjacent_brace_space):
         return {**base, "rejection_reason": "candidate_changes_unrelated_bytes"}
     # The compiler normally reports the *following* line when an earlier
     # brace or terminator is wrong. Permit only nearby changes.

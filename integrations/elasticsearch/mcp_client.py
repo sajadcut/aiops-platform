@@ -384,7 +384,10 @@ class ElasticsearchMCPClient(MCPClient):
                         "Properties.ServiceName", "Properties.ServiceName.keyword",
                         "Properties.ApplicationName", "Properties.ApplicationName.keyword",
                         "service.name", "service", "Properties.ServiceId")) and
-                    any(key in indexed_fields for key in ("@timestamp", "Timestamp"))):
+                    any(key in indexed_fields for key in ("@timestamp", "Timestamp")) and
+                    any(key in indexed_fields for key in (
+                        "Properties.MachineName", "host.name", "host.ip",
+                        "agent.hostname", "HostName", "hostname"))):
                 attempted_observed_schema = True
                 try:
                     logs = await self.get_logs(
