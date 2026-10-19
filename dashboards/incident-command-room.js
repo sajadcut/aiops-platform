@@ -3931,6 +3931,69 @@
     }
     show('#ic-action-controls',controls);
   }
+  function renderDependencyChecks(brief) {
+    const node=$('#ic-dependency-checks-body');
+    if(!node)return;
+    const fa=state.language==='fa', report=state.investigationReport;
+    if(state.historic){
+      node.textContent=fa?'نسخهٔ تاریخی؛ شواهد همان Snapshot را ببینید.':'Historical snapshot; review its recorded evidence.';
+      return;
+    }
+    if(!report||report.snapshot_id!==brief.snapshot_id||report.language!==state.language){
+      node.textContent=state.investigationReportStatus==='failed'
+        ?(fa?'گزارش وابستگی‌ها دریافت نشد؛ نتیجه‌ای درباره سلامت آن‌ها نمی‌توان گرفت.':'Dependency report unavailable; health is unknown.')
+        :(fa?'در حال خواندن شواهد وابستگی‌ها…':'Loading recorded dependency evidence…');
+      return;
+    }
+    const section=report.dependency_checks||{};
+    const items=arr(section.items);
+    if(!items.length){
+      node.innerHTML='<p class="ic-meta">'+esc(section.status==='details_not_recorded'
+        ?(fa?'ابزار وابستگی اجرا شده ولی جزئیات ساختاریافته آزمون‌ها ثبت نشده است. این به معنی سالم بودن Redis یا سایر وابستگی‌ها نیست.':'Dependency tool ran but individual structured checks were not recorded; health is unverified.')
+        :(fa?'هیچ تست ثبت‌شده‌ای برای Endpointهای وابسته در این Snapshot وجود ندارد. سلامت وابستگی‌ها تأیید نشده است.':'No recorded dependency endpoint probes in this snapshot; health has not been verified.'))+'</p>';
+      return;
+    }
+    const yesNo=value=>value===true?(fa?'بله':'Yes'):value===false?(fa?'خیر':'No'):(fa?'تأیید نشده':'Unverified');
+    const protocols={
+      unauthenticated_ping_ok:fa?'PING: PONG؛ سلامت برنامه تأیید نشده':'PING: PONG; app health unverified',
+      authentication_required:fa?'Redis پاسخ NOAUTH داد؛ رمز برنامه بررسی نشده':'Redis returned NOAUTH; app credentials untested',
+      access_denied:fa?'دسترسی پروتکلی رد شد':'Protocol access denied',
+      client_not_installed:fa?'redis-cli نصب نیست؛ تست پروتکل تکمیل نشده':'redis-cli missing; protocol unverified',
+      tls_handshake_unverified:fa?'TLS تأیید نشده':'TLS unverified',
+      protocol_unverified:fa?'پروتکل تأیید نشده':'Protocol unverified',
+      probe_unavailable:fa?'امکان تست پروتکل نبود':'Protocol probe unavailable'
+    };
+    const head=fa?['وابستگی و مقصد','منبع کانفیگ','نتیجه تست اتصال','تست پروتکل و محدودیت','شواهد']:['Dependency / endpoint','Verified configuration source','Transport result','Protocol test / limits','Evidence'];
+    const body=items.map(x=>{
+      const target=String(x.kind||'unknown')+' · '+String(x.host||'?')+':'+String(x.port??'?');
+      const connectivity=x.tcp_reachable===true
+        ?(fa?'TCP برقرار؛ سلامت برنامه نامعلوم':'TCP reachable; app health unknown')
+        :x.tcp_reachable===false
+          ?(fa?'TCP ناموفق':'TCP unreachable')
+          :x.http_status!=null?'HTTP '+String(x.http_status)
+          :(x.probe_status?String(x.probe_status):(fa?'تست ثبت نشده':'Not recorded'));
+      const protocol=x.protocol_status
+        ?(protocols[x.protocol_status]||String(x.protocol_status))
+        :(fa?'تست پروتکل مستقل ثبت نشده':'No separate protocol probe recorded');
+      const tls=x.tls_verified===null||x.tls_verified===undefined?''
+        :' · TLS: '+yesNo(x.tls_verified);
+      const source=[x.config_file,x.config_key].filter(Boolean).join(' · ');
+      return '<tr><th scope="row"><code dir="ltr">'+esc(target)+'</code></th>'+
+        '<td><code dir="ltr">'+esc(source||'not_recorded')+'</code></td>'+
+        '<td>'+esc(connectivity)+'</td>'+
+        '<td>'+esc(protocol+tls)+'</td>'+
+        '<td><small><code dir="ltr">'+esc(x.evidence_ref||'not_recorded')+'</code></small>'+
+        (x.collected_at?'<small> · '+esc(x.collected_at)+'</small>':'')+
+        '</td></tr>';
+    }).join('');
+    node.innerHTML='<div class="ic-ledger-scroll"><table class="ic-ledger-table"><thead><tr>'+
+      head.map(x=>'<th scope="col">'+esc(x)+'</th>').join('')+
+      '</tr></thead><tbody>'+body+'</tbody></table></div>'+
+      '<p class="ic-ledger-conclusion">'+esc(fa
+        ?'تست‌ها از سمت سرور مصرف‌کننده انجام شده‌اند. TCP یا HTTP موفق، سلامت احراز هویت، Pool، Timeout و عملیات برنامه را اثبات نمی‌کند.'
+        :'Probes run from the consumer VM. TCP/HTTP success does not establish application credentials, connection pools, timeouts or business health.')+'</p>';
+  }
+
   function renderInvestigationLedger(brief) {
     const node=$('#ic-investigation-ledger-body');
     if(!node)return;
@@ -3967,6 +4030,7 @@
     renderKnowledge(r);renderInvestigation(r);renderOutcome(r);renderTimeline(r);renderDecision(r);renderReceivedSignals();
     renderIncidentChat();
     renderInvestigationLedger(r);
+    renderDependencyChecks(r);
     renderAnalysisProgress();
     $('#ic-snapshot-label').textContent='Snapshot '+String(r.snapshot_id||'').slice(0,14);
   }
@@ -4273,9 +4337,14 @@
       const report=await api(base+'/investigation-report?lang='+encodeURIComponent(state.language));
       if(!state.historic&&state.report?.snapshot_id===snapshot){
         state.investigationReport=report;
+        state.investigationReportStatus='loaded';
         renderInvestigationLedger(state.report);
+        renderDependencyChecks(state.report);
       }
-    } catch(_) {state.investigationReportStatus='failed';}
+    } catch(_) {
+      state.investigationReportStatus='failed';
+      if(state.report){renderInvestigationLedger(state.report);renderDependencyChecks(state.report);}
+    }
   }
 
   async function loadNarrative() {
