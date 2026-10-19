@@ -24,14 +24,29 @@ async def redis_unauthenticated_ping(
     checked_port = connector._validate_port(port)
     if type(tls) is not bool:
         raise ValueError("redis_tls_flag_invalid")
+    # Redis RESP PING needs no redis-cli and no application secret. On Linux
+    # with bash + timeout, use a single bounded read-only PING as fallback.
+    # TLS is deliberately NOT downgraded to plaintext if redis-cli is absent.
+    resp_ping = (
+        "exec 3<>/dev/tcp/" + host + "/" + str(checked_port)
+        + " || exit 1; "
+        + "printf '*1\\r\\n$4\\r\\nPING\\r\\n' >&3; "
+        + "IFS= read -r -t 2 answer <&3; printf '%s' \"$answer\""
+    )
     cmd = (
-        "if ! command -v redis-cli >/dev/null 2>&1 "
-        "|| ! command -v timeout >/dev/null 2>&1; "
+        "if ! command -v timeout >/dev/null 2>&1; "
         "then printf '__AIOPS_REDIS_CLI_UNAVAILABLE__'; "
-        "else timeout 5 redis-cli --raw --no-auth-warning "
+        "elif command -v redis-cli >/dev/null 2>&1; then "
+        "timeout 5 redis-cli --raw --no-auth-warning "
         "-h " + shlex.quote(host) + " -p " + str(checked_port)
         + (" --tls" if tls else "")
-        + " PING 2>&1 | head -c 256; fi"
+        + " PING 2>&1 | head -c 256; "
+        + ("else printf '__AIOPS_REDIS_CLI_UNAVAILABLE__'; fi"
+           if tls else
+           "elif command -v bash >/dev/null 2>&1; then "
+           "timeout 5 bash -c " + shlex.quote(resp_ping)
+           + " 2>/dev/null; "
+           "else printf '__AIOPS_REDIS_CLI_UNAVAILABLE__'; fi")
     )
     try:
         response = await connector._run(target, cmd)
@@ -46,7 +61,7 @@ async def redis_unauthenticated_ping(
                 "protocol_health_verified": False}
     if "__aiops_redis_cli_unavailable__" in output:
         status = "client_not_installed"
-    elif output == "pong":
+    elif output in {"pong", "+pong"}:
         status = "unauthenticated_ping_ok"
     elif "noauth" in output or "authentication required" in output:
         status = "authentication_required"

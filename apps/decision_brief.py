@@ -399,7 +399,7 @@ def _mcp(rows: Iterable[dict], now: datetime) -> tuple[list[dict], list[dict]]:
             "failed" if tool_failed(raw) else
             "success" if explicit_success else "unknown"
         )
-        items.append({
+        evidence_item = {
             "evidence_ref": safe(item.get("id") or item.get("evidence_id") or item.get("reference"), 180),
             "server": source_name,
             "tool": safe(raw.get("tool_name") or raw.get("tool") or raw.get("diagnostic"), 120)
@@ -418,7 +418,44 @@ def _mcp(rows: Iterable[dict], now: datetime) -> tuple[list[dict], list[dict]]:
             "freshness": age,
             "phase": safe(raw.get("phase") or raw.get("collection_phase"), 70) or "unknown",
             "finding": tool_observation_summary(raw),
-        })
+        }
+        # Preserve bounded, redacted probe *facts* for the operator. A prose
+        # finding is truncated and cannot serve as a complete test report.
+        if evidence_item["tool"] == "dependency_investigation":
+            observed = raw if isinstance(raw.get("dependencies"), list) else inner
+            checks = []
+            for dep in arr(observed.get("dependencies"))[:6]:
+                if not isinstance(dep, dict):
+                    continue
+                port = dep.get("port")
+                if type(port) is not int or not 1 <= port <= 65535:
+                    continue
+                kind = safe(dep.get("kind"), 24)
+                host = safe(dep.get("host"), 120)
+                if not kind or not host:
+                    continue
+                check = {
+                    "kind": kind, "host": host, "port": port,
+                    "config_file": safe(dep.get("config_file"), 180),
+                    "config_key": safe(dep.get("config_key"), 120),
+                    "probe_scope": safe(dep.get("probe_scope"), 50),
+                    "probe_status": safe(dep.get("probe_status"), 50),
+                    "protocol_status": safe(dep.get("protocol_status"), 60),
+                    "http_status": (dep.get("http_status")
+                                    if type(dep.get("http_status")) is int
+                                    and 100 <= dep["http_status"] <= 599 else None),
+                }
+                for flag in ("tcp_reachable", "dns_resolved", "route_found",
+                             "probe_supported", "protocol_health_verified",
+                             "tls_verified"):
+                    check[flag] = dep.get(flag) if type(dep.get(flag)) is bool else None
+                checks.append(check)
+            evidence_item["dependency_checks"] = checks
+            evidence_item["dependency_probe_count"] = (
+                observed.get("checks_executed")
+                if type(observed.get("checks_executed")) is int else len(checks)
+            )
+        items.append(evidence_item)
     return items[:100], list(sources.values())[:50]
 
 

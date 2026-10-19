@@ -59,6 +59,45 @@ async def test_redis_protocol_response_is_typed_and_never_exposes_raw_output(
 
 
 @pytest.mark.asyncio
+async def test_plaintext_redis_uses_bounded_read_only_resp_fallback_without_redis_cli():
+    class Worker:
+        def _validate_target(self, target): assert target == "vm-a"
+        def _validate_remote_host(self, host): assert host == "cache.internal"
+        def _validate_port(self, port): return port
+        async def _run(self, target, command):
+            assert "timeout 5 bash -c " in command
+            assert "command -v redis-cli" in command
+            assert "/dev/tcp/cache.internal/6379" in command
+            assert "PING" in command and "AUTH" not in command
+            assert "password" not in command.lower()
+            assert "--tls" not in command
+            return {"success": True, "stdout": "+PONG\r"}
+    result = await redis_unauthenticated_ping(
+        Worker(), "vm-a", "cache.internal", 6379, tls=False,
+    )
+    assert result["protocol_status"] == "unauthenticated_ping_ok"
+    assert result["protocol_health_verified"] is True
+
+
+@pytest.mark.asyncio
+async def test_redis_tls_fallback_does_not_downgrade_to_plaintext():
+    class Worker:
+        def _validate_target(self, target): pass
+        def _validate_remote_host(self, host): pass
+        def _validate_port(self, port): return port
+        async def _run(self, target, command):
+            assert "--tls" in command
+            assert "/dev/tcp" not in command
+            assert "timeout 5 bash -c " not in command
+            return {"success": True, "stdout": "__AIOPS_REDIS_CLI_UNAVAILABLE__"}
+    result = await redis_unauthenticated_ping(
+        Worker(), "vm-a", "cache.internal", 6380, tls=True,
+    )
+    assert result["protocol_status"] == "client_not_installed"
+    assert result["protocol_health_verified"] is False
+
+
+@pytest.mark.asyncio
 async def test_redis_network_failure_runs_consumer_dns_without_ping_or_auth():
     source = base64.b64encode(json.dumps({
         "Redis": {"Connection": "redis://cache.internal:6379"}
