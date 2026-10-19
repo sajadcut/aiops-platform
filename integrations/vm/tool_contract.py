@@ -55,6 +55,7 @@ _DEPENDENCY_ROW = {
         "config_key": {"type": "string", "maxLength": 160},
         "probe_scope": {"type": "string", "enum": [
             "origin_root_head", "transport_tcp_connect",
+            "not_executed_inferred_port",
         ]},
         "probe_supported": {"type": "boolean"},
         "probe_status": {"type": "string"},
