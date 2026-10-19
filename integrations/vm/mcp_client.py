@@ -202,7 +202,19 @@ class VMEdgeMCPClient(MCPClient):
     async def nginx_config_inspect(self, target: str, service: str) -> Dict[str, Any]: return await self._invoke("nginx_config_inspect", target, service=service)
     async def service_runtime_discovery(self, target: str, service: str) -> Dict[str, Any]: return await self._invoke("service_runtime_discovery", target, service=service)
     async def service_config_discovery(self, target: str, service: str) -> Dict[str, Any]: return await self._invoke("service_config_discovery", target, service=service)
-    async def dependency_investigation(self, target: str, service: str) -> Dict[str, Any]: return await self._invoke("dependency_investigation", target, service=service)
+    async def dependency_investigation(
+        self, target: str, service: str, *,
+        mode: str | None = None, selections: list[dict] | None = None,
+        priority_family: str = "",
+    ) -> Dict[str, Any]:
+        params: dict = {"service": service}
+        if mode is not None:
+            params["mode"] = mode
+        if selections is not None:
+            params["selections"] = selections
+        if priority_family:
+            params["priority_family"] = priority_family
+        return await self._invoke("dependency_investigation", target, **params)
     async def redis_dependency_check(self, target: str, service: str) -> Dict[str, Any]: return await self._invoke("redis_dependency_check", target, service=service)
     async def service_config_review(self, target: str, service: str) -> Dict[str, Any]: return await self._invoke("service_config_review", target, service=service)
     async def service_config_llm_repair(self, target: str, service: str) -> Dict[str, Any]: return await self._invoke("service_config_llm_repair", target, service=service)

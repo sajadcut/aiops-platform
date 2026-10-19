@@ -127,6 +127,7 @@ def validate_vm_observation(tool: str, target: str, payload: Any) -> dict[str, A
             "dependencies", "limitations", "error", "observed_at",
             "investigation_status", "next_checks",
             "llm_field_binding_status", "llm_field_binding_files",
+            "binding_candidates",
         }
         if not set(payload) <= safe_top:
             raise ValueError("vm_mcp_dependency_unexpected_payload")
@@ -137,9 +138,67 @@ def validate_vm_observation(tool: str, target: str, payload: Any) -> dict[str, A
             "llm_response_invalid", "llm_response_incomplete",
             "llm_unsubstantiated_selection", "llm_cross_dependency_selection",
             "llm_binding_unavailable", "no_model_match",
+            "central_llm_required", "central_llm_unavailable", "config_changed",
         }
         if llm_status is not None and llm_status not in allowed_llm:
             raise ValueError("vm_mcp_dependency_llm_status_invalid")
+        candidates = payload.get("binding_candidates", [])
+        if not isinstance(candidates, list) or len(candidates) > 4:
+            raise ValueError("vm_mcp_dependency_candidates_invalid")
+        if candidates:
+            import re
+            from integrations.vm.dependency_discovery import (
+                KINDS, safe_config_key, safe_host, safe_port,
+            )
+            from integrations.vm.general_config_review import checked_config_path
+            allowed_kinds = {kind for kind, _ in KINDS.values()}
+            used_indices: set[int] = set()
+            for entry in candidates:
+                if not isinstance(entry, dict) or set(entry) != {
+                    "file_index", "config_file", "sha256",
+                    "host_fields", "port_fields", "inline_endpoint_fields",
+                }:
+                    raise ValueError("vm_mcp_dependency_candidate_shape_invalid")
+                idx, digest, path = (entry["file_index"], entry["sha256"],
+                                     entry["config_file"])
+                if (type(idx) is not int or idx not in range(4)
+                        or idx in used_indices or not isinstance(digest, str)
+                        or re.fullmatch(r"[a-f0-9]{64}", digest) is None
+                        or not isinstance(path, str)
+                        or checked_config_path(path) != path):
+                    raise ValueError("vm_mcp_dependency_candidate_identity_invalid")
+                used_indices.add(idx)
+                for field, limit, prefix in (
+                    ("host_fields", 16, "h"), ("port_fields", 16, "p"),
+                    ("inline_endpoint_fields", 8, "e"),
+                ):
+                    items = entry[field]
+                    if not isinstance(items, list) or len(items) > limit:
+                        raise ValueError("vm_mcp_dependency_candidate_inventory_invalid")
+                    ids: set[str] = set()
+                    for j, row in enumerate(items):
+                        if not isinstance(row, dict) or row.get("id") != f"{prefix}{j}":
+                            raise ValueError("vm_mcp_dependency_candidate_id_invalid")
+                        if row["id"] in ids:
+                            raise ValueError("vm_mcp_dependency_candidate_duplicate_id")
+                        ids.add(row["id"])
+                        required = (
+                            {"id", "path", "host", "family"} if prefix == "h" else
+                            {"id", "path", "port", "family"} if prefix == "p" else
+                            {"id", "path", "kind", "host", "port"}
+                        )
+                        if set(row) != required:
+                            raise ValueError("vm_mcp_dependency_candidate_field_invalid")
+                        parts = str(row["path"]).split(".")
+                        if safe_config_key(parts) != row["path"]:
+                            raise ValueError("vm_mcp_dependency_candidate_path_invalid")
+                        family = row.get("family", row.get("kind"))
+                        if family not in allowed_kinds:
+                            raise ValueError("vm_mcp_dependency_candidate_kind_invalid")
+                        if "host" in row and safe_host(row["host"]) != row["host"]:
+                            raise ValueError("vm_mcp_dependency_candidate_host_invalid")
+                        if "port" in row and safe_port(row["port"]) != row["port"]:
+                            raise ValueError("vm_mcp_dependency_candidate_port_invalid")
         metadata = payload.get("llm_field_binding_files", [])
         if not isinstance(metadata, list) or len(metadata) > 4:
             raise ValueError("vm_mcp_dependency_llm_metadata_invalid")

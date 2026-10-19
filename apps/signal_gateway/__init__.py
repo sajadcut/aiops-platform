@@ -312,7 +312,25 @@ class SignalGateway:
                 active = str(result.get("active_state") or "").strip().lower()
                 load = str(result.get("load_state") or "").strip().lower()
                 unit_id = str(result.get("unit_id") or "").strip().casefold().removesuffix(".service")
-                if unit_id and unit_id != runtime_service.casefold().removesuffix(".service"):
+                requested_name = runtime_service.casefold().removesuffix(".service")
+                alias_names = [
+                    name.casefold().removesuffix(".service")
+                    for value in (result.get("unit_aliases") or [])[:12]
+                    if isinstance(value, str)
+                    for name in [value.strip()]
+                    if re.fullmatch(r"[A-Za-z0-9@_.:-]{2,128}", name)
+                ] if isinstance(result.get("unit_aliases"), list) else []
+                # Authoritative systemd Names must contain both the requested
+                # alias AND canonical unit. Merely getting another Id from a
+                # service_status call is NOT sufficient identity evidence.
+                live_systemd_alias = bool(
+                    unit_id and unit_id != requested_name
+                    and unit_id in alias_names and requested_name in alias_names
+                    and result.get("success") is True and load == "loaded"
+                    and returned_service == requested_name
+                    and returned_target == target.casefold()
+                )
+                if unit_id and unit_id != requested_name and not live_systemd_alias:
                     candidate["verification_status"] = "vm_canonical_unit_mismatch"
                     # Expose ONLY unit names to the operator for a safe,
                     # explicit mapping correction; never bypass verification.
@@ -330,26 +348,34 @@ class SignalGateway:
                         or active not in {"active", "failed", "inactive", "activating", "deactivating", "reloading"}):
                     candidate["verification_status"] = "vm_service_identity_not_confirmed"
                     continue
-                candidate["verification_status"] = "verified_read_only"
+                canonical_service = unit_id if live_systemd_alias else runtime_service
+                candidate["verification_status"] = (
+                    "verified_systemd_alias" if live_systemd_alias else "verified_read_only"
+                )
                 discovery["status"] = "verified_by_vm_mcp"
                 discovery["verified_target"] = target
-                discovery["verified_runtime_service"] = runtime_service
+                discovery["verified_runtime_service"] = canonical_service
                 discovery["reported_log_service"] = service
                 discovery["mapping_status"] = (
+                    "verified_systemd_alias" if live_systemd_alias else
                     "verified_live_vm_mcp" if runtime_service.casefold() != service.casefold()
                     else "same_name_verified"
                 )
                 discovery["runtime_probe_count"] = len(attempted)
                 return [{
                     "type": "telemetry", "source": "vm_mcp",
-                    "reference": f"elastic-discovery-vm:{target}:{runtime_service}",
+                    "reference": f"elastic-discovery-vm:{target}:{canonical_service}",
                     "timestamp": datetime.now(timezone.utc).isoformat(),
                     "raw_data": {
                         "diagnostic": "service_status", "success": True,
-                        "target": target, "service": runtime_service,
+                        "target": target, "service": canonical_service,
                         "source_service_label": service,
                         "active_state": active, "load_state": load,
                         "unit_id": str(result.get("unit_id") or "")[:128] or None,
+                        "unit_aliases": (
+                            [name for name in alias_names[:12]]
+                            if live_systemd_alias else []
+                        ),
                         "sub_state": str(result.get("sub_state") or "")[:60],
                     },
                 }]
@@ -419,9 +445,17 @@ class SignalGateway:
         client = None
         try:
             client = VMEdgeMCPClient()
+            from integrations.vm.central_dependency import investigate_from_aiops
+            priority = next((
+                family for family in (
+                    "database", "message_broker", "cache", "http_dependency",
+                ) if family in classes
+            ), "")
             result = await asyncio.wait_for(
-                client.dependency_investigation(target, unit),
-                timeout=max(8.0, min(45.0, float(settings.MCP_TIMEOUT_SECONDS) * 3)),
+                investigate_from_aiops(
+                    client, target, unit, priority_family=priority,
+                ),
+                timeout=max(18.0, min(90.0, float(settings.MCP_TIMEOUT_SECONDS) * 6)),
             )
             if not isinstance(result, dict) or result.get("success") is not True:
                 return [], {

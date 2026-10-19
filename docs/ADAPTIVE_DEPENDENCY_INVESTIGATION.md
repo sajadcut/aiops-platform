@@ -135,3 +135,53 @@ The VM MCP process requires its own trusted `LLM_BASE_URL` and `LLM_MODEL` (plus
 The same incident reported `vm_canonical_unit_mismatch`: alert label `GFP_Backend` requested `gfp_backend`, but systemd returned canonical unit `gfpapi`. This mismatch must not be silently accepted as execution authority. After confirming the two names designate the same loaded unit, explicitly configure `ELASTIC_SERVICE_DISCOVERY_ALIASES={"gfpapi":["GFP_Backend"]}` in the API, restart its process and recheck host discovery. Rebuilding the on-target agent is necessary if its code is stale. If the mapping cannot be independently verified, leave binding unverified and require human review.
 
 Finally, a received test webhook describing 10 database errors is a monitoring signal, **not evidence that the database itself is down**. If no actual DB connection string/Host/Port has been discovered, the correct disposition is unverified, even if Redis TCP succeeded. No database credentials or SQL write operations are required for this diagnosis.
+
+## Central AIOps dependency reasoning (control-plane only)
+
+**The VM Agent does not need an LLM endpoint or API key for dependency
+investigation.** The API owns all model inference, and the host worker owns
+config parsing, identity verification, independent SHA/field-ID checks and
+bounded read-only connectivity probes.
+
+1. Match the exact service named in the received Zabbix/ELK alert. If the
+   requested systemd alias returns a different canonical Id, it is accepted
+   **only** when the read-only `systemctl show Names` inventory explicitly
+   contains both names for the same loaded unit, or after an operator-declared
+   mapping is independently verified. Never infer `GFP_Backend=gfpapi` from
+   similarity or a past incident.
+2. Request `dependency_investigation(mode=discover)` over the existing
+   authenticated VM MCP/agent-pull channel. The worker rereads only
+   systemd-verified bounded config files and returns non-secret structural
+   Host/Port field IDs, JDBC/Kafka/ActiveMQ inline endpoint IDs, source paths
+   and SHA-256 of the source bytes. This phase performs **zero probes**.
+3. The AIOps API invokes its own `LLM_PROVIDER`, `LLM_BASE_URL`,
+   `LLM_MODEL`, `LLM_API_KEY` via
+   `central_dependency_config_binding`. The model sees only the matching
+   alert family and chooses previously listed IDs. An invented ID is ignored.
+4. Send only file indices, SHA-256, and selected IDs via
+   `dependency_investigation(mode=probe)`; never send model-proposed
+   hostnames, ports or commands. Worker independently rereads the actual
+   config, rejects changed hashes/cross-wired Host/Port scopes, and tests
+   only verified destinations *of the incident's dependency family*.
+   Vendor-default or inherited guesses do not establish app connectivity.
+5. Independently classify exact-service journal and decoded Elasticsearch
+   DB/broker/cache errors into bounded signatures (refused, timeout,
+   authentication, pool exhaustion, DNS, TLS, reset), correlate those with
+   relevant transport checks, and submit **signatures only** to the central
+   `central_dependency_error_correlation` model. Its Persian explanation
+   is a **hypothesis**, not proof of root cause, unless a separate validator
+   and evidence establish it. Unparsable ELK MCP envelopes must be marked
+   `response_format_unrecognized`, not `0 matching errors`.
+
+A valid DB incident with Redis/HTTP config but no DB endpoint yields
+`alert_dependency_not_discovered` and no unrelated network probes.
+If the central model is unavailable, the worker still safely probes
+independently parsed explicit same-family endpoints, but it cannot assert
+a model-verified split-field binding. Full credentials, connection strings,
+SQL statements and raw log lines must not enter the selection LLM prompt.
+
+**Deployment**: update API, VM MCP and *on-target vmmcpagent binary*
+together to support both phases and the `Names` live alias proof. Do not
+configure any LLM gateway in the VM Agent for this diagnosis.
+A legacy agent or a network response returning HTTP 200 does not count as
+runtime acceptance. Run a staging/VM incident check before claiming success.

@@ -448,8 +448,19 @@ class EvidenceCollector:
             elif await self._healthy(self.elasticsearch):
                 try:
                     logs = await self.elasticsearch.get_logs(effective_service, since, until)
-                    elastic_logs_available = True
-                    observation = self._observation("elasticsearch", f"elastic-observation:{effective_service}:{since.isoformat()}", status="queried", result_count=len(logs), service=effective_service, detail="matching_logs")
+                    last_query = dict(getattr(
+                        self.elasticsearch, "_last_esql_query_diagnostics", {},
+                    ) or {})
+                    decode_failed = (
+                        not logs and int(last_query.get("unrecognized_envelopes") or 0) > 0
+                    )
+                    elastic_logs_available = not decode_failed
+                    observation = self._observation(
+                        "elasticsearch", f"elastic-observation:{effective_service}:{since.isoformat()}",
+                        status="error" if decode_failed else "queried",
+                        result_count=len(logs), service=effective_service,
+                        detail="response_format_unrecognized" if decode_failed else "matching_logs",
+                    )
                     # The Elastic interface currently filters on service, not
                     # explicitly on VM host. Preserve scope, never imply a host
                     # correlation that the provider did not execute.
@@ -458,6 +469,14 @@ class EvidenceCollector:
                         "query_since": since.isoformat(),
                         "query_until": until.isoformat() if until else None,
                         "host_filter_applied": False,
+                        "error_code": "response_format_unrecognized" if decode_failed else None,
+                        "unrecognized_envelopes": (
+                            int(last_query.get("unrecognized_envelopes") or 0)
+                            if decode_failed else 0
+                        ),
+                        "recognized_empty_envelopes": int(
+                            last_query.get("recognized_empty_envelopes") or 0
+                        ),
                     })
                     evidence.append(observation)
                 except Exception as exc:
@@ -554,7 +573,26 @@ class EvidenceCollector:
                     evidence.append(self._observation("vm_mcp", f"vm-skipped:{vm_target}:{action}:{since.isoformat()}", status="skipped", service=effective_service, detail="diagnostic_not_supported"))
                     continue
                 try:
-                    if action in {"service_status", "service_logs", "config_validate", "nginx_config_review", "nginx_config_inspect", "service_runtime_discovery", "service_config_discovery", "redis_dependency_check", "dependency_investigation", "service_config_review", "dotnet_config_syntax"}:
+                    if action == "dependency_investigation":
+                        from integrations.vm.central_dependency import investigate_from_aiops
+                        monitored_alerts = [
+                            item for item in evidence
+                            if isinstance(item, dict)
+                            and item.get("type") == "alert"
+                            and item.get("source") in {"zabbix", "prometheus", "elasticsearch"}
+                        ]
+                        signal_classes = dependency_signals(monitored_alerts or evidence)
+                        priority = next((
+                            match for match in (
+                                "database", "message_broker", "cache",
+                                "http_dependency",
+                            ) if match in signal_classes
+                        ), "")
+                        result = await investigate_from_aiops(
+                            self.vm, vm_target, effective_service,
+                            priority_family=priority,
+                        )
+                    elif action in {"service_status", "service_logs", "config_validate", "nginx_config_review", "nginx_config_inspect", "service_runtime_discovery", "service_config_discovery", "redis_dependency_check", "service_config_review", "dotnet_config_syntax"}:
                         result = await method(vm_target, effective_service)
                     elif action == "process_status":
                         result = await method(vm_target, effective_service)
@@ -629,6 +667,33 @@ class EvidenceCollector:
                             )
                         rows = self._vm_evidence(action, vm_target, effective_service, vm_port, result, since)
                         evidence.extend(rows)
+                        if action == "dependency_investigation":
+                            # Correlate the EXACT alert family against
+                            # service-scoped ELK/journal error signatures
+                            # and actual config-derived TCP checks. Model
+                            # stays in the AIOps API, never on a VM.
+                            from apps.context_service.dependency_log_analysis import (
+                                analyze_dependency_logs,
+                            )
+                            signal_alerts = [
+                                item for item in evidence
+                                if isinstance(item, dict)
+                                and item.get("type") == "alert"
+                                and item.get("source") in {"zabbix", "prometheus", "elasticsearch"}
+                            ]
+                            scoped_classes = dependency_signals(signal_alerts or evidence)
+                            scoped_family = next((
+                                family for family in ("database", "message_broker", "cache")
+                                if family in scoped_classes
+                            ), "")
+                            if scoped_family:
+                                analysis = await analyze_dependency_logs(
+                                    service=effective_service,
+                                    family=scoped_family,
+                                    evidence=evidence,
+                                    probe=result,
+                                )
+                                evidence.append(analysis)
                         evidence.append(self._observation("vm_mcp", f"vm-observation:{vm_target}:{action}:{since.isoformat()}", status="queried", result_count=len(rows), service=effective_service, detail=f"target={vm_target};diagnostic={action}"))
                         # Deterministic read-only follow-up after a confirmed
                         # Nginx syntax failure. Does not depend on the optional
