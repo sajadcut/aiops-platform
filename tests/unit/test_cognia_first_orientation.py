@@ -198,3 +198,62 @@ def test_incident_ledger_labels_cognia_runtime_as_advisory():
     assert profile["status"] == "advisory"
     assert profile["evidence_refs"] == ["cognia:gfpapi"]
     assert "تأییدشده" in profile["result"]
+
+
+@pytest.mark.asyncio
+async def test_context_subject_scope_does_not_reuse_unscoped_ingest_docs(monkeypatch):
+    from apps.orchestrator.e2e_graph import E2EOrchestrator
+    from apps.rag_service import KnowledgeRAGService
+    from domain.contracts.config import settings
+
+    class Collector:
+        async def collect(self, service, since):
+            return {"service": service, "evidence": []}
+
+    async def search(self, query, limit=5, **kwargs):
+        assert kwargs["scope_context"]["subjectNamespace"] == "tenant"
+        return []
+
+    monkeypatch.setattr(settings, "COGNIA_CLIENT_APPLICATION_ID", 1)
+    monkeypatch.setattr(KnowledgeRAGService, "search", search)
+    monkeypatch.setattr(E2EOrchestrator, "_audit", staticmethod(lambda *a, **kw: None))
+    workflow = E2EOrchestrator.__new__(E2EOrchestrator)
+    workflow.evidence_collector = Collector()
+    workflow.db = None
+    workflow.progress_emitter = None
+    state = await workflow._context_node({
+        "service_name": "gfpapi", "evidence_summary": "database error",
+        "context": {
+            "knowledge_results": [GFP],
+            "knowledge_subject": {
+                "namespace": "tenant", "externalSubjectId": "customer-a",
+            },
+            "incident": {"service": "gfpapi", "summary": "database error"},
+        },
+    })
+    assert state["knowledge_results"] == []
+    assert state["context"]["knowledge_orientation"]["hints"] == []
+    assert state["knowledge_status"]["status"] == "empty"
+
+
+@pytest.mark.asyncio
+async def test_unknown_service_alert_still_queries_topology_without_wrong_owner(monkeypatch):
+    from apps.signal_gateway import SignalGateway, OperationalSignal
+    from apps.rag_service import KnowledgeRAGService
+
+    queries = []
+
+    async def search(self, query, limit=5, **kwargs):
+        queries.append(query)
+        return [NGINX, GENERIC]
+
+    monkeypatch.setattr(KnowledgeRAGService, "search", search)
+    signal = OperationalSignal(
+        source="prometheus", source_id="disk-alert-unknown",
+        signal_type="disk_used_high", severity="high",
+        summary="Disk filling on a host", service=None, raw_data={},
+    )
+    value = await SignalGateway._knowledge_assisted_asset(signal, signal.to_evidence())
+    assert len(queries) == 1
+    assert [x["source_id"] for x in value["knowledge_results"]] == ["cognia:general"]
+    assert value["knowledge_orientation"]["hints"] == []
