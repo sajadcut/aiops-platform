@@ -893,19 +893,77 @@ class SSHVMConnector:
         return diagnostics
 
     async def process_status(self, target: str, process: str) -> Dict[str, Any]:
+        """Correlate a systemd service to its actual MainPID, not just comm.
+
+        A .NET or Java service runs under `dotnet` or `java`; `ps -C
+        service_name` alone is not proof that the service has no process.
+        The fallback verifies the exact canonical unit and live MainPID.
+        """
         self._validate_service(process)
-        result = await self._run(target, f"LC_ALL=C; ps -C {process} -o pid=,ppid=,stat=,comm=,%cpu=,%mem= 2>/dev/null || true")
+        result = await self._run(
+            target,
+            f"LC_ALL=C; ps -C {process} -o pid=,ppid=,stat=,comm=,%cpu=,%mem= 2>/dev/null || true",
+        )
         if not result.get("success"):
-            return {"success": False, "target": target, "process": process, "error": "process_status_failed"}
-        rows = []
-        for line in str(result.get("stdout") or "").splitlines():
-            parts = line.split()
-            if len(parts) >= 6:
+            return {"success": False, "target": target, "process": process,
+                    "error": "process_status_failed"}
+
+        def read_ps(output: str) -> list[dict]:
+            found = []
+            for line in output.splitlines()[:128]:
+                parts = line.split()
+                if len(parts) < 6:
+                    continue
                 try:
-                    rows.append({"pid": int(parts[0]), "ppid": int(parts[1]), "state": parts[2], "command": parts[3], "cpu_percent": float(parts[4]), "memory_percent": float(parts[5])})
+                    pid, ppid = int(parts[0]), int(parts[1])
+                    if pid < 1 or parts[2].startswith("Z"):
+                        continue
+                    found.append({
+                        "pid": pid, "ppid": ppid, "state": parts[2],
+                        "command": parts[3], "cpu_percent": float(parts[4]),
+                        "memory_percent": float(parts[5]),
+                    })
                 except (TypeError, ValueError):
                     continue
-        return {"success": True, "target": target, "process": process, "running": bool(rows), "count": len(rows), "processes": rows}
+            return found
+
+        rows = read_ps(str(result.get("stdout") or ""))
+        match_basis = "process_comm"
+        if not rows:
+            # Only a verified loaded systemd unit may qualify a distinct
+            # process command as the service runtime. This is *not* app health.
+            try:
+                service = await self.service_status(target, process)
+                unit = str(service.get("unit_id") or "").casefold().removesuffix(".service")
+                expected = process.casefold().removesuffix(".service")
+                pid = service.get("main_pid")
+                if (
+                    service.get("success") is True
+                    and service.get("target") == target
+                    and unit == expected
+                    and service.get("load_state") == "loaded"
+                    and service.get("active_state") == "active"
+                    and type(pid) is int and pid > 0
+                ):
+                    observed = await self._run(
+                        target,
+                        f"LC_ALL=C ps -p {pid} -o pid=,ppid=,stat=,comm=,%cpu=,%mem= 2>/dev/null || true",
+                    )
+                    if observed.get("success"):
+                        rows = [row for row in read_ps(str(observed.get("stdout") or ""))
+                                if row["pid"] == pid]
+                        if rows:
+                            match_basis = "verified_systemd_main_pid"
+            except Exception:
+                # An unavailable systemd probe never changes an empty
+                # process-name lookup into a positive result.
+                pass
+        return {
+            "success": True, "target": target, "process": process,
+            "running": bool(rows), "count": len(rows),
+            "processes": rows, "match_basis": match_basis,
+            "application_health_verified": False,
+        }
 
     async def process_snapshot(self, target: str) -> Dict[str, Any]:
         result = await self._run(target, "LC_ALL=C; ps -eo pid=,ppid=,stat=,comm=,%cpu=,%mem= --sort=-%cpu | head -n 25")
