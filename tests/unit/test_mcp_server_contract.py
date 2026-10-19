@@ -13,7 +13,7 @@ def test_provider_tool_names_match_control_plane_clients():
         "service_status", "service_logs", "list_services", "search_services", "system_logs", "process_snapshot",
         "process_status", "tcp_check", "port_listener_status", "dns_check",
         "route_check", "firewall_status", "config_validate", "nginx_config_review", "nginx_config_inspect",
-        "service_runtime_discovery", "service_config_discovery", "redis_dependency_check", "service_config_review", "service_config_llm_repair", "dotnet_config_syntax",
+        "service_runtime_discovery", "service_config_discovery", "redis_dependency_check", "dependency_investigation", "service_config_review", "service_config_llm_repair", "dotnet_config_syntax",
         "start_service", "restart_service", "reload_service",
         "config_change_validate", "config_change_apply",
     }
