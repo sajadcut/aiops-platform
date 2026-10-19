@@ -183,6 +183,8 @@ def build_alert_focused_report(incident: dict, evidence: list[dict],
             "protocol_health_verified": check.get("protocol_health_verified") is True,
             "config_file": _text(check.get("config_file"), 170),
             "config_key": _text(check.get("config_key"), 100),
+            "config_port_key": _text(check.get("config_port_key"), 100),
+            "endpoint_source": _text(check.get("endpoint_source"), 70),
         } for check in matched_checks[:3]]
         if matched_checks:
             parts = []
