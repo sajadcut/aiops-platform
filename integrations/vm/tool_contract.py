@@ -116,7 +116,6 @@ def validate_vm_observation(tool: str, target: str, payload: Any) -> dict[str, A
             "config_contents_exposed", "secrets_exposed",
         )):
             raise ValueError("vm_mcp_dependency_safety_claim_invalid")
-            raise ValueError("vm_mcp_dependency_execution_authority_invalid")
         rows = payload.get("dependencies")
         if not isinstance(rows, list) or len(rows) > 6:
             raise ValueError("vm_mcp_dependency_inventory_invalid")
