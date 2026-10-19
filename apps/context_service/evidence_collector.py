@@ -534,6 +534,10 @@ class EvidenceCollector:
             if not early_vm_actions:
                 await self._progress("vm_mcp", "started")
             actions = self._vm_actions_for_requests(requests, service=effective_service, port=vm_port, elastic_logs_available=elastic_logs_available)
+            if effective_service and any("redis" in str(row.get("raw_data") or "").lower()[:1000]
+                                         for row in evidence if isinstance(row, dict)):
+                if "redis_dependency_check" not in actions:
+                    actions.append("redis_dependency_check")
             if early_failed_service:
                 # Pre-approved read-only connector methods; these are diagnostics,
                 # never user/LLM-provided commands or remediation operations.
