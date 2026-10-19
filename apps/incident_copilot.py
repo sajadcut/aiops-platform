@@ -443,7 +443,7 @@ def dependency_investigation_answer(value: dict, *, persian: bool = True) -> str
     note = (
         "PING بدون احراز هویت فقط پاسخ اولیهٔ Redis را بررسی می‌کند؛ "
         "درستی رمز و DB انتخاب‌شدهٔ اپلیکیشن، وضعیت Connection Pool، "
-        "عملکرد تجاری و علت ریشه‌ای همچنان تأیید نشده‌اند."
+        "عملکرد تجاری و سایر موارد هنوز روشن نیستند؛ علت ریشه‌ای تأیید نشده است."
         if persian else
         "Unauthenticated Redis PING verifies only a limited protocol response; "
         "application credentials, database selection, pooling, business "
