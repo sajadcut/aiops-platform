@@ -161,9 +161,9 @@ async def resolve_llm_bindings(config: object, *, adapter: Any = None) -> dict:
         "other independently parsed inline host:port literals, select only the "
         "listed endpoint IDs. Never infer a default port. Never synthesize host, "
         "port, filename, command or credentials. Do not guess when relationships "
-        "are ambiguous. Return ONLY JSON with arrays, for example "
-        '{\"pairs\":[{\"host_id\":\"h0\",\"port_id\":\"p0\"}],'
-        '\"endpoint_ids\":[\"e0\"]}. Select only listed IDs."
+        "are ambiguous. Return ONLY JSON with arrays of field IDs, for example "
+        '{"pairs":[{"host_id":"h0","port_id":"p0"}],"endpoint_ids":["e0"]}. '
+        "Select only listed IDs."
     )
     try:
         response = await asyncio.wait_for(
