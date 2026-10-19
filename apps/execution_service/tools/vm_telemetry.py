@@ -33,7 +33,7 @@ class VMTelemetryTool(BaseTool):
         if not input_data.target or input_data.action not in self._ACTIONS:
             return False
         params = input_data.parameters or {}
-        if input_data.action in {"service_status", "service_logs", "config_validate", "nginx_config_review", "nginx_config_inspect", "service_runtime_discovery", "dotnet_config_syntax"}:
+        if input_data.action in {"service_status", "service_logs", "config_validate", "nginx_config_review", "nginx_config_inspect", "service_runtime_discovery", "redis_dependency_check", "dotnet_config_syntax"}:
             return bool(str(params.get("service", "")).strip())
         if input_data.action == "search_services":
             return bool(str(params.get("query") or "").strip())
@@ -75,6 +75,7 @@ class VMTelemetryTool(BaseTool):
         elif action == "nginx_config_review": result = await connector.nginx_config_review(target, str(params["service"]))
         elif action == "nginx_config_inspect": result = await connector.nginx_config_inspect(target, str(params["service"]))
         elif action == "service_runtime_discovery": result = await connector.service_runtime_discovery(target, str(params["service"]))
+        elif action == "redis_dependency_check": result = await connector.redis_dependency_check(target, str(params["service"]))
         elif action == "dotnet_config_syntax": result = await connector.dotnet_config_syntax(target, str(params["service"]))
         else: result = {"success": False, "error": "unsupported_action"}
         return ToolOutput(success=bool(result.get("success")), result=result, error=result.get("error"))
