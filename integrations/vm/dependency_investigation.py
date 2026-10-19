@@ -284,10 +284,14 @@ async def investigate(
         base["investigation_status"] = "awaiting_central_llm"
         return base
     if priority_family:
-        by_file.sort(key=lambda group: not any(
-            _matches_priority(str(row.get("kind") or ""), priority_family)
-            for row in group
-        ))
+        # Exact alert focus: NEVER spend a database incident's probe budget
+        # on Redis/HTTP or report those checks as database verification.
+        # The model cannot elevate an unrelated dependency to this scope.
+        by_file = [
+            [row for row in group
+             if _matches_priority(str(row.get("kind") or ""), priority_family)]
+            for group in by_file
+        ]
     # Never persist the complete parsed config or prompt in incident evidence.
     # Only bounded field counts, path provenance, and transport outcomes leave.
     # Spread the fixed probe budget across verified files. Otherwise one
@@ -308,10 +312,17 @@ async def investigate(
         if len(known) >= MAX_CHECKS:
             break
     if not known:
-        base["status"] = ("dependency_not_discovered" if base["config_files_checked"]
-                          else "config_parse_failed" if base["config_files_parse_failed"]
-                          else "config_read_unavailable")
-        base["limitations"] = ["no_static_dependency_endpoint_verified"]
+        base["status"] = (
+            "alert_dependency_not_discovered" if priority_family and
+            base["config_files_checked"] else
+            "dependency_not_discovered" if base["config_files_checked"]
+            else "config_parse_failed" if base["config_files_parse_failed"]
+            else "config_read_unavailable"
+        )
+        base["limitations"] = [
+            "no_config_verified_endpoint_for_alert_family" if priority_family
+            else "no_static_dependency_endpoint_verified"
+        ]
         return base
     followups: list[str] = []
     saw_unreachable = False
