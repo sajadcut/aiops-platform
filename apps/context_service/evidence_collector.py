@@ -27,7 +27,7 @@ class EvidenceCollector:
         "service_status", "service_logs", "system_logs", "process_snapshot",
         "process_status", "tcp_check", "port_listener_status", "dns_check",
         "route_check", "firewall_status", "config_validate", "nginx_config_review", "nginx_config_inspect",
-        "service_runtime_discovery", "service_config_discovery", "service_config_review", "dotnet_config_syntax",
+        "service_runtime_discovery", "service_config_discovery", "redis_dependency_check", "service_config_review", "dotnet_config_syntax",
     }
 
     def __init__(self, zabbix=None, elasticsearch=None, prometheus=None, vm=None, kubernetes=None):
@@ -175,6 +175,8 @@ class EvidenceCollector:
                 add("service_config_discovery")
             if service and any(token in text for token in ("runtime discovery", "systemd unit", "publish directory", "execstart")):
                 add("service_runtime_discovery")
+            if service and "redis" in text:
+                add("redis_dependency_check")
             if service and any(token in text for token in ("dotnet json", ".net json", "appsettings", "json syntax")):
                 add("dotnet_config_syntax")
             if any(token in text for token in ("firewall", "iptables", "nftables", "firewalld", " acl")):
@@ -547,7 +549,7 @@ class EvidenceCollector:
                     evidence.append(self._observation("vm_mcp", f"vm-skipped:{vm_target}:{action}:{since.isoformat()}", status="skipped", service=effective_service, detail="diagnostic_not_supported"))
                     continue
                 try:
-                    if action in {"service_status", "service_logs", "config_validate", "nginx_config_review", "nginx_config_inspect", "service_runtime_discovery", "service_config_discovery", "service_config_review", "dotnet_config_syntax"}:
+                    if action in {"service_status", "service_logs", "config_validate", "nginx_config_review", "nginx_config_inspect", "service_runtime_discovery", "service_config_discovery", "redis_dependency_check", "service_config_review", "dotnet_config_syntax"}:
                         result = await method(vm_target, effective_service)
                     elif action == "process_status":
                         result = await method(vm_target, effective_service)
