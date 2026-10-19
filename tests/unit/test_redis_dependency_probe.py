@@ -176,13 +176,13 @@ async def test_redis_alert_gets_bounded_dependency_check_without_model():
     }]}}
     result = await DynamicInvestigationPlanner.propose(state, adapter=None)
     assert result["execution_authority"] is False
-    assert result["checks"] == ["redis_dependency_check"]
+    assert result["checks"] == ["dependency_investigation"]
     requests = DynamicInvestigationPlanner.evidence_requests(
         result, has_service=True, has_port=False
     )
     assert len(requests) == 1
     assert requests[0]["evidence_type"] == "telemetry"
-    assert "redis" in requests[0]["reason"]
+    assert "dependency" in requests[0]["reason"]
     assert DynamicInvestigationPlanner.evidence_requests(
         result, has_service=False, has_port=False
     ) == []
