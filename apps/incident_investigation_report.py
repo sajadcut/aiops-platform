@@ -131,7 +131,7 @@ async def explain(brief: dict, lang: str = "fa", *, llm: Any = None) -> dict:
         "connection verification only as NOT YET EXECUTED unless evidence proves it. "
         "Only recommend registered read-only tools: " + ", ".join(sorted(_SUGGESTIONS)) +
         ". Keep each note under 160 characters and conclusion under 260. "
-        "Use Persian." if lang == "fa" else "Use English."
+        + ("Use Persian." if lang == "fa" else "Use English.")
     )
     try:
         reply = await asyncio.wait_for(
