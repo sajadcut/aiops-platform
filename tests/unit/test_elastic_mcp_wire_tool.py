@@ -44,6 +44,51 @@ async def test_elastic_mcp_wire_tool_allowlist_and_discovery(monkeypatch):
         await client.close()
 
 
+def test_esql_empty_table_is_decoded_from_json_string_content_block():
+    client = ElasticsearchMCPClient()
+    response = {
+        "structuredContent": {"task_id": "metadata-only"},
+        "content": [
+            {"type": "text", "text": '{"columns":[{"name":"@timestamp"}],"values":[]}'}
+        ],
+    }
+    selected = client._esql_payloads(response)
+    assert len(selected) == 1
+    assert client._esql_empty_table(selected[0]) is True
+    assert client._rows_from_payload(selected[0]) == []
+
+
+def test_esql_unknown_metadata_does_not_claim_zero_rows():
+    client = ElasticsearchMCPClient()
+    unknown = {"structuredContent": {"task_id": "metadata-only"},
+               "content": [{"type": "text", "text": "query accepted"}]}
+    selected = client._esql_payloads(unknown)
+    assert len(selected) == 1
+    assert client._esql_empty_table(selected[0]) is False
+    assert client._rows_from_payload(selected[0]) == []
+
+
+@pytest.mark.asyncio
+async def test_empty_esql_text_envelopes_are_not_unrecognized(monkeypatch):
+    client = ElasticsearchMCPClient()
+    async def fake_call_tool(name, arguments):
+        return {"structuredContent": {"status": "completed"},
+                "content": [{"type": "text", "text": '{"rows":[]}'}]}
+    monkeypatch.setattr(client, "call_tool", fake_call_tool)
+    try:
+        result = await client.get_logs(
+            "gfpapi", datetime(2026, 10, 19, 17, 0, tzinfo=timezone.utc),
+            limit=20,
+        )
+        assert result == []
+        diagnostics = client._last_esql_query_diagnostics
+        assert diagnostics["success_count"] == 5
+        assert diagnostics["unrecognized_envelopes"] == 0
+        assert diagnostics["recognized_empty_envelopes"] == 5
+    finally:
+        await client.close()
+
+
 @pytest.mark.asyncio
 async def test_elastic_get_logs_calls_actual_esql_wire_tool(monkeypatch):
     client = ElasticsearchMCPClient()
