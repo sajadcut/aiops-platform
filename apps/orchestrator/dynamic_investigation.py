@@ -483,6 +483,13 @@ class DynamicInvestigationPlanner:
             "config_proposal": None,
             "execution_authority": False, "counts_as_live_evidence": False,
         }
+        if redis_needs_check:
+            result["checks"] = ["redis_dependency_check"]
+            result["operator_questions"].append({
+                "question": "Redis errors were recorded. Verify the application\u0027s systemd-bound Redis endpoint and TCP connectivity.",
+                "reason": "Read-only dependency evidence is missing; an active systemd unit is not proof of Redis health.",
+                "evidence_refs": [],
+            })
         # Prefer the live, complete-file model result for the selected service
         # over stale grammar-only advice, but never elevate it to an executable
         # config_proposal. Its actual corrected bytes are intentionally absent.
