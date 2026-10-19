@@ -1109,6 +1109,12 @@ def build_decision_brief(
     recorded["alert_focused_report"] = build_alert_focused_report(
         incident=incident, evidence=evidence, brief=recorded,
     )
+    # Fast operator-facing conclusion is always populated from recorded facts,
+    # while optional LLM interpretation is fetched independently.
+    from apps.incident_alert_explanation import fallback_explanation
+    alert_fallback = fallback_explanation(recorded, "fa")
+    if alert_fallback:
+        recorded["alert_focused_report"]["readable_summary_fa"] = alert_fallback["text"]
     from apps.incident_remediation_opportunities import build_remediation_opportunities
     recorded["remediation_opportunities"] = build_remediation_opportunities(
         incident=incident, evidence=evidence, report=recorded,

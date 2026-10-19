@@ -388,6 +388,14 @@
 .ic-ir-alert-focus>p:first-child{padding:10px 14px;background:var(--raised);border:1px solid var(--line);border-radius:10px}
 .ic-ir-alert-focus h4{margin:18px 0 8px;font-size:14px;color:var(--text)}
 .ic-ir-alert-focus>small{display:block;color:var(--muted);margin-top:12px;font-size:12px}
+.ic-ir-alert-explanation{background:var(--raised);border:1px solid var(--line);border-radius:12px;padding:16px 20px;margin:14px 0}
+.ic-ir-alert-explanation strong{display:block;color:var(--text);font-size:14px}
+.ic-ir-alert-explanation p{font-size:14px;line-height:2.1;max-width:92ch;overflow-wrap:anywhere}
+.ic-ir-alert-technical{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+.ic-ir-alert-technical summary{cursor:pointer;color:var(--muted);font-size:13px;font-weight:700}
+.ic-ir-alert-technical summary:hover{color:var(--accent)}
+.ic-ir-alert-technical:focus-visible{outline:2px solid var(--accent)}
+
 
 .ic-ir-section h3{margin:0 0 12px;font-size:17px;line-height:1.8;color:var(--text)}
 .ic-ir-section p{margin:8px 0 12px}

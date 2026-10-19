@@ -185,6 +185,29 @@ def test_custom_dependency_is_supported_by_keyword_grounded_check():
     assert report["root_cause_confirmed"] is False
 
 
+def test_duplicate_same_redis_endpoint_collapses_and_preserves_both_evidences():
+    message = "GFP_Backend Redis errors reached at least 10 events in the last 2 minutes"
+    evidence = [
+        _record("trigger", "zabbix", {"signal_type": message,
+            "signal_summary": message, "name": message}),
+    ]
+    for name in ("redis-first", "redis-repeat"):
+        evidence.append(_record(name, "vm_mcp", {
+            "mcp_server": "vm_mcp", "tool_name": "dependency_investigation",
+            "success": True, "dependencies": [{
+                "kind": "redis", "host": "10.248.34.221", "port": 6379,
+                "probe_status": "tcp_reachable", "tcp_reachable": True,
+                "protocol_status": "client_not_installed",
+            }],
+        }))
+    alert = _brief(evidence)["alert_focused_report"]
+    assert len(alert["related_checks"]) == 1
+    assert alert["related_checks"][0]["evidence_refs"] == ["redis-first", "redis-repeat"]
+    assert alert["related_checks"][0]["endpoints"][0]["host"] == "10.248.34.221"
+    assert "10.248.34.221:6379" in alert["readable_summary_fa"]
+    assert "اتصال TCP موفق" in alert["readable_summary_fa"]
+
+
 def test_incident_without_ingress_still_has_honest_alert_focused_answer():
     summary = "Unusual Python worker latency spike"
     report = _brief([], summary)["alert_focused_report"]

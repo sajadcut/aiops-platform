@@ -1787,6 +1787,22 @@
     const alertObserved=arr(alert.related_checks);
     const alertName=String(alert.alert_message||i.summary||'').trim();
     const alertPrimary=alert.source_basis==='received_signal';
+    const narrativeMatches=state.narrative?.snapshot_id===r.snapshot_id &&
+      state.narrative?.language===state.language;
+    const focused=narrativeMatches?state.narrative?.alert_explanation:null;
+    const focusedText=fa && typeof focused?.text==='string' && focused.text.trim()
+      ?focused.text.trim():fa?String(alert.readable_summary_fa||'').trim():'';
+    const focusedLlm=focused?.status==='available' &&
+      focused?.generator==='configured_llm';
+    const focusedMarkup=focusedText?
+      '<div class="ic-ir-alert-explanation" data-alert-llm="'+
+      esc(focusedLlm?'available':'fallback')+'">'+
+      '<strong>'+esc(fa?(focusedLlm?'گزارش تحلیلی LLM بر پایه تست‌های واقعی':
+        'خلاصه فنی بر اساس تست‌های ثبت‌شده'):'Evidence-based explanation')+
+      '</strong><p>'+txt(focusedText)+'</p>'+
+      refs(arr(focused?.evidence_refs).length?focused.evidence_refs:
+        alertObserved.flatMap(x=>arr(x.evidence_refs).length?x.evidence_refs:
+          [x.evidence_ref].filter(Boolean)))+'</div>':'';
     const alertHeadline=alertName
       ?(fa?'بررسی آلارم دریافتی: ':'Analysis of received alert: ')+alertName.slice(0,155)
       :title;
@@ -1803,7 +1819,8 @@
           ?'هویت سرویس در همین مشاهده ثبت نشده؛ انتساب به این آلارم هنوز نیازمند تأیید است.'
           :'Service identity was not recorded for this check; attribution remains unverified.')+'</small>'
         :'')+
-      refs([row.evidence_ref].filter(Boolean))+'</li>');
+      refs(arr(row.evidence_refs).length?row.evidence_refs:
+        [row.evidence_ref].filter(Boolean))+'</li>');
     const alertSection='<div class="ic-ir-alert-focus" data-alert-focus="mandatory">'+
       '<p><strong>'+esc(fa?'متن هشدار مورد بررسی: ':'Alert being investigated: ')+
       '</strong>'+txt(alertName|| (fa?'متن آلارم ثبت نشده':'No alert message recorded'))+'</p>'+
@@ -1813,6 +1830,13 @@
         (fa?'مستقیماً از سیگنال ذخیره‌شده':'From persisted received signal'):
         (fa?'از خلاصه رخداد؛ متن اصلی سیگنال موجود نیست':'Incident summary fallback; original alert unavailable'))+
       '</p>'+refs([alert.alert_evidence_ref].filter(Boolean))+
+      focusedMarkup+
+      (focusedMarkup?'':'<p class="ic-ir-caution"><strong>'+
+       esc(fa?'نتیجه اولیه بررسی: ':'Initial assessment: ')+'</strong>'+
+       txt(alert.assessment_fa||'')+'</p>')+
+      '<details class="ic-ir-alert-technical"><summary>'+
+      esc(fa?'جزئیات بررسی‌های MCP و فرضیه‌های ایجنت‌ها':
+        'MCP probes and agent hypotheses')+'</summary>'+
       '<p class="ic-ir-caution"><strong>'+esc(fa?'پاسخ تحلیل به همین آلارم: ':'Assessment of this alert: ')+
       '</strong>'+txt(alert.assessment_fa||
         (fa?'تست مرتبط با متن آلارم هنوز تأیید نشده است.':'No alert-specific check is verified yet.'))+'</p>'+
@@ -1829,7 +1853,7 @@
         (fa?'با توجه به موضوع آلارم شواهد مستقیم جمع‌آوری شود.':'Collect direct evidence for the alert.'))+'</p>'+
       '<small>'+esc(fa?
       'هم‌زمانی خطاها یا موفقیت TCP به‌تنهایی علت ریشه‌ای را تأیید نمی‌کند.':
-      'Coincidence or TCP success alone cannot confirm root cause.')+'</small></div>';
+      'Coincidence or TCP success alone cannot confirm root cause.')+'</small></details></div>';
     const legacyNote=fa?'متن تخصصی و گزارش کامل Agentها در جزئیات پایین قابل مشاهده است.':
       'Detailed findings and agent reports are available below.';
     const section=(title,body,extra='')=>'<section class="ic-ir-section '+extra+'"><h3>'+

@@ -172,6 +172,16 @@ def build_alert_focused_report(incident: dict, evidence: list[dict],
             and _KIND_FAMILY.get(str(check.get("kind") or "").lower()) == family
         ]
         detail = finding
+        endpoints = [{
+            "kind": _text(check.get("kind"), 28),
+            "host": _text(check.get("host"), 120),
+            "port": check.get("port") if type(check.get("port")) is int else None,
+            "tcp_reachable": check.get("tcp_reachable") if type(check.get("tcp_reachable")) is bool else None,
+            "protocol_status": _text(check.get("protocol_status"), 65),
+            "protocol_health_verified": check.get("protocol_health_verified") is True,
+            "config_file": _text(check.get("config_file"), 170),
+            "config_key": _text(check.get("config_key"), 100),
+        } for check in matched_checks[:3]]
         if matched_checks:
             parts = []
             for check in matched_checks[:3]:
@@ -193,11 +203,37 @@ def build_alert_focused_report(incident: dict, evidence: list[dict],
             "result": detail or "نتیجه فنی تفصیلی ثبت نشده است.",
             "evidence_ref": _text(row.get("evidence_ref"), 180),
             "collected_at": _text(row.get("collected_at"), 60),
+            "endpoints": endpoints,
+            "evidence_refs": [_text(row.get("evidence_ref"), 180)] if row.get("evidence_ref") else [],
             "scope": ("related_observation_not_causal_proof" if observed_service
                       else "service_identity_not_recorded"),
         })
         if len(observations) >= 6:
             break
+
+    # Multiple investigation rounds can repeat the same endpoint result.
+    # Collapse identical facts but retain every source reference for audit.
+    collapsed: list[dict] = []
+    seen: dict[tuple, dict] = {}
+    for finding_row in observations:
+        endpoints = finding_row.get("endpoints") or []
+        key = (
+            finding_row.get("tool"),
+            tuple((ep.get("kind"), ep.get("host"), ep.get("port"),
+                   ep.get("tcp_reachable"), ep.get("protocol_status"))
+                  for ep in endpoints),
+            finding_row.get("result") if not endpoints else "",
+            finding_row.get("scope"),
+        )
+        if key in seen:
+            current = seen[key]
+            for ref in finding_row.get("evidence_refs") or []:
+                if ref and ref not in current["evidence_refs"]:
+                    current["evidence_refs"].append(ref)
+            continue
+        seen[key] = finding_row
+        collapsed.append(finding_row)
+    observations = collapsed
 
     agent_interpretations = []
     for agent in (brief.get("agent_findings") or [])[:35]:
