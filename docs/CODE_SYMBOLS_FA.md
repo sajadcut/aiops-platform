@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 614 | Dashboard JS files scanned: 8 | Symbols indexed: 7022**
+**Python files scanned: 615 | Dashboard JS files scanned: 8 | Symbols indexed: 7032**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1098,7 +1098,7 @@
 | `apps/context_service/builder.py` | `ContextBuilder` | 4 | class | Normalizes an incoming incident context and preserves evidence refs. | module |
 | `apps/context_service/builder.py` | `ContextBuilder.build` | 7 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | ContextBuilder |
 | `apps/context_service/dependency_log_analysis.py` | `_error_signatures` | 49 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/context_service/dependency_log_analysis.py` | `analyze_dependency_logs` | 105 | async function | Bounded, read-only central LLM analysis; never authorizes remediation. | module |
+| `apps/context_service/dependency_log_analysis.py` | `analyze_dependency_logs` | 109 | async function | Bounded, read-only central LLM analysis; never authorizes remediation. | module |
 | `apps/context_service/dependency_signals.py` | `dependency_signals` | 36 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/context_service/dependency_signals.py` | `has_dependency_probe` | 56 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/context_service/evidence_collector.py` | `EvidenceCollector` | 14 | class | Read-only cross-source Evidence boundary used by orchestration. | module |
@@ -4819,6 +4819,9 @@
 | `tests/unit/test_incident_alert_explanation.py` | `test_focused_llm_survives_main_narrative_reference_or_schema_failure.Provider` | 112 | class | کلاس | test_focused_llm_survives_main_narrative_reference_or_schema_failure |
 | `tests/unit/test_incident_alert_explanation.py` | `test_focused_llm_survives_main_narrative_reference_or_schema_failure.Provider.generate_with_messages` | 113 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_focused_llm_survives_main_narrative_reference_or_schema_failure.Provider |
 | `tests/unit/test_incident_alert_explanation.py` | `test_exact_tcp_success_never_becomes_verified_app_health` | 134 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_alert_explanation.py` | `test_central_llm_database_alert_excludes_unrelated_redis_and_marks_missing_elk` | 144 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_incident_alert_explanation.py` | `test_central_llm_database_alert_excludes_unrelated_redis_and_marks_missing_elk.Provider` | 161 | class | کلاس | test_central_llm_database_alert_excludes_unrelated_redis_and_marks_missing_elk |
+| `tests/unit/test_incident_alert_explanation.py` | `test_central_llm_database_alert_excludes_unrelated_redis_and_marks_missing_elk.Provider.generate_with_messages` | 162 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_central_llm_database_alert_excludes_unrelated_redis_and_marks_missing_elk.Provider |
 | `tests/unit/test_incident_alert_focused_report.py` | `_record` | 12 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_incident_alert_focused_report.py` | `_brief` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_incident_alert_focused_report.py` | `test_redis_alarm_is_primary_even_when_unrelated_systemd_is_active` | 34 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
@@ -6271,6 +6274,13 @@
 | `tests/unit/test_storage_reliability_engine.py` | `test_storage_agent_suppresses_llm_cleanup_suggestions_without_causal_evidence` | 249 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_storage_reliability_engine.py` | `test_storage_agent_suppresses_llm_cleanup_suggestions_without_causal_evidence.CleanupSuggestingModel` | 250 | class | کلاس | test_storage_agent_suppresses_llm_cleanup_suggestions_without_causal_evidence |
 | `tests/unit/test_storage_reliability_engine.py` | `test_storage_agent_suppresses_llm_cleanup_suggestions_without_causal_evidence.CleanupSuggestingModel.generate` | 251 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_storage_agent_suppresses_llm_cleanup_suggestions_without_causal_evidence.CleanupSuggestingModel |
+| `tests/unit/test_strict_database_log_analysis.py` | `_log` | 12 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_strict_database_log_analysis.py` | `test_only_explicit_matching_service_logs_can_support_database_rca` | 20 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_strict_database_log_analysis.py` | `Model` | 35 | class | کلاس | module |
+| `tests/unit/test_strict_database_log_analysis.py` | `Model.__init__` | 36 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Model |
+| `tests/unit/test_strict_database_log_analysis.py` | `Model.generate_with_messages` | 39 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Model |
+| `tests/unit/test_strict_database_log_analysis.py` | `test_model_cannot_invent_auth_failure_from_tcp_only` | 48 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_strict_database_log_analysis.py` | `test_model_auth_hypothesis_requires_explicit_matching_database_log` | 68 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_structured_agent_resilience.py` | `FakeLLM` | 13 | class | کلاس | module |
 | `tests/unit/test_structured_agent_resilience.py` | `FakeLLM.__init__` | 14 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeLLM |
 | `tests/unit/test_structured_agent_resilience.py` | `FakeLLM.provider_name` | 19 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | FakeLLM |
