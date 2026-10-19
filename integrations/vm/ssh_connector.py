@@ -1075,6 +1075,35 @@ class SSHVMConnector:
                     not isinstance(c, dict) or c.get("path") != appsettings for c in paths
                 ):
                     paths.append({"path": appsettings, "source": "systemd_dotnet_publish"})
+                # A .NET service frequently uses appsettings.Production.json
+                # while WorkingDirectory is unset. Inventory ONLY its
+                # systemd-verified DLL publish root; never guess an environment
+                # or recursively scan arbitrary directories.
+                from integrations.vm.runtime_discovery import _candidate_path
+                import re
+                quoted_publish = shlex.quote(publish)
+                inventory_command = (
+                    "test -d " + quoted_publish + " && test ! -L " + quoted_publish
+                    + " && test \"$(readlink -f -- " + quoted_publish + ")\" = " + quoted_publish
+                    + " && LC_ALL=C find " + quoted_publish
+                    + " -mindepth 1 -maxdepth 1 -type f -name 'appsettings*.json'"
+                    + " -print 2>/dev/null | head -n 12"
+                )
+                try:
+                    inventory = await self._run(target, inventory_command)
+                except Exception:
+                    inventory = {"success": False}
+                if inventory.get("success") is True:
+                    for discovered in str(inventory.get("stdout") or "").splitlines()[:12]:
+                        name = discovered.rsplit("/", 1)[-1]
+                        if not re.fullmatch(r"appsettings(?:\.[A-Za-z0-9_-]{1,48})?\.json", name):
+                            continue
+                        path = _candidate_path(discovered)
+                        if (path and path.startswith(publish.rstrip("/") + "/")
+                                and all(not isinstance(c, dict) or c.get("path") != path
+                                        for c in paths) and len(paths) < 16):
+                            paths.append({"path": path,
+                                          "source": "systemd_dotnet_publish_inventory"})
         for candidate in paths:
             if not isinstance(candidate, dict):
                 continue
