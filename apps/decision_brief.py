@@ -463,6 +463,41 @@ def _mcp(rows: Iterable[dict], now: datetime) -> tuple[list[dict], list[dict]]:
             evidence_item["llm_field_binding_status"] = safe(
                 observed.get("llm_field_binding_status"), 80,
             )
+            # Report the precise failure stage instead of reducing a completed
+            # tool call to "success". These are bounded, non-secret counters
+            # and status codes from the trusted MCP response.
+            evidence_item["dependency_discovery_status"] = safe(
+                observed.get("status"), 80,
+            )
+            evidence_item["dependency_config_files_read"] = (
+                observed.get("config_files_read")
+                if type(observed.get("config_files_read")) is int else None
+            )
+            evidence_item["dependency_config_files_parse_failed"] = (
+                observed.get("config_files_parse_failed")
+                if type(observed.get("config_files_parse_failed")) is int else None
+            )
+            evidence_item["dependency_config_files_checked"] = (
+                observed.get("config_files_checked")
+                if type(observed.get("config_files_checked")) is int else None
+            )
+            evidence_item["dependency_llm_file_results"] = [
+                {
+                    "config_file": safe(entry.get("config_file"), 180),
+                    "status": safe(entry.get("status"), 70),
+                    "host_fields": entry.get("candidate_host_count"),
+                    "port_fields": entry.get("candidate_port_count"),
+                    "verified_pairs": entry.get("verified_pair_count"),
+                }
+                for entry in arr(observed.get("llm_field_binding_files"))[:4]
+                if isinstance(entry, dict)
+                and all(
+                    type(entry.get(field)) is int and 0 <= entry[field] <= 16
+                    for field in ("candidate_host_count",
+                                  "candidate_port_count",
+                                  "verified_pair_count")
+                )
+            ]
             evidence_item["dependency_checks"] = checks
             evidence_item["dependency_probe_count"] = (
                 observed.get("checks_executed")
