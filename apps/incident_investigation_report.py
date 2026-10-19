@@ -60,6 +60,27 @@ def build_rows(brief: dict) -> list[dict]:
         if ref and ref not in row["evidence_refs"] and len(row["evidence_refs"]) < 5:
             row["evidence_refs"].append(ref)
     rows = list(groups.values())[:21]
+    identity = (brief.get("incident_summary") or {}).get("service_identity") or {}
+    if isinstance(identity, dict) and (
+        identity.get("source_host") or identity.get("suspected_service")
+    ):
+        verified = identity.get("verified") is True
+        facts = [x for x in (
+            "host=" + _safe(identity.get("source_host"), 100) if identity.get("source_host") else "",
+            "service=" + _safe(identity.get("suspected_service"), 80) if identity.get("suspected_service") else "",
+            "basis=" + _safe(identity.get("basis"), 70) if identity.get("basis") else "",
+        ) if x]
+        rows.insert(0, {
+            "id": "host-identity", "component": "کشف میزبان و سرویس",
+            "check": "تطبیق هویت میزبان و سرویس در شواهد رخداد",
+            "tool": "identity_correlation", "status": "verified" if verified else "unverified",
+            "count": 1,
+            "result": "; ".join(facts) + (
+                "؛ هویت مطابق شواهد بررسی‌شده تأیید شده است."
+                if verified else "؛ این تطبیق هنوز تأیید نشده است."
+            ),
+            "evidence_refs": [],
+        })
     for row in rows:
         if not row["result"]:
             row["result"] = "فراخوانی ثبت شده، اما نتیجهٔ فنی تفصیلی قابل استناد نیست."
