@@ -14,7 +14,7 @@ from integrations.vm.general_config_review import checked_config_path, remote_co
 MAX_FILES = 4
 MAX_CHECKS = 6
 MAX_ENCODED = 349528
-SUPPORTED = (".json", ".yaml", ".yml", ".properties", ".ini", ".cfg", ".conf")
+SUPPORTED = (".json", ".yaml", ".yml", ".properties", ".ini", ".cfg", ".conf", ".xml", ".config")
 
 
 async def http_head(connector: Any, target: str, *, host: str, port: int, scheme: str) -> dict:
