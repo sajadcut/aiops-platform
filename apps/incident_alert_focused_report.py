@@ -176,6 +176,8 @@ def build_alert_focused_report(incident: dict, evidence: list[dict],
             "kind": _text(check.get("kind"), 28),
             "host": _text(check.get("host"), 120),
             "port": check.get("port") if type(check.get("port")) is int else None,
+            "port_inferred": (check.get("port_inferred")
+                              if type(check.get("port_inferred")) is bool else None),
             "tcp_reachable": check.get("tcp_reachable") if type(check.get("tcp_reachable")) is bool else None,
             "protocol_status": _text(check.get("protocol_status"), 65),
             "protocol_health_verified": check.get("protocol_health_verified") is True,
@@ -189,9 +191,15 @@ def build_alert_focused_report(incident: dict, evidence: list[dict],
                 host = _text(check.get("host"), 110)
                 port = check.get("port")
                 destination = f"{kind} {host}:{port}" if type(port) is int and host else kind
-                transport = ("TCP برقرار" if check.get("tcp_reachable") is True
-                             else "TCP ناموفق" if check.get("tcp_reachable") is False
-                             else "TCP تأیید نشده")
+                # A legacy row without port provenance is not proof that
+                # the TCP test targeted the effective application port.
+                transport = (
+                    "پورت برنامه تأیید نشده؛ TCP روی این مقصد اعتبارسنجی ارتباط برنامه نیست"
+                    if check.get("port_inferred") is not False else
+                    "TCP برقرار" if check.get("tcp_reachable") is True else
+                    "TCP ناموفق" if check.get("tcp_reachable") is False else
+                    "TCP تأیید نشده"
+                )
                 protocol = _text(check.get("protocol_status"), 65)
                 parts.append(f"{destination} — {transport}"
                              + (f"؛ پروتکل: {protocol}" if protocol else "؛ پروتکل تأیید نشده"))
@@ -205,8 +213,12 @@ def build_alert_focused_report(incident: dict, evidence: list[dict],
             "collected_at": _text(row.get("collected_at"), 60),
             "endpoints": endpoints,
             "evidence_refs": [_text(row.get("evidence_ref"), 180)] if row.get("evidence_ref") else [],
-            "scope": ("related_observation_not_causal_proof" if observed_service
-                      else "service_identity_not_recorded"),
+            "scope": (
+                "dependency_port_not_verified" if any(
+                    ep.get("port_inferred") is not False for ep in endpoints
+                ) else "related_observation_not_causal_proof" if observed_service
+                else "service_identity_not_recorded"
+            ),
         })
         if len(observations) >= 6:
             break
@@ -220,7 +232,8 @@ def build_alert_focused_report(incident: dict, evidence: list[dict],
         key = (
             finding_row.get("tool"),
             tuple((ep.get("kind"), ep.get("host"), ep.get("port"),
-                   ep.get("tcp_reachable"), ep.get("protocol_status"))
+                   ep.get("tcp_reachable"), ep.get("protocol_status"),
+                   ep.get("port_inferred"))
                   for ep in endpoints),
             finding_row.get("result") if not endpoints else "",
             finding_row.get("scope"),
