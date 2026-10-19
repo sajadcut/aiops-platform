@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, Iterable, List, Optional, Set
 
 from apps.context_service.asset_identity import AssetIdentityResolver
+from domain.contracts.logging import logger
 from domain.contracts.config import settings
 from integrations.vm.target_context import current_vm_port, current_vm_target, vm_probes_blocked
 from integrations.kubernetes.target_context import current_kubernetes_namespace
@@ -566,6 +567,41 @@ class EvidenceCollector:
                     if action == "service_config_review" and isinstance(result, dict):
                         result = await self._analyze_config_syntax_without_persisting_grammar(result)
                     if isinstance(result, dict) and result.get("success"):
+                        if action == "dependency_investigation":
+                            # Log only contract-bounded, non-secret evidence
+                            # of WHY a config-derived port was (not) found.
+                            # A successful MCP dispatch is not a successful
+                            # Host/Port extraction or a successful TCP test.
+                            logger.info(
+                                "vm_dependency_endpoint_extraction_result",
+                                target=vm_target, service=effective_service,
+                                discovery_status=str(result.get("status") or "")[:60],
+                                binding_status=str(result.get("llm_field_binding_status") or "")[:70],
+                                config_files_read=result.get("config_files_read"),
+                                config_files_checked=result.get("config_files_checked"),
+                                config_files_parse_failed=result.get("config_files_parse_failed"),
+                                checks_executed=result.get("checks_executed"),
+                                binding_files=[
+                                    {
+                                        "status": str(item.get("status") or "")[:60],
+                                        "host_fields": item.get("candidate_host_count"),
+                                        "port_fields": item.get("candidate_port_count"),
+                                        "verified_pairs": item.get("verified_pair_count"),
+                                    }
+                                    for item in (result.get("llm_field_binding_files") or [])[:4]
+                                    if isinstance(item, dict)
+                                ],
+                                probe_summary=[
+                                    {
+                                        "kind": str(item.get("kind") or "")[:24],
+                                        "port": item.get("port") if type(item.get("port")) is int else None,
+                                        "inferred": item.get("port_inferred"),
+                                        "status": str(item.get("probe_status") or "")[:60],
+                                    }
+                                    for item in (result.get("dependencies") or [])[:6]
+                                    if isinstance(item, dict)
+                                ],
+                            )
                         rows = self._vm_evidence(action, vm_target, effective_service, vm_port, result, since)
                         evidence.extend(rows)
                         evidence.append(self._observation("vm_mcp", f"vm-observation:{vm_target}:{action}:{since.isoformat()}", status="queried", result_count=len(rows), service=effective_service, detail=f"target={vm_target};diagnostic={action}"))
