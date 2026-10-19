@@ -998,6 +998,9 @@ async def test_elastic_vm_refuses_reported_alias_when_systemd_id_is_different(mo
     assert evidence == []
     assert discovery["status"] == "candidates_found"
     assert discovery["candidates"][0]["verification_status"] == "vm_canonical_unit_mismatch"
+    assert discovery["candidates"][0]["requested_runtime_unit"] == "gfp_backend"
+    assert discovery["candidates"][0]["observed_canonical_unit"] == "gfpapi"
+    assert discovery.get("verified_target") is None
 
 
 @pytest.mark.asyncio
