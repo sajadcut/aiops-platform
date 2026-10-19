@@ -835,7 +835,7 @@ class SSHVMConnector:
         """
         self._validate_service(service)
         props = " --property=".join([
-            "Id", "LoadState", "ActiveState", "SubState", "UnitFileState", "MainPID",
+            "Id", "Names", "LoadState", "ActiveState", "SubState", "UnitFileState", "MainPID",
             "ExecMainCode", "ExecMainStatus", "NRestarts", "Result",
             "TimeoutStartUSec", "TimeoutStopUSec",
         ])
@@ -865,6 +865,12 @@ class SSHVMConnector:
             # Id is systemd's canonical loaded unit, unlike a requested alias.
             # The Control Plane must check it independently before binding.
             "unit_id": str(values.get("Id") or "")[:128] or None,
+            # systemd's own Names property is an independently observed alias
+            # inventory; never generated from an alert, LLM or RAG record.
+            "unit_aliases": [
+                name for name in str(values.get("Names") or "").split()[:12]
+                if re.fullmatch(r"[A-Za-z0-9@_.:-]{2,128}", name)
+            ],
             "load_state": values.get("LoadState"), "active_state": active_state,
             "sub_state": values.get("SubState"), "unit_file_state": values.get("UnitFileState"),
             "main_pid": numeric("MainPID"), "exec_main_code": numeric("ExecMainCode"),
