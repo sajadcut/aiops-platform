@@ -41,7 +41,7 @@ async def test_read_only_redis_tcp_uses_only_systemd_verified_appsettings():
             return {"success": True, "stdout": encoded}
         async def tcp_check(self, target, host, port):
             assert (target, host, port) == ("10.248.16.82", "redis.internal", 6380)
-            return {"supported": True, "reachable": False}
+            return {"success": True, "supported": True, "reachable": False}
     result = await check_redis_config(Stub(), "10.248.16.82", "gfpapi")
     assert result["status"] == "tcp_checked"
     assert result["endpoints"][0]["tcp_status"] == "unreachable"
