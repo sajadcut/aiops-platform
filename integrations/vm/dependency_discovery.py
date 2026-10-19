@@ -85,6 +85,10 @@ def load_config(text: str, filename: str):
         return json.loads(normalize_dotnet_json(text))
     if filename.lower().endswith((".yml", ".yaml")):
         return yaml.safe_load(text)
+    if filename.lower().endswith(".toml"):
+        # Python standard library; important for Go and Python services.
+        import tomllib
+        return tomllib.loads(text)
     if filename.lower().endswith((".xml", ".config")):
         # Tomcat context.xml and .NET app.config: only known connection
         # attribute formats are considered; no XML entities or DTD expansion.
@@ -115,7 +119,7 @@ def load_config(text: str, filename: str):
                 elif prefix.startswith(("redis://", "rediss://")):
                     result["Redis" + str(index)] = {"Configuration": value}
         return result
-    if filename.lower().endswith((".properties", ".ini", ".cfg", ".conf")):
+    if filename.lower().endswith((".properties", ".ini", ".cfg", ".conf", ".cnf")):
         result = {}
         for line in text.splitlines()[:1800]:
             line = line.strip()
