@@ -242,7 +242,9 @@ def _deterministic_vm_service_read_call(
         r"(?<![\w/])/(?:var|app|home|opt|data|tmp|usr|root)(?:/|\b))",
         current, re.IGNORECASE,
     ))
-    if disk_request and "vm_diagnostics" in available:
+    if disk_request and "vm_diagnostics" not in available:
+        return None  # Never coerce a disk request into a stale systemd service.
+    if disk_request:
         return {
             "id": "deterministic-vm-disk-read",
             "type": "function",
