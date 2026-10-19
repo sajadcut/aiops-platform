@@ -62,6 +62,36 @@ def load_config(text: str, filename: str):
         return json.loads(normalize_dotnet_json(text))
     if filename.lower().endswith((".yml", ".yaml")):
         return yaml.safe_load(text)
+    if filename.lower().endswith((".xml", ".config")):
+        # Tomcat context.xml and .NET app.config: only known connection
+        # attribute formats are considered; no XML entities or DTD expansion.
+        if "<!DOCTYPE" in text.upper() or "<!ENTITY" in text.upper():
+            raise ValueError("xml_entities_not_allowed")
+        import xml.etree.ElementTree as ET
+        root = ET.fromstring(text)
+        result = {}
+        for index, element in enumerate(root.iter()):
+            if index >= 75:
+                break
+            attrs = {str(k).lower(): v for k, v in element.attrib.items()}
+            for field in ("connectionstring", "url", "uri", "brokerurl"):
+                value = attrs.get(field)
+                if not isinstance(value, str) or len(value) > 1600:
+                    continue
+                prefix = value.strip().lower()
+                if prefix.startswith(("jdbc:", "server=", "host=", "data source=")):
+                    result["ConnectionStrings" + str(index)] = {"ConnectionStrings": {
+                        "ConnectionString": value,
+                    }}
+                elif prefix.startswith(("tcp://", "ssl://")):
+                    result["ActiveMQ" + str(index)] = {"BrokerUrl": value}
+                elif prefix.startswith(("http://", "https://")):
+                    result["Service" + str(index)] = {"BaseUrl": value}
+                elif prefix.startswith(("amqp://", "amqps://")):
+                    result["RabbitMQ" + str(index)] = {"Connection": value}
+                elif prefix.startswith(("redis://", "rediss://")):
+                    result["Redis" + str(index)] = {"Configuration": value}
+        return result
     if filename.lower().endswith((".properties", ".ini", ".cfg", ".conf")):
         result = {}
         for line in text.splitlines()[:1800]:
