@@ -169,6 +169,7 @@ def build_alert_focused_report(incident: dict, evidence: list[dict],
             binding_diagnostics.append({
                 "status": _text(row.get("dependency_discovery_status"), 70),
                 "binding_status": _text(row.get("llm_field_binding_status"), 70),
+                "agent_contract_status": _text(row.get("dependency_agent_contract_status"), 70),
                 "config_files_read": row.get("dependency_config_files_read"),
                 "config_files_checked": row.get("dependency_config_files_checked"),
                 "config_files_parse_failed": row.get("dependency_config_files_parse_failed"),

@@ -568,6 +568,31 @@ class EvidenceCollector:
                         result = await self._analyze_config_syntax_without_persisting_grammar(result)
                     if isinstance(result, dict) and result.get("success"):
                         if action == "dependency_investigation":
+                            checked = result.get("config_files_checked")
+                            bindings = result.get("llm_field_binding_files")
+                            legacy_probe = any(
+                                isinstance(dep, dict)
+                                and dep.get("port_inferred") is True
+                                and (dep.get("tcp_reachable") is not None
+                                     or dep.get("probe_status") not in {
+                                         "port_unverified", "not_executed"
+                                     })
+                                for dep in (result.get("dependencies") or [])[:6]
+                            )
+                            legacy_binding = (
+                                type(checked) is int and checked > 0
+                                and (not isinstance(bindings, list) or not bindings)
+                                and not result.get("llm_field_binding_status")
+                            )
+                            if legacy_probe or legacy_binding:
+                                logger.warning(
+                                    "vm_dependency_agent_contract_mismatch",
+                                    target=vm_target, service=effective_service,
+                                    update_required=True,
+                                    legacy_probe_on_inferred_port=legacy_probe,
+                                    missing_llm_binding_evidence=legacy_binding,
+                                    reason="outbound_agent_runtime_does_not_match_current_dependency_contract",
+                                )
                             # Log only contract-bounded, non-secret evidence
                             # of WHY a config-derived port was (not) found.
                             # A successful MCP dispatch is not a successful

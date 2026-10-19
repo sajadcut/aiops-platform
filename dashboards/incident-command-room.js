@@ -1814,6 +1814,15 @@
     const extraction=arr(alert.dependency_extraction_diagnostics).slice(0,3);
     const extractionLines=extraction.flatMap(item=>{
       const facts=arr(item.files).slice(0,4);
+      const mismatch=item.agent_contract_status==='upgrade_required';
+      const compatibility=mismatch
+        ?'<p class="ic-ir-caution"><strong>'+
+        esc(fa?'نسخه VM Agent قدیمی یا ناسازگار است: ':
+          'VM agent contract mismatch: ')+
+        '</strong>'+esc(fa
+          ?'کد اجرایی روی میزبان باید به‌روزرسانی شود. تست TCP روی پورت پیش‌فرض، اعتبارسنجی پورت برنامه نیست.'
+          :'Upgrade the on-host VM agent. A TCP test on an inferred vendor-default port does not verify the application endpoint.')+
+        '</p>':'';
       const head=(fa?'وضعیت بررسی کانفیگ: ':'Config review status: ')+
         (item.status||'unknown')+' · LLM: '+(item.binding_status||'not_recorded')+
         ' · '+(fa?'فایل خوانده‌شده: ':'Files read: ')+
@@ -1826,7 +1835,7 @@
         ' · Host='+txt(String(f.host_fields??'?'))+
         ' · Port='+txt(String(f.port_fields??'?'))+
         ' · matched='+txt(String(f.verified_pairs??'?'))+'</li>');
-      return ['<p>'+txt(head)+'</p>'+(rows.length?list(rows):
+      return [compatibility+'<p>'+txt(head)+'</p>'+(rows.length?list(rows):
         '<p>'+esc(fa?'نتیجهٔ تطبیق فیلدهای فایل ثبت نشده است.':
           'Per-file field matching was not recorded.')+'</p>')+
         refs([item.evidence_ref].filter(Boolean))];
