@@ -2789,6 +2789,8 @@
     const blocked=state.historic||state.busy||state.chatBusy||
       state.configPreviewPending||state.lifecycle?.analysis_in_progress;
     const disabled=blocked?' disabled':'';
+    const nginxNeedsPreview=service==='nginx'&&originalFailed&&!candidate&&!hasDiff&&
+      !['approved','pending','pending_validation','consumed'].includes(approval);
     const previewButton='<button type="button" class="ic-btn ic-btn-primary" data-config-preview="'+
       previewKind+'" data-preview-open-diff="1"'+disabled+'>'+
       esc(nginxNeedsPreview?(fa?'ساخت پیش‌نمایش اصلاح':'Generate safe fix preview'):
@@ -2802,8 +2804,6 @@
     // A confirmed syntax failure without a candidate should offer the
     // deliberate COMPLETE-file repair as the primary action. The browser
     // always asks before sending any configuration secrets to the gateway.
-    const nginxNeedsPreview=service==='nginx'&&originalFailed&&!candidate&&!hasDiff&&
-      !['approved','pending','pending_validation','consumed'].includes(approval);
     // Prefer a bounded worker-side Nginx preview before disclosing any
     // complete configuration file to a model.
     const needsCompleteRepair=originalFailed&&!candidate&&!hasDiff&&
