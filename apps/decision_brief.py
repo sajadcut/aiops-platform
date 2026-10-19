@@ -303,9 +303,19 @@ def tool_observation_summary(raw: dict) -> str | None:
         for row in arr(raw.get("dependencies"))[:6]:
             if not isinstance(row, dict):
                 continue
-            observed.append(f"{safe(row.get('kind'), 30)}:{safe(row.get('host'), 100)}:"
-                            f"{row.get('port')}={safe(row.get('probe_status'), 35)}"
-                            + (f"(HTTP {row.get('http_status')})" if type(row.get("http_status")) is int else ""))
+            endpoint = (f"{safe(row.get('kind'), 30)}:{safe(row.get('host'), 100)}:"
+                        f"{row.get('port')}={safe(row.get('probe_status'), 35)}"
+                        + (f"(HTTP {row.get('http_status')})"
+                           if type(row.get("http_status")) is int else ""))
+            # Show the structural source of the evidence, never a setting value.
+            config_path = safe(row.get("config_file"), 160)
+            config_key = safe(row.get("config_key"), 100)
+            if config_path:
+                endpoint += f" [file={config_path}"
+                if config_key:
+                    endpoint += f", key={config_key}"
+                endpoint += "]"
+            observed.append(endpoint)
         return safe(f"config_files_checked={raw.get('config_files_checked', 0)}; "
                     f"checks_executed={raw.get('checks_executed', 0)}; "
                     + ("; ".join(observed) if observed else "no_verified_dependency"), 380)
