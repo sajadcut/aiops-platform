@@ -1100,7 +1100,7 @@ class SSHVMConnector:
         # If systemd has no explicit config flags, inspect ONLY the
         # unit-owned working directory, never a path suggested by an LLM.
         # Inventory returns filenames, not file contents or environment.
-        if not any(item["verified_exists"] for item in base["files"]):
+        if len(base["files"]) < 12:
             from integrations.vm.runtime_discovery import safe_absolute_path, _candidate_path
             working = safe_absolute_path(unit.get("working_directory"))
             if (working and len(working) <= 210
