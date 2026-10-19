@@ -125,12 +125,11 @@ def _response_safe(text: str, endpoints: list[dict], family: str) -> bool:
     return True
 
 
-async def explain_alert(brief: dict, lang: str = "fa") -> dict | None:
+def fallback_explanation(brief: dict, lang: str = "fa") -> dict | None:
     alert = brief.get("alert_focused_report") or {}
     if not isinstance(alert, dict) or not alert.get("alert_message") or lang != "fa":
         return None
     endpoints = _verified_endpoints(alert)
-    prefix = _prefix(alert, endpoints, lang)
     refs = list(dict.fromkeys(
         str(ref)[:180]
         for row in (alert.get("related_checks") or [])[:8]
@@ -138,12 +137,24 @@ async def explain_alert(brief: dict, lang: str = "fa") -> dict | None:
         for ref in (row.get("evidence_refs") or [row.get("evidence_ref")])
         if isinstance(ref, str) and ref
     ))[:12]
-    base = {
+    return {
         "status": "fallback", "generator": "deterministic_evidence",
-        "text": prefix + " " + _clean(alert.get("next_check_fa"), 320),
-        "evidence_refs": refs,
-        "read_only": True, "authorizes_execution": False,
+        "text": _prefix(alert, endpoints, lang) + " "
+                + _clean(alert.get("next_check_fa"), 320),
+        "evidence_refs": refs, "read_only": True,
+        "authorizes_execution": False,
     }
+
+
+async def explain_alert(brief: dict, lang: str = "fa") -> dict | None:
+    alert = brief.get("alert_focused_report") or {}
+    if not isinstance(alert, dict) or not alert.get("alert_message") or lang != "fa":
+        return None
+    endpoints = _verified_endpoints(alert)
+    prefix = _prefix(alert, endpoints, lang)
+    base = fallback_explanation(brief, lang)
+    if base is None:
+        return None
     # The IP/port, statuses, and evidence links are owned by the backend.
     # The LLM is only allowed to add an interpretation and next checks.
     payload = redact({
