@@ -74,7 +74,11 @@ def _error_signatures(evidence: list[dict], family: str, service: str) -> tuple[
             continue
         observed = str(raw.get("service") or raw.get("Properties.ServiceName")
                        or raw.get("service.name") or "").strip()
-        if observed and observed.casefold().removesuffix(".service") != service.casefold().removesuffix(".service"):
+        # An unscoped log line can describe another service on the same VM.
+        # Require an explicit matching service label. For VM journal entries,
+        # only an independently service-bound query may establish the source.
+        # Without either, refuse to attribute the error to this alert.
+        if observed.casefold().removesuffix(".service") != service.casefold().removesuffix(".service"):
             continue
         entries = raw.get("entries") if isinstance(raw.get("entries"), list) else [
             raw.get("message") or raw.get("Message") or raw.get("Properties.LogEntry.Message")
@@ -164,7 +168,31 @@ async def analyze_dependency_logs(
                 candidate = str(parsed.get("hypothesis") or "")
                 allowed_hosts = {row["host"] for row in relevant}
                 ip_mentions = re.findall(r"(?<![\w.])(?:\d{1,3}\.){3}\d{1,3}(?![\w.])", text)
-                if (candidate in _ALLOWED and 20 <= len(text) <= 650
+                signature_codes = {row["error_signature"] for row in signatures}
+                hypothesis_supported = (
+                    candidate == "unknown"
+                    or candidate == "authentication"
+                       and "authentication_failed" in signature_codes
+                    or candidate == "pool"
+                       and "pool_exhaustion" in signature_codes
+                    or candidate == "tls"
+                       and "tls_handshake_failed" in signature_codes
+                    or candidate == "dns"
+                       and "name_resolution_failed" in signature_codes
+                    or candidate == "network"
+                       and (
+                           "connection_refused" in signature_codes
+                           or "connection_timeout" in signature_codes
+                           or "connection_reset" in signature_codes
+                           or any(row["tcp_reachable"] is False for row in relevant)
+                       )
+                    or candidate == "protocol"
+                       and bool(signature_codes & {
+                           "db_connection_error", "broker_connection_error",
+                       })
+                )
+                if (candidate in _ALLOWED and hypothesis_supported
+                        and 20 <= len(text) <= 650
                         and not any(host not in allowed_hosts for host in ip_mentions)
                         and not re.search(r"علت\s+قطعی\s+(?:است|مشخص|تأیید\s+شده)|قطعاً\s+مشخص|ریشه\s+تأیید\s+شده", text)):
                     hypothesis = candidate

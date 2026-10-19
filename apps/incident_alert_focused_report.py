@@ -365,6 +365,9 @@ def build_alert_focused_report(incident: dict, evidence: list[dict],
     return {
         "status": "related_checks_recorded" if observed else "no_relevant_checks",
         "alert_message": message,
+        # The reported service remains the subject. A different canonical
+        # systemd unit cannot silently replace it without live alias proof.
+        "reported_service": _text(incident.get("service"), 120),
         "alert_source": source_name or _text(incident.get("context", {}).get("source")
                                              if isinstance(incident.get("context"), dict) else "", 70)
                         or "ثبت رخداد",
