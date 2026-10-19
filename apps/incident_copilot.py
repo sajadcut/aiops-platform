@@ -17,7 +17,7 @@ from apps.chatbot.vm_investigation import run_vm_investigation
 READ_ACTIONS = frozenset({
     "vm_investigate",
     "service_status", "service_logs", "config_validate", "nginx_config_review",
-    "service_runtime_discovery", "service_config_discovery", "service_config_review", "service_config_llm_repair", "dotnet_config_syntax", "knowledge_search",
+    "service_runtime_discovery", "service_config_discovery", "redis_dependency_check", "service_config_review", "service_config_llm_repair", "dotnet_config_syntax", "knowledge_search",
     "nginx_config_inspect", "elastic_logs", "elastic_recorded",
 })
 WRITE_SUGGESTIONS = {"propose_reload": "reload_service",
