@@ -313,3 +313,47 @@ def test_unknown_stack_transport_error_still_proposes_bounded_discovery():
     rows = [{"source": "elasticsearch", "type": "log",
              "raw_data": {"message": "PaymentClient SocketException: ECONNREFUSED"}}]
     assert dependency_signals(rows) == ["unknown_dependency"]
+
+
+@pytest.mark.asyncio
+async def test_invalid_config_has_distinct_parse_status_without_leaking_values():
+    encoded = base64.b64encode(b'{"Main": "SECRET", broken syntax').decode()
+
+    class Stub:
+        def _validate_target(self, target): pass
+        def _validate_service(self, service): pass
+
+        async def service_config_discovery(self, target, service):
+            return {"success": True, "files": [
+                {"path": "/srv/app/appsettings.json", "verified_exists": True},
+            ]}
+
+        async def _run(self, target, command):
+            return {"success": True, "stdout": encoded}
+
+        async def tcp_check(self, target, host, port):
+            raise AssertionError("never probe from invalid config")
+
+    result = await investigate(Stub(), "vm", "svc")
+    assert result["status"] == "config_parse_failed"
+    assert result["config_files_read"] == 1
+    assert result["config_files_parse_failed"] == 1
+    assert result["checks_executed"] == 0
+    assert "SECRET" not in repr(result)
+
+
+def test_public_dependency_answer_identifies_provenance_not_business_health():
+    from apps.incident_copilot import dependency_investigation_answer
+    answer = dependency_investigation_answer({
+        "success": True, "service": "gfpapi", "status": "checks_completed",
+        "dependencies": [{
+            "kind": "custom_tcp", "host": "payment.internal", "port": 60001,
+            "probe_status": "tcp_reachable", "probe_scope": "transport_tcp_connect",
+            "config_file": "/srv/gfp/appsettings.json",
+            "config_key": "PaymentAdapter.Host",
+        }],
+    })
+    assert "gfpapi" in answer
+    assert "/srv/gfp/appsettings.json" in answer
+    assert "PaymentAdapter.Host" in answer
+    assert "علت ریشه‌ای تأیید نشده" in answer
