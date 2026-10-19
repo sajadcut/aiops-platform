@@ -51,6 +51,7 @@ def output_schema(tool: str) -> dict[str, Any]:
     }
     if tool == "disk_status":
         schema["properties"]["filesystems"] = {"type": "array", "items": _FILE_ROW}
+        schema["properties"]["block_devices"] = {"type": "array", "items": {"type": "object"}}
         schema["properties"]["inodes"] = {"type": "array", "items": _FILE_ROW}
     else:
         schema["properties"]["services"] = {"type": "array", "items": _SERVICE_ROW}

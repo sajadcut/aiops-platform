@@ -100,8 +100,20 @@ def render_vm_disk_status(payload: dict[str, Any], *, persian: bool = True) -> s
             line = f"- {mount} ({fs}): total {total}, used {used}, available {free}, used {pct}"
             if inode:
                 line += f", inode used {inode}"
+        if isinstance(row.get("read_only"), bool):
+            line += ("، فقط‌خواندنی" if persian else ", read-only") if row["read_only"] else ""
         lines.append(line)
         valid += 1
+    devices = result.get("block_devices")
+    if isinstance(devices, list) and devices:
+        lines.append("دیسک‌ها و پارتیشن‌های شناخته‌شده:" if persian else "Detected block devices:")
+        for item in devices[:64]:
+            if not isinstance(item, dict):
+                continue
+            size = _bytes(item.get("size_bytes"))
+            if size is not None:
+                lines.append(f"- {_label(item.get('device'))} ({_label(item.get('type'))}): {size}" +
+                             ("، فقط‌خواندنی" if item.get("read_only") else ""))
     if valid == 0:
         return (f"داده‌های دیسک {target} قابل‌اعتبارسنجی نبود؛ ظرفیت اعلام نمی‌شود."
                 if persian else f"Disk data for {target} failed validation; capacity not reported.")

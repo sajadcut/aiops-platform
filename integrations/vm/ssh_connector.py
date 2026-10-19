@@ -14,6 +14,7 @@ from domain.contracts.config import settings
 from domain.contracts.logging import logger
 from domain.contracts.redaction import redact_text
 from integrations.vm.service_inventory import parse_systemd_services
+from integrations.vm.block_devices import parse_block_devices, parse_mount_modes
 from integrations.vm.service_adapters import (
     get_service_adapter, discover_config_path, config_check_for_path,
     parse_config_diagnostic,
@@ -581,10 +582,20 @@ class SSHVMConnector:
         return {"success": True, "target": target, "host": data}
 
     async def disk_status(self, target: str) -> Dict[str, Any]:
-        result = await self._run(target, "LC_ALL=C; df -P -B1 2>/dev/null; printf '\\n__AIOPS_INODES__\\n'; df -Pi 2>/dev/null")
+        result = await self._run(target, (
+            "LC_ALL=C; df -P -B1 2>/dev/null; printf '\\n__AIOPS_INODES__\\n'; "
+            "df -Pi 2>/dev/null; printf '\\n__AIOPS_BLOCK_DEVICES__\\n'; "
+            "if command -v lsblk >/dev/null 2>&1; then "
+            "lsblk -b -P -o NAME,TYPE,SIZE,FSTYPE,MOUNTPOINT,RO 2>/dev/null; fi; "
+            "printf '\\n__AIOPS_MOUNT_MODES__\\n'; "
+            "if command -v findmnt >/dev/null 2>&1; then "
+            "findmnt -rn -o TARGET,OPTIONS 2>/dev/null; fi"
+        ))
         if not result.get("success"):
             return {"success": False, "target": target, "error": "disk_status_failed"}
-        disk_text, _, inode_text = str(result.get("stdout") or "").partition("__AIOPS_INODES__")
+        disk_text, _, remainder = str(result.get("stdout") or "").partition("__AIOPS_INODES__")
+        inode_text, block_marker, block_tail = remainder.partition("__AIOPS_BLOCK_DEVICES__")
+        block_text, mount_marker, mount_text = block_tail.partition("__AIOPS_MOUNT_MODES__")
 
         def parse_df(value: str) -> list[Dict[str, Any]]:
             rows: list[Dict[str, Any]] = []
@@ -597,7 +608,14 @@ class SSHVMConnector:
         filesystems = parse_df(disk_text)
         if not filesystems:
             return {"success": False, "target": target, "error": "disk_inventory_empty"}
+        mount_modes = parse_mount_modes(mount_text) if mount_marker else {}
+        for row in filesystems:
+            row["read_only"] = mount_modes.get(row["mount"])
+        devices = parse_block_devices(block_text) if block_marker else []
         return {"success": True, "target": target, "filesystems": filesystems,
+                "block_devices": devices,
+                "block_devices_supported": bool(block_marker and block_text.strip()),
+                "mount_read_only_supported": bool(mount_marker and mount_text.strip()),
                 "inodes": parse_df(inode_text),
                 "observed_at": datetime.now(timezone.utc).isoformat(),
                 "source": self.source_name}
