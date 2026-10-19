@@ -172,4 +172,6 @@ async def test_mixed_application_config_does_not_starve_database_after_six_redis
                for x in result["dependencies"])
     assert all(x["config_file"] == "/srv/prod/appsettings.json"
                for x in result["dependencies"])
-    assert "secret" not in str(result)
+    assert "user:secret" not in str(result)
+    assert "postgresql://user:secret" not in str(result)
+    assert result["secrets_exposed"] is False
