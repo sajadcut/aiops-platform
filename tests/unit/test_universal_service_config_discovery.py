@@ -302,15 +302,31 @@ def test_unknown_config_search_asks_cognia_for_vendor_procedure_not_secret_bytes
     assert len(query) <= 430
 
 
-def test_generic_json_multi_edit_candidate_is_blocked_until_diff_covers_every_edit():
+def test_generic_json_multi_edit_candidate_exposes_every_edit_without_authorizing_apply():
+    # A deterministic parser-valid, bounded multi-edit candidate is eligible
+    # for *review only* once its FULL redacted change inventory is available.
+    # A one-row diff must never disguise a two-edit patch.
+    import hashlib
+    import json
+    from integrations.vm.json_syntax_candidate import bounded_json_repair_with_edits
     source = '{"outer":{"x":1,},"items":[1,2,]}'
+    measured = bounded_json_repair_with_edits(source)
+    assert measured is not None
+    expected_bytes, expected_changes = measured
+    assert len(expected_changes) >= 2
+    assert json.loads(expected_bytes) == {"outer": {"x": 1}, "items": [1, 2]}
     result = local_config_review(
         base64.b64encode(source.encode()).decode(),
         path="/srv/app/application.json",
     )
-    assert result["status"] != "candidate_proposed"
-    assert result["candidate_hash"] is None
+    assert result["status"] == "candidate_proposed"
+    assert result["candidate_hash"] == hashlib.sha256(expected_bytes.encode()).hexdigest()
+    assert result["redacted_changes"] == expected_changes
+    assert result["redacted_diff"] == expected_changes[0]
+    assert result["validator_executed_on_proposal"] is True
+    assert result["validation_status"] == "FORMAT_CANDIDATE_VALID_ONLY"
     assert result["execution_authority"] is False
+    assert result["apply_eligible"] is False
 
 
 @pytest.mark.asyncio

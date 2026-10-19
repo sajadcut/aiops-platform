@@ -2743,7 +2743,7 @@
         (esc(fa?'در فایل ':'In file ')+filename+
           esc(fullChangeActor)+
           fullChanged.map(num).join(', ')+
-          esc(fa?' را پیشنهاد داده است؛ شمارهٔ خط ثبت‌شدهٔ Validator ممکن است مربوط به تشخیص قدیمی باشد. هنوز تست روی فایل اصلاحی انجام نشده است.':
+          esc(fa?' را پیشنهاد داده است؛ شمارهٔ خط ثبت‌شدهٔ Validator ممکن است مربوط به تشخیص قدیمی باشد. هنوز تست مستقلی روی فایل اصلاحی انجام نشده است.':
             '. The recorded validator line may come from an older diagnostic. The revised file has not been tested.')):
         location+esc(fa?'، '+symptom+' گزارش شده است.':
           ': '+symptom+' was reported.');
@@ -2792,7 +2792,7 @@
     const previewButton='<button type="button" class="ic-btn ic-btn-primary" data-config-preview="'+
       previewKind+'" data-preview-open-diff="1"'+disabled+'>'+
       esc(fa?'بررسی و مشاهده اصلاح':'Review proposed fix')+'</button>';
-    const diffLink='<a class="ic-btn ic-btn-primary" href="#ic-config-diff">'+
+    const diffLink='<a class="ic-btn ic-btn-primary" href="#ic-ai-proposed-fix">'+
       esc(fa?'مشاهده اصلاح و Diff':'View fix and diff')+'</a>';
     const nextLink='<a class="ic-btn ic-btn-primary" href="#ic-action-controls">'+
       esc(fa?'مشاهده تأیید و اجرا':'View approval and execution')+'</a>';
@@ -2852,6 +2852,10 @@
     if(stageFailure&&!['none','not_recorded','not_tested','—'].includes(stageFailure)){
       diagnosticRows.push(esc(fa?'مانع بررسی: ':'Check blocked: ')+txt(stageFailure));
     }
+    if(response.validation_pipeline_status==='not_implemented')diagnosticRows.push(
+      esc(fa?'تست مستقل نسخهٔ اصلاحی هنوز پیاده‌سازی یا اجرا نشده است؛ Approval اجرایی مجاز نیست.':
+        'Independent validation of the proposed file is not implemented or executed; execution approval is blocked.')
+    );
     if(response.validation_pipeline_status)diagnosticRows.push(
       esc(fa?'اعتبارسنجی مستقل: ':'Independent validation: ')+
       txt(response.validation_pipeline_status));

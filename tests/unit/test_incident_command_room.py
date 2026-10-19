@@ -13,6 +13,17 @@ ROOT = Path(__file__).resolve().parents[2]
 INCIDENT = "11111111-1111-4111-8111-111111111111"
 
 
+def _approval_runtime_harness() -> str:
+    """Select the approval runtime fixture, not earlier unrelated JS fixtures."""
+    source = Path(__file__).read_text(encoding="utf-8")
+    function = source.index("def test_command_room_renders_and_only_posts_after_deliberate_confirmed_approval():")
+    start = source.index('    script = r"""', function) + len('    script = r"""')
+    end = source.index('"""', start)
+    return source[start:end]
+
+
+
+
 def test_dedicated_page_is_a_real_deep_link_not_a_compressed_dashboard_side_panel():
     client = TestClient(app)
     response = client.get(f"/dashboard/incidents/{INCIDENT}")
@@ -439,10 +450,7 @@ def test_completed_chat_incident_routes_execute_to_approved_api_not_workflow_res
     # Reuse the realistic browser harness above with a *completed* checkpoint,
     # exactly as reproduced by GFPAPI on 2026-10-13. This verifies the actual
     # click handler, not just the existence of endpoint strings.
-    source = Path(__file__).read_text(encoding="utf-8")
-    start = source.index('    script = r"""') + len('    script = r"""')
-    end = source.index('"""', start)
-    script = source[start:end]
+    script = _approval_runtime_harness()
     patterns = (
         ("let approvalStatus='pending', version=0;",
          "let approvalStatus='pending', version=0;"),
@@ -496,10 +504,7 @@ def test_completed_chat_approval_does_not_require_ephemeral_checkbox():
 @pytest.mark.skipif(shutil.which("node") is None, reason="Node required for live status card regression")
 def test_service_status_card_shows_recorded_running_and_real_readonly_recheck():
     """Actual browser handler: GET returns last recorded; click POST returns stopped without reload."""
-    source = Path(__file__).read_text(encoding="utf-8")
-    start = source.index('    script = r"""') + len('    script = r"""')
-    end = source.index('"""', start)
-    script = source[start:end]
+    script = _approval_runtime_harness()
     before = "    if(method==='GET'&&url.endsWith('/decision-brief'))data=brief();"
     after = (
         "    if(method==='GET'&&url.endsWith('/service-status'))\n"
@@ -564,10 +569,7 @@ def test_service_status_card_exists_above_decision_brief_and_is_safe_readonly():
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="Node required for demo UX regression")
 def test_demo_uses_no_action_or_not_applicable_instead_of_wall_of_unknowns():
-    source = Path(__file__).read_text(encoding="utf-8")
-    start = source.index('    script = r"""') + len('    script = r"""')
-    end = source.index('"""', start)
-    script = source[start:end]
+    script = _approval_runtime_harness()
     # Simulate a real fully analyzed VM incident blocked by the Evaluator,
     # rather than a pending, bound execution proposal.
     assert "let approvalStatus='pending'" in script
@@ -619,10 +621,7 @@ def test_health_profile_html_is_present_and_never_auto_posts():
 @pytest.mark.skipif(shutil.which("node") is None, reason="Node required for RAM room regression")
 def test_host_ram_room_shows_causal_gaps_and_checks_without_service_unknown_card():
     """Use the real browser renderer with a host-level memory incident."""
-    source = Path(__file__).read_text(encoding="utf-8")
-    start = source.index('    script = r"""') + len('    script = r"""')
-    end = source.index('"""', start)
-    script = source[start:end]
+    script = _approval_runtime_harness()
     marker = "  const brief=()=>({"
     assert marker in script
     additions = (
