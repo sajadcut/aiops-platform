@@ -386,7 +386,7 @@ class SignalGateway:
         target = str(host_discovery.get("verified_target") or "").strip()
         unit = str(host_discovery.get("verified_runtime_service") or "").strip()
         if not (
-            signal.source == "elasticsearch"
+            signal.source in {"elasticsearch", "zabbix", "prometheus"}
             and host_discovery.get("status") == "verified_by_vm_mcp"
             and target and unit and runtime_service
             and unit.casefold().removesuffix(".service")
@@ -706,6 +706,65 @@ class SignalGateway:
                 verification_method=(sole_candidate or {}).get("verification_method"),
                 verification_status=(sole_candidate or {}).get("verification_status"),
             )
+        # Zabbix/Prometheus asset labels are also hypotheses, never remote
+        # execution authority. Promote only a uniquely specified, pre-allowlisted
+        # host whose exact service unit was independently read using VM MCP.
+        # This is deliberately not a general inventory scan.
+        if (signal.source in {"zabbix", "prometheus"}
+                and ServiceIdentityResolver.known(signal.service)):
+            raw_ips = asset.get("ip_addresses") or []
+            raw_host = str(asset.get("hostname") or "").strip()
+            if raw_ips or raw_host:
+                host_discovery = {
+                    "status": "candidates_found",
+                    "candidates": [{
+                        "hostname": raw_host,
+                        "ip_addresses": list(raw_ips)[:6] if isinstance(raw_ips, list) else [],
+                    }],
+                    "result_count": 1,
+                    "origin": "source_asset_metadata_pending_vm_verification",
+                }
+                host_verification_evidence = await SignalGateway._verify_elastic_host_candidate(
+                    str(signal.service), host_discovery,
+                )
+                verified_unit = str(host_discovery.get("verified_runtime_service") or "")
+                source_label = str(signal.service or "").strip()
+                if (host_verification_evidence and verified_unit and source_label
+                        and verified_unit.casefold() != source_label.casefold()):
+                    candidate_mapping = {
+                        "source_service": source_label,
+                        "runtime_service": verified_unit,
+                        "target": host_discovery.get("verified_target"),
+                        "evidence_reference": host_verification_evidence[0].get("reference"),
+                        "verification": "vm_mcp_service_status",
+                    }
+                    blocking, _ = ServiceIdentityResolver.split_conflicts(
+                        (resolution.get("service_identity") or {}).get("conflicts"))
+                    if not blocking and ServiceIdentityResolver.verified_runtime_alias_matches(
+                            source_label, verified_unit,
+                            {"verified_runtime_mapping": candidate_mapping},
+                            host_verification_evidence):
+                        verified_runtime_mapping = candidate_mapping
+                        original_identity = dict(resolution["service_identity"])
+                        original_identity.update({
+                            "service": verified_unit,
+                            "status": "verified", "verified": True,
+                            "basis": "configured_source_alias_verified_by_vm_mcp",
+                            "reported_service": source_label,
+                            "requires_more_evidence": False,
+                        })
+                        resolution["service_identity"] = original_identity
+                        resolution["asset_context"] = {
+                            **resolution["asset_context"],
+                            "service": verified_unit,
+                            "service_identity_status": "verified",
+                            "service_identity_basis": "configured_source_alias_verified_by_vm_mcp",
+                            "service_identity_unverified": False,
+                        }
+                        host_discovery["mapping_status"] = "verified_runtime_promoted"
+                    else:
+                        host_discovery["mapping_status"] = "mapping_conflict_or_unverified"
+
         # For explicit dependency alerts, the verified Elasticsearch -> VM
         # mapping is already available here, *before* triage. Do not lose this
         # trusted binding in the generic evidence collector (which intentionally
