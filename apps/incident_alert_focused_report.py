@@ -98,6 +98,10 @@ def _shares_alert_topic(alert: str, text: str) -> bool:
 
 def _is_relevant(family: str, tool: str, finding: str, checks: list[dict],
                  alert: str) -> bool:
+    if tool == "dependency_error_log_analysis":
+        # This model hypothesis is only relevant to the explicit alert
+        # family, never to another dependency mentioned in narrative prose.
+        return finding.startswith(f"{family} dependency log analysis;")
     # A dependency investigation mentioning a *different* endpoint is not
     # evidence for a Redis/database/broker alarm on the same shared VM.
     if family in {"redis", "database", "messaging", "http"}:
@@ -252,6 +256,7 @@ def build_alert_focused_report(incident: dict, evidence: list[dict],
         observations.append({
             "tool": tool,
             "status": (
+                "llm_hypothesis_only" if tool == "dependency_error_log_analysis" else
                 "port_unverified" if matched_checks and all(
                     check.get("port_inferred") is not False
                     for check in matched_checks
@@ -280,6 +285,7 @@ def build_alert_focused_report(incident: dict, evidence: list[dict],
             ],
             "evidence_refs": [_text(row.get("evidence_ref"), 180)] if row.get("evidence_ref") else [],
             "scope": (
+                "alert_scoped_hypothesis" if tool == "dependency_error_log_analysis" else
                 "dependency_port_not_verified" if any(
                     ep.get("port_inferred") is not False for ep in endpoints
                 ) else "related_observation_not_causal_proof" if observed_service
