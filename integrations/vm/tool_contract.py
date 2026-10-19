@@ -53,6 +53,8 @@ _DEPENDENCY_ROW = {
         "config_verified": {"type": "boolean"},
         "config_file": {"type": "string", "maxLength": 255},
         "config_key": {"type": "string", "maxLength": 160},
+        "config_port_key": {"type": "string", "maxLength": 160},
+        "endpoint_source": {"type": "string", "maxLength": 70},
         "probe_scope": {"type": "string", "enum": [
             "origin_root_head", "transport_tcp_connect",
             "not_executed_inferred_port",
