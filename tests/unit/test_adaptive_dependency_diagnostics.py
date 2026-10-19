@@ -223,3 +223,59 @@ async def test_zabbix_proven_vm_unit_can_launch_read_only_dependency_probe(monke
     assert calls == [("10.248.16.82", "gfpapi")]
     assert len(rows) == 1
     assert followup["probe_recorded"] is True
+
+
+@pytest.mark.asyncio
+async def test_llm_selected_readonly_followups_require_independent_vm_proof():
+    from apps.orchestrator.verified_dependency_followup import (
+        run_verified_dependency_followup,
+    )
+    calls = []
+    class Client:
+        async def service_logs(self, target, service):
+            calls.append(("service_logs", target, service))
+            return {"success": True, "target": target,
+                    "service": service, "logs": ["Redis timeout"]}
+        async def network_status(self, target):
+            calls.append(("network_status", target))
+            return {"success": True, "target": target, "interfaces": []}
+        async def config_change_apply(self, *args):
+            raise AssertionError("No write action allowed")
+    state = {
+        "incident_id": "incident-1", "service_name": "gfpapi",
+        "context": {
+            "host_discovery": {
+                "status": "verified_by_vm_mcp",
+                "verified_target": "10.248.16.82",
+                "verified_runtime_service": "gfpapi",
+            },
+            "evidence": [{
+                "source": "vm_mcp",
+                "raw_data": {
+                    "diagnostic": "service_status", "success": True,
+                    "load_state": "loaded", "target": "10.248.16.82",
+                    "service": "gfpapi",
+                },
+            }],
+        },
+    }
+    result = await run_verified_dependency_followup(
+        Client(), state, ["service_logs", "config_change_apply", "network_status"],
+    )
+    assert calls == [
+        ("service_logs", "10.248.16.82", "gfpapi"),
+        ("network_status", "10.248.16.82"),
+    ]
+    assert [x["raw_data"]["diagnostic"] for x in result] == [
+        "service_logs", "network_status",
+    ]
+    assert all(x["raw_data"]["binding"] ==
+               "independent_vm_mcp_service_status" for x in result)
+    # If the matching live systemd proof is absent, even selected read tools
+    # must not run. Logs, source labels or LLM text are never enough.
+    state["context"]["evidence"] = []
+    calls.clear()
+    blocked = await run_verified_dependency_followup(
+        Client(), state, ["service_logs", "network_status"],
+    )
+    assert blocked == [] and calls == []
