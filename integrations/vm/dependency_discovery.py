@@ -19,6 +19,7 @@ KINDS = {
     "pgsql": ("postgresql", 5432), "mysql": ("mysql", 3306),
     "mariadb": ("mysql", 3306), "sqlserver": ("mssql", 1433),
     "mssql": ("mssql", 1433), "mongodb": ("mongodb", 27017),
+    "oracle": ("oracle", 1521), "db2": ("db2", 50000),
     "rabbitmq": ("amqp", 5672), "activemq": ("activemq", 61616),
     "artemis": ("activemq", 61616), "amqp": ("amqp", 5672),
     "kafka": ("kafka", 9092), "bootstrapservers": ("kafka", 9092),
@@ -33,8 +34,9 @@ SCHEMES = {
     "redis": "redis", "rediss": "redis", "postgres": "postgresql",
     "postgresql": "postgresql", "mysql": "mysql", "mariadb": "mysql",
     "mongodb": "mongodb", "mongodb+srv": "mongodb",
-    "amqp": "amqp", "amqps": "amqp", "tcp": "activemq",
-    "ssl": "activemq", "http": "http", "https": "https",
+    "sqlserver": "mssql", "oracle": "oracle", "db2": "db2",
+    "amqp": "amqp", "amqps": "amqp", "tcp": "custom_tcp",
+    "ssl": "custom_tcp", "http": "http", "https": "https",
     "nats": "nats", "mqtt": "mqtt", "bolt": "neo4j",
     "cassandra": "cassandra",
 }
@@ -42,6 +44,19 @@ ENDPOINT_FIELDS = {"host", "hostname", "server", "endpoint", "endpoints",
                    "address", "nodes", "url", "uri", "baseurl", "brokerurl",
                    "connection", "connectionstring", "configuration",
                    "bootstrapservers", "servers", "brokers"}
+
+
+_CONFIG_KEY_PART = re.compile(r"^[A-Za-z_][A-Za-z0-9_-]{0,49}$")
+
+
+def safe_config_key(parts: tuple[str, ...]) -> str | None:
+    """Structural key provenance only; never return arbitrary config key/value."""
+    if not parts or len(parts) > 10:
+        return None
+    if any(not _CONFIG_KEY_PART.fullmatch(p) or SECRET.search(p) for p in parts):
+        return None
+    result = ".".join(parts)
+    return result if len(result) <= 160 else None
 
 
 def safe_host(value):
@@ -126,21 +141,24 @@ def discover(config: object, limit: int = MAX_ENDPOINTS) -> list[dict]:
     output, seen = [], set()
     limit = min(MAX_ENDPOINTS, max(1, limit))
 
-    def put(kind, hostname, port, inferred=False):
+    def put(kind, hostname, port, inferred=False, source_key=None):
         name, number = safe_host(hostname), safe_port(port)
         if not name or not number or kind in {"unknown", "database"}:
             return
         key = (kind, name, number)
         if key not in seen and len(output) < limit:
             seen.add(key)
-            output.append({
+            record = {
                 "kind": kind, "host": name, "port": number,
                 "port_inferred": inferred, "probe": (
                     "http_head" if kind in {"http", "https"} else "tcp"
                 ), "config_verified": True,
-            })
+            }
+            if source_key:
+                record["config_key"] = source_key
+            output.append(record)
 
-    def parse(value, hint):
+    def parse(value, hint, source_key=None):
         if not isinstance(value, str) or len(value) > 1900 or (
             "$" in value or "%" in value
         ):
@@ -148,6 +166,9 @@ def discover(config: object, limit: int = MAX_ENDPOINTS) -> list[dict]:
         value = value.strip().strip('"').strip("'")
         if value.lower().startswith("jdbc:"):
             value = value[5:]
+        # Oracle JDBC Thin has a vendor-specific prefix rather than a URI.
+        if value.lower().startswith("oracle:thin:@//"):
+            value = "oracle://" + value[len("oracle:thin:@//"):]
         # SQL Server and PostgreSQL key/value connection strings.
         parts = {}
         if ";" in value and "=" in value:
@@ -161,17 +182,28 @@ def discover(config: object, limit: int = MAX_ENDPOINTS) -> list[dict]:
                     "postgresql" if "port" in parts else hint)
             explicit = safe_port(parts.get("port") or port)
             default = next((p for k, p in KINDS.values() if k == kind), None)
-            put(kind, server, explicit or default, inferred=explicit is None)
+            put(kind, server, explicit or default, inferred=explicit is None,
+                source_key=source_key)
             return
         if "://" in value:
             try:
-                uri = urlsplit(value)
-                kind = SCHEMES.get(uri.scheme.lower())
+                # SQL Server JDBC semicolon properties are not part of host:port.
+                uri = urlsplit(value.split(";", 1)[0] if value.lower().startswith(
+                    "sqlserver://") else value)
+                scheme = uri.scheme.lower()
+                kind = SCHEMES.get(scheme)
+                # tcp:// and ssl:// are generic transports. Only a verified
+                # ActiveMQ/Artemis context may identify them as ActiveMQ.
+                if scheme in {"tcp", "ssl"}:
+                    kind = hint if hint in {"activemq", "amqp", "kafka", "nats",
+                                            "mqtt", "redis"} else "custom_tcp"
                 if kind:
-                    if kind == "http" and uri.scheme.lower() == "https":
-                        kind = "https"
                     default = next((p for k, p in KINDS.values() if k == kind), None)
-                    put(kind, uri.hostname, uri.port or default, inferred=uri.port is None)
+                    if scheme == "amqps":
+                        default = 5671
+                    port = uri.port
+                    put(kind, uri.hostname, port if port is not None else default,
+                        inferred=port is None, source_key=source_key)
             except ValueError:
                 return
             return
@@ -179,12 +211,12 @@ def discover(config: object, limit: int = MAX_ENDPOINTS) -> list[dict]:
             token = item.strip()
             match = HOSTPORT.fullmatch(token)
             if match:
-                put(hint, match.group(1), match.group(2))
+                put(hint, match.group(1), match.group(2), source_key=source_key)
             elif hint in {v[0] for v in KINDS.values()} and "=" not in token:
                 default = next((p for k, p in KINDS.values() if k == hint), None)
-                put(hint, token, default, inferred=True)
+                put(hint, token, default, inferred=True, source_key=source_key)
 
-    def walk(node, hint=None, depth=0):
+    def walk(node, hint=None, depth=0, keypath=()):
         if depth > 8 or len(output) >= limit:
             return
         if isinstance(node, dict):
@@ -192,6 +224,8 @@ def discover(config: object, limit: int = MAX_ENDPOINTS) -> list[dict]:
                 name = re.sub("[^a-z0-9]", "", str(key).lower())
                 if SECRET.search(name):
                     continue
+                source_path = keypath + (str(key),)
+                source_key = safe_config_key(source_path)
                 next_hint = next((kind for part, (kind, _) in KINDS.items()
                                   if part in name), hint)
                 if next_hint is None and name in {
@@ -218,17 +252,17 @@ def discover(config: object, limit: int = MAX_ENDPOINTS) -> list[dict]:
                         host = item.get("Host", item.get("host", item.get("hostname")))
                         port = item.get("Port", item.get("port"))
                         if host and port:
-                            put(next_hint or "custom_tcp", host, port)
+                            put(next_hint or "custom_tcp", host, port, source_key=source_key)
                             # The same host key must not produce a spurious
                             # additional probe on the default vendor port.
                             reduced = {k: v for k, v in item.items()
                                        if k.lower() not in {"host", "hostname"}}
-                            walk(reduced, next_hint, depth + 1)
+                            walk(reduced, next_hint, depth + 1, source_path)
                             continue
-                    walk(item, next_hint, depth + 1)
+                    walk(item, next_hint, depth + 1, source_path)
                 elif isinstance(item, list):
                     for child in item[:8]:
-                        walk(child, next_hint, depth + 1)
+                        walk(child, next_hint, depth + 1, source_path)
                 elif isinstance(item, str) and (
                     (next_hint and (next_hint != hint or name in ENDPOINT_FIELDS))
                     or (hint == "database" and (
@@ -237,9 +271,9 @@ def discover(config: object, limit: int = MAX_ENDPOINTS) -> list[dict]:
                         )
                     ))
                 ):
-                    parse(item, next_hint or "database")
+                    parse(item, next_hint or "database", source_key)
         elif isinstance(node, str) and hint:
-            parse(node, hint)
+            parse(node, hint, safe_config_key(keypath))
 
     walk(config)
     return output
