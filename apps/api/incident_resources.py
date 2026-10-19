@@ -973,6 +973,12 @@ async def get_decision_brief_historical_snapshot(incident_id: UUID, snapshot_id:
         return brief
 
 
+@router.get("/incidents/{incident_id}/investigation-report")
+async def investigation_report(incident_id: UUID, lang: str = Query(default="fa", pattern="^(fa|en)$")):
+    from apps.incident_investigation_report import explain
+    return await explain(await get_incident_decision_brief(incident_id), lang)
+
+
 @router.get("/incidents/{incident_id}/decision-brief/narrative")
 async def get_incident_decision_brief_narrative(
     incident_id: UUID,

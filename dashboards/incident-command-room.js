@@ -214,6 +214,7 @@
     receivedSignals: null, receivedSignalsStatus: 'loading',
     hostDiscovery: null,
     configResponse: null, configResponseStatus: 'loading',
+    investigationReport: null, investigationReportStatus: 'loading',
     chat: null, chatStatus: 'loading', chatBusy: false, chatLastResult: null,
     configPreviewPending: false, configPreviewLastResult: null,
     serviceStatus: null, serviceStatusLoading: false, serviceStatusBusy: false,
@@ -444,7 +445,7 @@
     document.querySelectorAll('[data-lang]').forEach(el=>el.setAttribute('aria-pressed',String(el.dataset.lang===state.language)));
     try{localStorage.setItem('aiops.decision-brief.language',state.language);}catch(_){}
     render();
-    if(state.report && !state.historic) void loadNarrative();
+    if(state.report && !state.historic){void loadNarrative();void loadInvestigationReport();}
   }
   const progressStageFa={
     context:'جمع‌آوری شواهد و اطلاعات دارایی',
@@ -3930,6 +3931,34 @@
     }
     show('#ic-action-controls',controls);
   }
+  function renderInvestigationLedger(brief) {
+    const node=$('#ic-investigation-ledger-body');
+    if(!node)return;
+    const fa=state.language==='fa', report=state.investigationReport;
+    if(state.historic||!report||report.snapshot_id!==brief.snapshot_id||
+       report.language!==state.language){
+      node.textContent=state.historic?(fa?'نسخهٔ تاریخی: به بخش شواهد مراجعه کنید.':'Historical evidence only.'):
+        (fa?'در حال دریافت گزارش مستند…':'Loading recorded checks…');
+      return;
+    }
+    const names=fa?['بخش','بررسی ثبت‌شده','نتیجهٔ مستند']:['Component','Recorded check','Result'];
+    const header='<div class="ic-ledger-scroll"><table class="ic-ledger-table"><thead><tr>'+
+      names.map(x=>'<th scope="col">'+esc(x)+'</th>').join('')+'</tr></thead><tbody>';
+    const body=arr(report.rows).map(x=>'<tr><th scope="row">'+txt(x.component)+'</th>'+
+      '<td>'+txt(x.check)+'</td><td>'+txt(x.result)+
+      (x.llm_interpretation?'<p class="ic-ledger-interpretation">'+
+        esc(fa?'تفسیر LLM: ':'LLM analysis: ')+txt(x.llm_interpretation)+'</p>':'')+
+      (arr(x.evidence_refs).length?'<small class="ic-ledger-source">Evidence: '+
+        arr(x.evidence_refs).slice(0,3).map(v=>txt(v)).join(' · ')+'</small>':'')+
+      '</td></tr>').join('');
+    node.innerHTML=header+body+'</tbody></table></div><p class="ic-ledger-conclusion">'+
+      txt(report.conclusion)+'</p>'+
+      (arr(report.next_checks).length?'<strong>'+
+        esc(fa?'بررسی‌های پیشنهادی، اجرا نشده':'Suggested but not executed')+
+        '</strong><ul>'+arr(report.next_checks).map(x=>'<li>'+
+        txt(x.tool)+' — '+txt(x.why)+'</li>').join('')+'</ul>':'');
+  }
+
   function render() {
     if(!state.report)return;
     const r=state.historic||state.report;
@@ -3937,6 +3966,7 @@
     renderHero(r);renderServiceStatus();renderServiceProfile();renderConfigActionBanner(r);renderOverview(r);renderReview(r);renderAnalysis(r);renderEvidence(r);
     renderKnowledge(r);renderInvestigation(r);renderOutcome(r);renderTimeline(r);renderDecision(r);renderReceivedSignals();
     renderIncidentChat();
+    renderInvestigationLedger(r);
     renderAnalysisProgress();
     $('#ic-snapshot-label').textContent='Snapshot '+String(r.snapshot_id||'').slice(0,14);
   }
@@ -4236,6 +4266,18 @@
       if(state.configResponse?.approval_queue_registered) await load();
     }
   }
+  async function loadInvestigationReport() {
+    const snapshot=state.report?.snapshot_id;
+    if(!snapshot||state.historic)return;
+    try {
+      const report=await api(base+'/investigation-report?lang='+encodeURIComponent(state.language));
+      if(!state.historic&&state.report?.snapshot_id===snapshot){
+        state.investigationReport=report;
+        renderInvestigationLedger(state.report);
+      }
+    } catch(_) {state.investigationReportStatus='failed';}
+  }
+
   async function loadNarrative() {
     if(!state.report||state.historic)return;
     const snapshot=state.report.snapshot_id,lang=state.language;
@@ -4279,6 +4321,7 @@
       const checkpointStatus=low(lifecycle.checkpoint_status);
       const detailReady=['completed','paused','failed'].includes(checkpointStatus);
       if(detailReady){
+        void loadInvestigationReport();
         if(!report.memory_investigation){void loadServiceStatus();void loadServiceProfile();}
         void loadConfigResponse(token);
         void loadIncidentChat(token);

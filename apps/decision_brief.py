@@ -298,6 +298,27 @@ def tool_observation_summary(raw: dict) -> str | None:
             location = (f" line={line} column={column}" if line is not None else "")
             files.append(f"{name}: {status}{location}" + (f" ({code})" if code else ""))
         return safe("; ".join(files), 380) if files else "No .NET config JSON syntax results"
+    if diagnostic == "redis_dependency_check":
+        endpoints = [
+            f"{safe(x.get('host'), 100)}:{x.get('port')}="
+            f"{'reachable' if x.get('tcp_reachable') is True else 'unreachable' if x.get('tcp_reachable') is False else 'not_verified'}"
+            for x in arr(raw.get("endpoints"))[:4] if isinstance(x, dict)
+            and type(x.get("port")) is int
+        ]
+        status = safe(raw.get("status"), 50) or "unknown"
+        count = raw.get("checked_files") if type(raw.get("checked_files")) is int else 0
+        return safe(f"status={status}; verified_config_files_read={count}; TCP=" +
+                    ("; ".join(endpoints) if endpoints else "no_verified_endpoint"), 380)
+    if diagnostic == "source_observation" or (
+        "result_count" in raw and raw.get("status") in
+        {"queried", "skipped", "error", "unavailable"}
+    ):
+        status = safe(raw.get("status"), 40) or "unknown"
+        count = raw.get("result_count")
+        count_text = str(count) if type(count) is int else "not_counted"
+        service = safe(raw.get("query_service") or raw.get("service"), 80)
+        return safe(f"query_status={status}; result_count={count_text}" +
+                    (f"; service={service}" if service else ""), 300)
     details = [
         f"{name}={safe(raw.get(name), 80)}" for name in fields
         if isinstance(raw.get(name), (str, bool, int, float))

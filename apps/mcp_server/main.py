@@ -87,6 +87,7 @@ _TOOL_SCHEMAS: Dict[str, Dict[str, Dict[str, Any]]] = {
         "nginx_config_review": {"description": "Read-only Nginx config inspection and deterministic in-memory correction preview on MCP worker; no remote Python, no candidate validation or apply", "inputSchema": {"type": "object", "additionalProperties": False, "required": ["target", "service"], "properties": {**_TARGET, **_SERVICE}}},
         "nginx_config_inspect": {"description": "Inspect read-only Nginx config file inventory and redacted directive structure including sites-enabled; no raw values, shell commands, or remote Python", "inputSchema": {"type": "object", "additionalProperties": False, "required": ["target", "service"], "properties": {**_TARGET, **_SERVICE}}},
         "service_runtime_discovery": {"description": "Read non-secret systemd properties and identify service runtime/entrypoint", "inputSchema": {"type": "object", "additionalProperties": False, "required": ["target", "service"], "properties": {**_TARGET, **_SERVICE}}},
+        "redis_dependency_check": {"description": "Read-only discovery of static Redis endpoints exclusively from verified systemd-bound appsettings; bounded TCP checks, never returns config values or credentials", "inputSchema": {"type": "object", "additionalProperties": False, "required": ["target", "service"], "properties": {**_TARGET, **_SERVICE}}},
         "service_config_discovery": {"description": "Read-only verification of safe config path candidates from systemd, without content/secret disclosure", "inputSchema": {"type": "object", "additionalProperties": False, "required": ["target", "service"], "properties": {**_TARGET, **_SERVICE}}},
         "service_config_review": {"description": "Secret-safe read-only review of vendor-validated or verified systemd config; worker-only XML/JSON format checks and deterministic JSON candidate", "inputSchema": {"type": "object", "additionalProperties": False, "required": ["target", "service"], "properties": {**_TARGET, **_SERVICE}}},
         "service_config_llm_repair": {"description": "Operator-requested, opt-in complete-file LLM candidate generated in trusted MCP worker memory; returns only hashes/changed line metadata, never file text; no apply authority", "inputSchema": {"type": "object", "additionalProperties": False, "required": ["target", "service"], "properties": {**_TARGET, **_SERVICE}}},
@@ -241,7 +242,7 @@ async def _call(provider: str, tool: str, args: Dict[str, Any]) -> Any:
         return await connector.process_status(target, process)
 
     service = str(args.get("service") or "").strip()
-    if tool in {"service_status", "service_logs", "config_validate", "nginx_config_review", "nginx_config_inspect", "service_runtime_discovery", "service_config_discovery", "service_config_review", "service_config_llm_repair", "dotnet_config_syntax", "config_change_validate", "config_change_apply", "start_service", "restart_service", "reload_service"} and not service:
+    if tool in {"service_status", "service_logs", "config_validate", "nginx_config_review", "nginx_config_inspect", "service_runtime_discovery", "service_config_discovery", "redis_dependency_check", "service_config_review", "service_config_llm_repair", "dotnet_config_syntax", "config_change_validate", "config_change_apply", "start_service", "restart_service", "reload_service"} and not service:
         raise ValueError("service_required")
     if tool == "service_status": return await connector.service_status(target, service)
     if tool == "service_logs": return await connector.service_logs(target, service, _limit(args.get("limit"), 100, 200))
@@ -250,6 +251,7 @@ async def _call(provider: str, tool: str, args: Dict[str, Any]) -> Any:
     if tool == "nginx_config_inspect": return await connector.nginx_config_inspect(target, service)
     if tool == "service_runtime_discovery": return await connector.service_runtime_discovery(target, service)
     if tool == "service_config_discovery": return await connector.service_config_discovery(target, service)
+    if tool == "redis_dependency_check": return await connector.redis_dependency_check(target, service)
     if tool == "service_config_review": return await connector.service_config_review(target, service)
     if tool == "service_config_llm_repair": return await connector.service_config_llm_repair(target, service)
     if tool == "dotnet_config_syntax": return await connector.dotnet_config_syntax(target, service)

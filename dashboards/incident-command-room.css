@@ -429,3 +429,13 @@
 .ic-config-banner-actions{display:flex;align-items:stretch;flex-wrap:wrap;gap:9px;flex:1 1 260px}
 .ic-config-banner-actions .ic-btn{min-height:43px}
 @media(max-width:760px){.ic-config-action-banner{padding:16px;gap:12px}.ic-config-banner-actions{width:100%;flex-direction:column}.ic-config-banner-actions .ic-btn{width:100%}}
+
+/* Read-only, evidence-first Incident investigation ledger. */
+.ic-investigation-ledger{border:1px solid var(--ic-border,rgba(130,145,170,.3));border-radius:14px;padding:1rem;margin:1rem 0;background:var(--ic-surface,transparent)}
+.ic-investigation-ledger h3{font-size:1.05rem;margin:0 0 .4rem}
+.ic-ledger-scroll{overflow-x:auto;max-width:100%}
+.ic-ledger-table{width:100%;min-width:530px;border-collapse:collapse;font-size:.9rem}
+.ic-ledger-table th,.ic-ledger-table td{padding:.7rem;border-bottom:1px solid var(--ic-border,rgba(130,145,170,.25));text-align:start;vertical-align:top;line-height:1.7}
+.ic-ledger-source{display:block;font-size:.75rem;direction:ltr;text-align:start;overflow-wrap:anywhere;opacity:.72;margin-top:.35rem}
+.ic-ledger-interpretation{border-inline-start:2px solid currentColor;padding-inline-start:.6rem;opacity:.84}
+.ic-ledger-conclusion{line-height:1.8;margin:.8rem 0}
