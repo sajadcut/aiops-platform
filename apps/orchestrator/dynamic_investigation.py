@@ -861,7 +861,7 @@ class DynamicInvestigationPlanner:
         for action in proposal.get("checks") or []:
             if action not in READ_ONLY_CHECKS:
                 continue
-            if not has_service and action in {"service_status", "service_logs", "process_status", "config_validate", "service_runtime_discovery", "service_config_discovery", "service_config_review", "dotnet_config_syntax", "nginx_config_review", "nginx_config_inspect"}:
+            if not has_service and action in {"service_status", "service_logs", "process_status", "config_validate", "service_runtime_discovery", "service_config_discovery", "redis_dependency_check", "service_config_review", "dotnet_config_syntax", "nginx_config_review", "nginx_config_inspect"}:
                 continue
             if not has_port and action in {"port_listener_status", "tcp_check"}:
                 continue
