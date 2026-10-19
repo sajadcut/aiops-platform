@@ -16,7 +16,7 @@ INCIDENT = "11111111-1111-4111-8111-111111111111"
 def _approval_runtime_harness() -> str:
     """Select the approval runtime fixture, not earlier unrelated JS fixtures."""
     source = Path(__file__).read_text(encoding="utf-8")
-    function = source.index("def test_command_room_renders_and_only_posts_after_deliberate_confirmed_approval():")
+    function = source.rindex("\ndef test_command_room_renders_and_only_posts_after_deliberate_confirmed_approval():")
     start = source.index('    script = r"""', function) + len('    script = r"""')
     end = source.index('"""', start)
     return source[start:end]
