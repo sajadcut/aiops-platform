@@ -779,7 +779,7 @@ async def incident_chat_message(
             intent = "answer"
         # Raw configuration disclosure is a separate, SRE-only trust boundary.
         intent = authorize_complete_file_disclosure(
-            intent, requested, identity.roles,
+            intent, requested, getattr(identity, "roles", ()),
         )
         vm_actions = READ_ACTIONS - {"knowledge_search", "elastic_logs", "elastic_recorded"}
         if intent in vm_actions or intent in WRITE_SUGGESTIONS:
