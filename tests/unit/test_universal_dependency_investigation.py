@@ -185,3 +185,27 @@ def test_unknown_vendor_explicit_host_port_uses_generic_tcp_without_guessing():
         (x["kind"], x["host"], x["port"]) for x in
         discover({"Messaging": {"Url": "nats://bus.internal:4222"}})
     }
+
+
+def test_mcp_result_contract_rejects_hidden_password_or_undeclared_fields():
+    from integrations.vm.tool_contract import output_schema, validate_vm_observation
+    schema = output_schema("dependency_investigation")
+    assert schema["properties"]["dependencies"]["maxItems"] == 6
+    base = {
+        "success": True, "target": "vm01", "execution_authority": False,
+        "dependencies": [{
+            "kind": "postgresql", "host": "pg.internal", "port": 5432,
+            "config_verified": True, "probe_status": "tcp_reachable",
+        }],
+    }
+    assert validate_vm_observation("dependency_investigation", "vm01", base) == base
+    with pytest.raises(ValueError):
+        validate_vm_observation("dependency_investigation", "wrong", base)
+    with pytest.raises(ValueError):
+        validate_vm_observation("dependency_investigation", "vm01", {
+            **base, "dependencies": [{**base["dependencies"][0], "password": "SECRET"}],
+        })
+    with pytest.raises(ValueError):
+        validate_vm_observation("dependency_investigation", "vm01", {
+            **base, "execution_authority": True,
+        })
