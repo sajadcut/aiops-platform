@@ -330,6 +330,43 @@ def fallback_intent(message: str) -> str:
     return "answer"
 
 
+def redis_dependency_answer(result: dict, *, persian: bool = True) -> str:
+    """Summarize only measured TCP outcomes; TCP is not Redis protocol health."""
+    if not isinstance(result, dict) or result.get("success") is not True:
+        return ("بررسی اتصال Redis انجام نشد؛ نتیجهٔ قابل استناد وجود ندارد."
+                if persian else "Redis connectivity was not measured.")
+    entries = result.get("endpoints") or []
+    facts = []
+    for row in entries[:4] if isinstance(entries, list) else []:
+        if not isinstance(row, dict):
+            continue
+        host = str(row.get("host") or "")[:100]
+        port = row.get("port")
+        if not host or type(port) is not int:
+            continue
+        value = row.get("tcp_reachable")
+        if persian:
+            outcome = ("اتصال TCP برقرار شد" if value is True else
+                       "اتصال TCP برقرار نشد" if value is False else
+                       "نتیجهٔ TCP نامشخص است")
+        else:
+            outcome = ("TCP reachable" if value is True else
+                       "TCP unreachable" if value is False else "TCP not verified")
+        facts.append(f"{host}:{port} — {outcome}")
+    state = str(result.get("status") or "unavailable")[:50]
+    if persian:
+        conclusion = ("این بررسی فقط دسترسی TCP به مقصد کشف‌شده از تنظیمات معتبر "
+                      "برنامه را اندازه گرفته است؛ سلامت Redis، احراز هویت، Latency "
+                      "و علت ریشه‌ای تأیید نشده‌اند.")
+        return ("بررسی Redis: " + state + "\n" +
+                ("\n".join(facts) if facts else
+                 "هیچ Endpoint تأییدشده‌ای برای آزمون TCP پیدا نشد.") +
+                "\n" + conclusion)
+    return ("Redis check: " + state + "\n" +
+            ("\n".join(facts) if facts else "No verified endpoint could be tested.") +
+            "\nTCP reachability does not establish Redis protocol health, authentication, latency, or root cause.")
+
+
 def public_result(action: str, value: Any) -> dict:
     """Project known diagnostic keys; never forward arbitrary MCP payloads."""
     if not isinstance(value, dict):
