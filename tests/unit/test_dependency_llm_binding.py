@@ -84,6 +84,29 @@ async def test_llm_refuses_ambiguous_multiple_sibling_ports():
 
 
 @pytest.mark.asyncio
+async def test_array_references_are_distinct_and_prevent_peer_cross_wiring():
+    data = {"Redis": {"Endpoints": [
+        {"Host": "cache-primary.local", "Port": 6389},
+        {"Host": "cache-replica.local", "Port": 6390},
+    ]}}
+    wrong = Provider([{"host_id": "h0", "port_id": "p1"}])
+    output = await resolve_llm_bindings(data, adapter=wrong)
+    assert output["status"] == "llm_cross_dependency_selection"
+    assert output["endpoints"] == []
+    correct = Provider([
+        {"host_id": "h0", "port_id": "p0"},
+        {"host_id": "h1", "port_id": "p1"},
+    ])
+    output = await resolve_llm_bindings(data, adapter=correct)
+    assert output["status"] == "verified"
+    assert [(r["host"], r["port"]) for r in output["endpoints"]] == [
+        ("cache-primary.local", 6389), ("cache-replica.local", 6390),
+    ]
+    assert output["endpoints"][0]["config_port_key"] == "Redis.Endpoints.Item_0.Port"
+    assert output["endpoints"][1]["config_port_key"] == "Redis.Endpoints.Item_1.Port"
+
+
+@pytest.mark.asyncio
 async def test_model_unavailable_does_not_block_strict_config_parser(monkeypatch):
     class ProviderDown:
         async def generate_with_messages(self, *args, **kwargs):
