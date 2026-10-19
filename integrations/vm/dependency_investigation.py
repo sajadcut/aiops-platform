@@ -24,7 +24,8 @@ async def http_head(connector: Any, target: str, *, host: str, port: int, scheme
     if scheme not in {"http", "https"}:
         return {"supported": False, "http_status": None, "tls_verified": None}
     # Host comes from verified config and was validated again before quoting.
-    uri = scheme + "://" + host + ":" + str(port) + "/"
+    uri_host = "[" + host + "]" if ":" in host else host
+    uri = scheme + "://" + uri_host + ":" + str(port) + "/"
     cmd = (
         "if ! command -v curl >/dev/null 2>&1; then printf 'unsupported'; "
         "else curl --head --silent --show-error --max-time 5 --connect-timeout 3 "
