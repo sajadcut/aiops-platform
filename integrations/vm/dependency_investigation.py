@@ -126,12 +126,26 @@ async def investigate(connector: Any, target: str, service: str) -> dict:
                 "verified_pair_count": len(llm["endpoints"]),
             })
             selected = llm["endpoints"]
-            if selected:
-                # A model-chosen pair is only accepted after independent
-                # resolution to the exact literal keys/values in THIS file.
-                base["llm_field_binding_status"] = "verified"
-            elif base["llm_field_binding_status"] != "verified":
-                base["llm_field_binding_status"] = llm["status"]
+            # Aggregate across files without letting later *empty* config
+            # files hide a meaningful failure on the application config.
+            # In particular, no_safe_host_port_candidates must not overwrite
+            # trusted_llm_not_configured from a file with 6 Host/Port fields.
+            binding_rank = {
+                "not_requested": 0,
+                "no_safe_host_port_candidates": 1,
+                "no_model_match": 2,
+                "trusted_llm_not_configured": 3,
+                "llm_binding_unavailable": 4,
+                "llm_response_incomplete": 5,
+                "llm_response_invalid": 6,
+                "llm_unsubstantiated_selection": 7,
+                "llm_cross_dependency_selection": 7,
+                "verified": 8,
+            }
+            current = str(base["llm_field_binding_status"])
+            candidate = "verified" if selected else str(llm["status"])
+            if binding_rank.get(candidate, 0) > binding_rank.get(current, 0):
+                base["llm_field_binding_status"] = candidate
             static = discover(config)
             selected_targets = {(item["kind"], item["host"]) for item in selected}
             # A vendor-default inference must not compete with a precisely
