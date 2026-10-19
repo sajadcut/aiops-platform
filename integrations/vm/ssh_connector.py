@@ -1061,7 +1061,20 @@ class SSHVMConnector:
         if not unit.get("success"):
             return {**base, "status": "systemd_unavailable"}
         from integrations.vm.runtime_discovery import _candidate_path
-        paths = (unit.get("config_candidates") or [])[:10]
+        paths = list((unit.get("config_candidates") or [])[:10])
+        # For a validated .NET ExecStart DLL, its publish directory is a
+        # systemd-derived configuration root even if WorkingDirectory is unset.
+        # Probe the known .NET filename for existence ONLY, never content.
+        if unit.get("runtime") == "dotnet":
+            from integrations.vm.runtime_discovery import safe_absolute_path
+            publish = safe_absolute_path(unit.get("publish_directory"))
+            if (publish and publish.startswith(("/opt/", "/srv/", "/data/"))
+                    and len(publish.strip("/").split("/")) >= 2):
+                appsettings = _candidate_path(publish.rstrip("/") + "/appsettings.json")
+                if appsettings and all(
+                    not isinstance(c, dict) or c.get("path") != appsettings for c in paths
+                ):
+                    paths.append({"path": appsettings, "source": "systemd_dotnet_publish"})
         for candidate in paths:
             if not isinstance(candidate, dict):
                 continue
