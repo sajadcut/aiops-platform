@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 609 | Dashboard JS files scanned: 8 | Symbols indexed: 6984**
+**Python files scanned: 614 | Dashboard JS files scanned: 8 | Symbols indexed: 7022**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1097,6 +1097,8 @@
 | `apps/context_service/asset_identity.py` | `AssetIdentityResolver._classify_elastic` | 316 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | AssetIdentityResolver |
 | `apps/context_service/builder.py` | `ContextBuilder` | 4 | class | Normalizes an incoming incident context and preserves evidence refs. | module |
 | `apps/context_service/builder.py` | `ContextBuilder.build` | 7 | method | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | ContextBuilder |
+| `apps/context_service/dependency_log_analysis.py` | `_error_signatures` | 49 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/context_service/dependency_log_analysis.py` | `analyze_dependency_logs` | 105 | async function | Bounded, read-only central LLM analysis; never authorizes remediation. | module |
 | `apps/context_service/dependency_signals.py` | `dependency_signals` | 36 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/context_service/dependency_signals.py` | `has_dependency_probe` | 56 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/context_service/evidence_collector.py` | `EvidenceCollector` | 14 | class | Read-only cross-source Evidence boundary used by orchestration. | module |
@@ -1152,9 +1154,9 @@
 | `apps/context_service/service_identity.py` | `ServiceIdentityResolver.known` | 43 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ServiceIdentityResolver |
 | `apps/context_service/service_identity.py` | `ServiceIdentityResolver.expected_fqdns` | 50 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ServiceIdentityResolver |
 | `apps/context_service/service_identity.py` | `ServiceIdentityResolver.verified_runtime_alias_matches` | 59 | method | Permit an alert-label/runtime-name mismatch only with direct VM evidence. | ServiceIdentityResolver |
-| `apps/context_service/service_identity.py` | `ServiceIdentityResolver.runtime_name_from_verified_mapping` | 118 | method | Return a case-preserved VM runtime unit only with same-incident proof. | ServiceIdentityResolver |
-| `apps/context_service/service_identity.py` | `ServiceIdentityResolver.independently_verified` | 140 | method | Require a direct successful read from the exact approved asset. | ServiceIdentityResolver |
-| `apps/context_service/service_identity.py` | `ServiceIdentityResolver.resolve` | 177 | method | Produce provenance plus a canonical service for non-executable display. | ServiceIdentityResolver |
+| `apps/context_service/service_identity.py` | `ServiceIdentityResolver.runtime_name_from_verified_mapping` | 128 | method | Return a case-preserved VM runtime unit only with same-incident proof. | ServiceIdentityResolver |
+| `apps/context_service/service_identity.py` | `ServiceIdentityResolver.independently_verified` | 150 | method | Require a direct successful read from the exact approved asset. | ServiceIdentityResolver |
+| `apps/context_service/service_identity.py` | `ServiceIdentityResolver.resolve` | 187 | method | Produce provenance plus a canonical service for non-executable display. | ServiceIdentityResolver |
 | `apps/context_service/source_policy.py` | `EvidenceSourcePolicy` | 5 | class | کلاس | module |
 | `apps/context_service/source_policy.py` | `EvidenceSourcePolicy.allows` | 9 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | EvidenceSourcePolicy |
 | `apps/database/pgvector_contract.py` | `validate_pgvector` | 9 | async function | Validate pgvector strictly for Operational Memory, never Knowledge RAG. | module |
@@ -1172,10 +1174,10 @@
 | `apps/decision_brief.py` | `tool_failed` | 187 | function | HTTP 200 alone does not prove nested tool success. | module |
 | `apps/decision_brief.py` | `_agents` | 202 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/decision_brief.py` | `tool_observation_summary` | 272 | function | Only bounded, whitelisted scalar facts: never dump journals or tool JSON. | module |
-| `apps/decision_brief.py` | `_mcp` | 362 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/decision_brief.py` | `_knowledge` | 530 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/decision_brief.py` | `_memory` | 645 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/decision_brief.py` | `build_decision_brief` | 670 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `apps/decision_brief.py` | `_mcp` | 377 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/decision_brief.py` | `_knowledge` | 545 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/decision_brief.py` | `_memory` | 660 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/decision_brief.py` | `build_decision_brief` | 685 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
 | `apps/decision_brief_history.py` | `archive_decision_brief` | 22 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/decision_brief_history.py` | `list_decision_brief_history` | 62 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/decision_brief_history.py` | `read_decision_brief_snapshot` | 83 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
@@ -1276,7 +1278,7 @@
 | `apps/incident_alert_focused_report.py` | `_topic_tokens` | 88 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_alert_focused_report.py` | `_shares_alert_topic` | 95 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/incident_alert_focused_report.py` | `_is_relevant` | 99 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/incident_alert_focused_report.py` | `build_alert_focused_report` | 128 | function | Produce a mandatory, alert-scoped operator response for every incident. | module |
+| `apps/incident_alert_focused_report.py` | `build_alert_focused_report` | 132 | function | Produce a mandatory, alert-scoped operator response for every incident. | module |
 | `apps/incident_copilot.py` | `merge_incident_evidence` | 27 | function | Supplement truncated DB evidence with the same Incident's checkpoint. | module |
 | `apps/incident_copilot.py` | `vm_binding` | 66 | function | Bind exactly one service/target using observed, consistent VM MCP facts. | module |
 | `apps/incident_copilot.py` | `asks_for_recorded_errors` | 152 | function | Distinguish 'what did you find?' from a request for a *new* MCP check. | module |
@@ -1393,17 +1395,17 @@
 | `apps/knowledge_review_dossier.py` | `dossier_addendum` | 246 | function | Knowledge-safe exact operational facts, distinct from inferred RCA. | module |
 | `apps/knowledge_review_dossier.py` | `dossier_title` | 260 | function | Meaningful candidate label rather than ten indistinguishable titles. | module |
 | `apps/mcp_server/main.py` | `JsonRpcRequest` | 25 | class | کلاس | module |
-| `apps/mcp_server/main.py` | `_vm_mcp_tool_metadata` | 128 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/mcp_server/main.py` | `_vm_mcp_wire_result` | 142 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/mcp_server/main.py` | `_provider` | 154 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/mcp_server/main.py` | `_parse_dt` | 161 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/mcp_server/main.py` | `_limit` | 167 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/mcp_server/main.py` | `_authorize` | 171 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/mcp_server/main.py` | `_call` | 185 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/mcp_server/main.py` | `_validate_production_server` | 288 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/mcp_server/main.py` | `startup_event` | 312 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/mcp_server/main.py` | `health` | 318 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/mcp_server/main.py` | `mcp` | 324 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/mcp_server/main.py` | `_vm_mcp_tool_metadata` | 156 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/mcp_server/main.py` | `_vm_mcp_wire_result` | 170 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/mcp_server/main.py` | `_provider` | 182 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/mcp_server/main.py` | `_parse_dt` | 189 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/mcp_server/main.py` | `_limit` | 195 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/mcp_server/main.py` | `_authorize` | 199 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/mcp_server/main.py` | `_call` | 213 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/mcp_server/main.py` | `_validate_production_server` | 321 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/mcp_server/main.py` | `startup_event` | 345 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/mcp_server/main.py` | `health` | 351 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/mcp_server/main.py` | `mcp` | 357 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/memory_service/__init__.py` | `OperationalMemoryService` | 32 | class | کلاس | module |
 | `apps/memory_service/__init__.py` | `OperationalMemoryService.__init__` | 37 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
 | `apps/memory_service/__init__.py` | `OperationalMemoryService.add_entry` | 40 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | OperationalMemoryService |
@@ -1650,15 +1652,15 @@
 | `apps/signal_gateway/__init__.py` | `SignalGateway._elastic_discovery_window` | 114 | method | Allow a bounded future-clock offset without unbounded historical scans. | SignalGateway |
 | `apps/signal_gateway/__init__.py` | `SignalGateway._runtime_service_candidates` | 141 | method | Only operator-configured aliases may be tested as real systemd units. | SignalGateway |
 | `apps/signal_gateway/__init__.py` | `SignalGateway._verify_elastic_host_candidate` | 181 | async method | Verify one log host with a read-only service_status on an *allowlisted* VM. | SignalGateway |
-| `apps/signal_gateway/__init__.py` | `SignalGateway._investigate_verified_alert_dependency` | 375 | async method | Read-only dependency investigation after *independent* VM identity verification. | SignalGateway |
-| `apps/signal_gateway/__init__.py` | `SignalGateway._knowledge_assisted_asset` | 469 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
-| `apps/signal_gateway/__init__.py` | `SignalGateway._persist_duplicate_dependency_evidence` | 804 | async method | Keep fresh, source-bound read-only MCP facts on repeated alerts. | SignalGateway |
-| `apps/signal_gateway/__init__.py` | `SignalGateway._persist_duplicate_dependency_evidence.merged` | 830 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway._persist_duplicate_dependency_evidence |
-| `apps/signal_gateway/__init__.py` | `SignalGateway.ingest` | 853 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
-| `apps/signal_gateway/__init__.py` | `signal_from_elasticsearch` | 1022 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/__init__.py` | `signal_from_prometheus` | 1056 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/__init__.py` | `_zabbix_service_from_tags` | 1071 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/signal_gateway/__init__.py` | `signal_from_zabbix` | 1082 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/__init__.py` | `SignalGateway._investigate_verified_alert_dependency` | 401 | async method | Read-only dependency investigation after *independent* VM identity verification. | SignalGateway |
+| `apps/signal_gateway/__init__.py` | `SignalGateway._knowledge_assisted_asset` | 503 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
+| `apps/signal_gateway/__init__.py` | `SignalGateway._persist_duplicate_dependency_evidence` | 838 | async method | Keep fresh, source-bound read-only MCP facts on repeated alerts. | SignalGateway |
+| `apps/signal_gateway/__init__.py` | `SignalGateway._persist_duplicate_dependency_evidence.merged` | 864 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway._persist_duplicate_dependency_evidence |
+| `apps/signal_gateway/__init__.py` | `SignalGateway.ingest` | 887 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SignalGateway |
+| `apps/signal_gateway/__init__.py` | `signal_from_elasticsearch` | 1056 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/__init__.py` | `signal_from_prometheus` | 1090 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/__init__.py` | `_zabbix_service_from_tags` | 1105 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/signal_gateway/__init__.py` | `signal_from_zabbix` | 1116 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/signal_gateway/correlation.py` | `CorrelationIdentity` | 20 | class | خروجی canonical correlation شامل fingerprint و scope قابل audit. | module |
 | `apps/signal_gateway/correlation.py` | `_token` | 30 | function | مقادیر vendor-specific را به token پایدار و قابل hash تبدیل می‌کند. | module |
 | `apps/signal_gateway/correlation.py` | `signal_family` | 36 | function | نام‌های alert مختلف را محافظه‌کارانه به symptom family مشترک نگاشت می‌کند. | module |
@@ -2555,6 +2557,9 @@
 | `integrations/vm/agent_ws_test_cipher.py` | `SecureAgentSocket.__aiter__.messages` | 211 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SecureAgentSocket.__aiter__ |
 | `integrations/vm/block_devices.py` | `parse_block_devices` | 14 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/block_devices.py` | `parse_mount_modes` | 43 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/central_dependency.py` | `_focused_fields` | 32 | function | Preserve original IDs while omitting unrelated technologies from the LLM. | module |
+| `integrations/vm/central_dependency.py` | `_valid_selection` | 53 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/central_dependency.py` | `investigate_from_aiops` | 85 | async function | Central AIOps-owned LLM call; VM worker only verifies and probes. | module |
 | `integrations/vm/config_candidate_vault.py` | `CandidateUnavailable` | 30 | class | Expected configuration/storage refusal. Never embed sensitive bytes. | module |
 | `integrations/vm/config_candidate_vault.py` | `_key` | 34 | function | Only the existing MCP_BEARER_TOKEN is required. Never log key material. | module |
 | `integrations/vm/config_candidate_vault.py` | `_validate_windows_directory` | 42 | function | Require a local, explicit drive path; reject UNC, devices and traversal. | module |
@@ -2576,15 +2581,17 @@
 | `integrations/vm/dependency_discovery.py` | `discover.put` | 155 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | discover |
 | `integrations/vm/dependency_discovery.py` | `discover.parse` | 174 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | discover |
 | `integrations/vm/dependency_discovery.py` | `discover.walk` | 272 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | discover |
-| `integrations/vm/dependency_investigation.py` | `http_head` | 22 | async function | HEAD '/' only, no auth, redirects, proxy, body or user-provided URL path. | module |
-| `integrations/vm/dependency_investigation.py` | `investigate` | 54 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/dependency_llm_binding.py` | `_simple` | 31 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/dependency_llm_binding.py` | `_kind` | 35 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/dependency_llm_binding.py` | `_projection` | 44 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/dependency_llm_binding.py` | `_projection.walk` | 50 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _projection |
-| `integrations/vm/dependency_llm_binding.py` | `_inline_candidates` | 100 | function | Extract independently parsed *literal* endpoint IDs from URIs, JDBC, | module |
-| `integrations/vm/dependency_llm_binding.py` | `_same_dependency` | 119 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `integrations/vm/dependency_llm_binding.py` | `resolve_llm_bindings` | 133 | async function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `integrations/vm/dependency_investigation.py` | `http_head` | 24 | async function | HEAD '/' only, no auth, redirects, proxy, body or user-provided URL path. | module |
+| `integrations/vm/dependency_investigation.py` | `_matches_priority` | 63 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/dependency_investigation.py` | `investigate` | 73 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/dependency_llm_binding.py` | `_simple` | 29 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/dependency_llm_binding.py` | `_kind` | 33 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/dependency_llm_binding.py` | `_projection` | 42 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/dependency_llm_binding.py` | `_projection.walk` | 48 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _projection |
+| `integrations/vm/dependency_llm_binding.py` | `_inline_candidates` | 98 | function | Extract independently parsed *literal* endpoint IDs from URIs, JDBC, | module |
+| `integrations/vm/dependency_llm_binding.py` | `_same_dependency` | 117 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `integrations/vm/dependency_llm_binding.py` | `safe_candidate_fields` | 131 | function | Non-secret, bounded structural fields for AIOps central LLM only. | module |
+| `integrations/vm/dependency_llm_binding.py` | `resolve_llm_bindings` | 141 | async function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
 | `integrations/vm/dotnet_json_repair.py` | `_parse_strict` | 31 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/dotnet_json_repair.py` | `dotnet_json_repair` | 36 | function | Find a *unique*, parser-valid JSON candidate; do not guess values. | module |
 | `integrations/vm/dotnet_json_repair.py` | `dotnet_json_candidate` | 97 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -2666,16 +2673,16 @@
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.service_runtime_discovery` | 203 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.service_config_discovery` | 204 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
 | `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.dependency_investigation` | 205 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.redis_dependency_check` | 206 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.service_config_review` | 207 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.service_config_llm_repair` | 208 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.dotnet_config_syntax` | 209 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.config_change_validate` | 211 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.config_change_apply` | 214 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient._write_context` | 221 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.restart_service` | 228 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.reload_service` | 231 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
-| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.start_service` | 234 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.redis_dependency_check` | 218 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.service_config_review` | 219 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.service_config_llm_repair` | 220 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.dotnet_config_syntax` | 221 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.config_change_validate` | 223 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.config_change_apply` | 226 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient._write_context` | 233 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.restart_service` | 240 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.reload_service` | 243 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
+| `integrations/vm/mcp_client.py` | `VMEdgeMCPClient.start_service` | 246 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VMEdgeMCPClient |
 | `integrations/vm/nginx_config_inspection.py` | `nginx_inspection_command` | 108 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/nginx_config_inspection.py` | `parse_nginx_inspection` | 123 | function | Allowlist protocol fields; no remote byte contents can cross the MCP. | module |
 | `integrations/vm/nginx_config_review.py` | `_checked_path` | 26 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -2736,31 +2743,31 @@
 | `integrations/vm/ssh_connector.py` | `SSHVMConnector.search_services` | 823 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | SSHVMConnector |
 | `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_status` | 829 | async method | Read structured systemd properties and bounded 'systemctl status'. | SSHVMConnector |
 | `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_status.numeric` | 855 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector.service_status |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.process_status` | 895 | async method | Correlate a systemd service to its actual MainPID, not just comm. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.process_status.read_ps` | 911 | method | داده را بدون تغییر state بازیابی/فهرست می‌کند | SSHVMConnector.process_status |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.process_snapshot` | 968 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_logs` | 982 | async method | Collect bounded journald history; retry read-only via sudo -n if denied. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.system_logs` | 1012 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.tcp_check` | 1028 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.port_listener_status` | 1042 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.dns_check` | 1054 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.route_check` | 1066 | async method | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.firewall_status` | 1074 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_runtime_discovery` | 1086 | async method | Read selected systemd properties; never return ExecStart argv or env values. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_config_discovery` | 1103 | async method | Read-only proof of config-path existence from systemd-derived paths. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.dependency_investigation` | 1247 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.redis_dependency_check` | 1251 | async method | Read-only Redis endpoint verification from a trusted systemd appsettings file. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_config_llm_repair` | 1256 | async method | Operator-requested full-file LLM repair, read-only and not approvable. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_config_review` | 1332 | async method | Read-only bounded review for a vendor error or verified unit file. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.dotnet_config_syntax` | 1475 | async method | Remote Linux coreutils read; *local AIOps Python* JSON syntax check. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.nginx_config_inspect` | 1536 | async method | Inspect only allowlisted Nginx config structure; no raw file bytes. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.nginx_config_review` | 1582 | async method | Generate a non-executable, bounded review from current validator proof. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.nginx_config_review.safe_preview_text` | 1643 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector.nginx_config_review |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.nginx_config_review.safe_rows` | 1646 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector.nginx_config_review |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.config_validate` | 1681 | async method | Locate the running unit's config, run a fixed read-only syntax check. | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.start_service` | 1797 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.restart_service` | 1804 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
-| `integrations/vm/ssh_connector.py` | `SSHVMConnector.reload_service` | 1811 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.process_status` | 901 | async method | Correlate a systemd service to its actual MainPID, not just comm. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.process_status.read_ps` | 917 | method | داده را بدون تغییر state بازیابی/فهرست می‌کند | SSHVMConnector.process_status |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.process_snapshot` | 974 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_logs` | 988 | async method | Collect bounded journald history; retry read-only via sudo -n if denied. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.system_logs` | 1018 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.tcp_check` | 1034 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.port_listener_status` | 1048 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.dns_check` | 1060 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.route_check` | 1072 | async method | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.firewall_status` | 1080 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_runtime_discovery` | 1092 | async method | Read selected systemd properties; never return ExecStart argv or env values. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_config_discovery` | 1109 | async method | Read-only proof of config-path existence from systemd-derived paths. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.dependency_investigation` | 1253 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.redis_dependency_check` | 1264 | async method | Read-only Redis endpoint verification from a trusted systemd appsettings file. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_config_llm_repair` | 1269 | async method | Operator-requested full-file LLM repair, read-only and not approvable. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.service_config_review` | 1345 | async method | Read-only bounded review for a vendor error or verified unit file. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.dotnet_config_syntax` | 1488 | async method | Remote Linux coreutils read; *local AIOps Python* JSON syntax check. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.nginx_config_inspect` | 1549 | async method | Inspect only allowlisted Nginx config structure; no raw file bytes. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.nginx_config_review` | 1595 | async method | Generate a non-executable, bounded review from current validator proof. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.nginx_config_review.safe_preview_text` | 1656 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector.nginx_config_review |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.nginx_config_review.safe_rows` | 1659 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector.nginx_config_review |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.config_validate` | 1694 | async method | Locate the running unit's config, run a fixed read-only syntax check. | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.start_service` | 1810 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.restart_service` | 1817 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
+| `integrations/vm/ssh_connector.py` | `SSHVMConnector.reload_service` | 1824 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | SSHVMConnector |
 | `integrations/vm/target_context.py` | `bind_vm_probe_blocked` | 22 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/target_context.py` | `reset_vm_probe_blocked` | 26 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `integrations/vm/target_context.py` | `vm_probes_blocked` | 30 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -3317,6 +3324,12 @@
 | `tests/unit/test_agent_failure_safety.py` | `test_parser_failure_is_counted_and_returns_low_confidence` | 66 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_agent_orchestrator_single_path.py` | `test_legacy_workflow_orchestrator_is_only_a_governed_facade` | 4 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_agent_orchestrator_single_path.py` | `test_agent_layer_has_no_hardcoded_legacy_a2a_endpoints` | 12 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_alert_dependency_log_llm_correlation.py` | `Model` | 12 | class | کلاس | module |
+| `tests/unit/test_alert_dependency_log_llm_correlation.py` | `Model.__init__` | 13 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Model |
+| `tests/unit/test_alert_dependency_log_llm_correlation.py` | `Model.generate_with_messages` | 16 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | Model |
+| `tests/unit/test_alert_dependency_log_llm_correlation.py` | `test_database_log_correlation_ignores_other_services_and_redacts_connection_strings` | 25 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_alert_dependency_log_llm_correlation.py` | `test_no_real_db_logs_and_no_db_endpoint_reports_unverified_without_llm` | 79 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_alert_dependency_log_llm_correlation.py` | `test_central_llm_db_hypothesis_is_only_db_alert_evidence` | 101 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_all_operator_pages_persian.py` | `read` | 12 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_all_operator_pages_persian.py` | `test_every_user_facing_html_entrypoint_is_persian_and_rtl` | 16 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_all_operator_pages_persian.py` | `test_all_control_center_subpages_show_persian_static_copy` | 23 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
@@ -3456,6 +3469,23 @@
 | `tests/unit/test_benchmark_hardening_2026.py` | `test_signal_gateway_uses_exact_and_cross_source_transaction_locks` | 13 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_benchmark_hardening_2026.py` | `test_correlation_repository_uses_postgresql_transaction_advisory_lock` | 21 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_benchmark_hardening_2026.py` | `test_mcp_transport_is_canonical_and_governed` | 28 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_central_dependency_two_phase.py` | `CentralModel` | 13 | class | کلاس | module |
+| `tests/unit/test_central_dependency_two_phase.py` | `CentralModel.__init__` | 14 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CentralModel |
+| `tests/unit/test_central_dependency_two_phase.py` | `CentralModel.generate_with_messages` | 17 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | CentralModel |
+| `tests/unit/test_central_dependency_two_phase.py` | `VerifiedWorker` | 22 | class | کلاس | module |
+| `tests/unit/test_central_dependency_two_phase.py` | `VerifiedWorker.__init__` | 23 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerifiedWorker |
+| `tests/unit/test_central_dependency_two_phase.py` | `VerifiedWorker._validate_target` | 27 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerifiedWorker |
+| `tests/unit/test_central_dependency_two_phase.py` | `VerifiedWorker._validate_service` | 29 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerifiedWorker |
+| `tests/unit/test_central_dependency_two_phase.py` | `VerifiedWorker.service_config_discovery` | 31 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerifiedWorker |
+| `tests/unit/test_central_dependency_two_phase.py` | `VerifiedWorker._run` | 35 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerifiedWorker |
+| `tests/unit/test_central_dependency_two_phase.py` | `VerifiedWorker.tcp_check` | 38 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerifiedWorker |
+| `tests/unit/test_central_dependency_two_phase.py` | `VerifiedWorker.dns_check` | 41 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerifiedWorker |
+| `tests/unit/test_central_dependency_two_phase.py` | `VerifiedWorker.dependency_investigation` | 43 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | VerifiedWorker |
+| `tests/unit/test_central_dependency_two_phase.py` | `test_central_model_binds_db_port_from_config_and_worker_probes_only_db_first` | 55 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_central_dependency_two_phase.py` | `test_changed_config_sha_blocks_model_selected_endpoint` | 83 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_central_dependency_two_phase.py` | `test_unavailable_central_model_still_probes_literal_db_uri_without_guessing` | 105 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_central_dependency_two_phase.py` | `test_invalid_model_pair_not_used_as_network_destination` | 121 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_central_dependency_two_phase.py` | `test_projection_rejects_unexpected_raw_config_value` | 137 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_centralized_config.py` | `_template_keys` | 9 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_centralized_config.py` | `_template_values` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_centralized_config.py` | `_settings_data` | 30 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -5499,6 +5529,14 @@
 | `tests/unit/test_latency_observability.py` | `test_orchestrator_analysis_phases_publish_duration_ms` | 38 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_latency_observability.py` | `test_mcp_server_and_vm_ssh_publish_server_side_latency` | 55 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_latency_observability.py` | `test_latency_logging_does_not_log_http_query_headers_or_body` | 70 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_live_systemd_alias_dependency.py` | `test_exact_gfp_backend_alert_only_follows_live_systemd_alias` | 10 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_live_systemd_alias_dependency.py` | `test_exact_gfp_backend_alert_only_follows_live_systemd_alias.Client` | 17 | class | کلاس | test_exact_gfp_backend_alert_only_follows_live_systemd_alias |
+| `tests/unit/test_live_systemd_alias_dependency.py` | `test_exact_gfp_backend_alert_only_follows_live_systemd_alias.Client.service_status` | 18 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_exact_gfp_backend_alert_only_follows_live_systemd_alias.Client |
+| `tests/unit/test_live_systemd_alias_dependency.py` | `test_exact_gfp_backend_alert_only_follows_live_systemd_alias.Client.close` | 27 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_exact_gfp_backend_alert_only_follows_live_systemd_alias.Client |
+| `tests/unit/test_live_systemd_alias_dependency.py` | `test_canonical_unit_mismatch_without_live_names_stays_unverified` | 69 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_live_systemd_alias_dependency.py` | `test_canonical_unit_mismatch_without_live_names_stays_unverified.Client` | 75 | class | کلاس | test_canonical_unit_mismatch_without_live_names_stays_unverified |
+| `tests/unit/test_live_systemd_alias_dependency.py` | `test_canonical_unit_mismatch_without_live_names_stays_unverified.Client.service_status` | 76 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_canonical_unit_mismatch_without_live_names_stays_unverified.Client |
+| `tests/unit/test_live_systemd_alias_dependency.py` | `test_canonical_unit_mismatch_without_live_names_stays_unverified.Client.close` | 80 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_canonical_unit_mismatch_without_live_names_stays_unverified.Client |
 | `tests/unit/test_llm_config_candidate_lifecycle.py` | `vault_env` | 32 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_llm_config_candidate_lifecycle.py` | `put` | 41 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_llm_config_candidate_lifecycle.py` | `get` | 49 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |

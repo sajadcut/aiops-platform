@@ -3,7 +3,7 @@
 > این فایل فهرست فایل‌به‌فایل repository است. توضیح معماری و flow در `CODEBASE_GUIDE_FA.md` آمده است.
 > این فایل با `scripts/generate_file_index_fa.py` ساخته و در CI کنترل می‌شود.
 
-**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 760**
+**تعداد فایل‌های track‌شده و پوشش‌داده‌شده: 765**
 
 | Path | Type | Purpose | Called By | Calls/Depends On | Runtime/Test/Docs | Notes |
 |---|---|---|---|---|---|---|
@@ -129,6 +129,7 @@
 | `apps/context_service/__init__.py` | Python | Context: Asset Resolution، Context و Evidence collection | Orchestrator/signal flow | MCP integrations/domain | Runtime | live evidence مرجع عملیات است |
 | `apps/context_service/asset_identity.py` | Python | Context: Asset Resolution، Context و Evidence collection | Orchestrator/signal flow | MCP integrations/domain | Runtime | live evidence مرجع عملیات است |
 | `apps/context_service/builder.py` | Python | Context: Asset Resolution، Context و Evidence collection | Orchestrator/signal flow | MCP integrations/domain | Runtime | live evidence مرجع عملیات است |
+| `apps/context_service/dependency_log_analysis.py` | Python | Context: Asset Resolution، Context و Evidence collection | Orchestrator/signal flow | MCP integrations/domain | Runtime | live evidence مرجع عملیات است |
 | `apps/context_service/dependency_signals.py` | Python | Context: Asset Resolution، Context و Evidence collection | Orchestrator/signal flow | MCP integrations/domain | Runtime | live evidence مرجع عملیات است |
 | `apps/context_service/evidence_collector.py` | Python | Context: Asset Resolution، Context و Evidence collection | Orchestrator/signal flow | MCP integrations/domain | Runtime | live evidence مرجع عملیات است |
 | `apps/context_service/knowledge_orientation.py` | Python | Context: Asset Resolution، Context و Evidence collection | Orchestrator/signal flow | MCP integrations/domain | Runtime | live evidence مرجع عملیات است |
@@ -388,6 +389,7 @@
 | `integrations/vm/__init__.py` | Python | Adapter provider/read-only integration | MCP server/test helper | external API/.env | Runtime/Helper | Control Plane production ترجیحاً MCP |
 | `integrations/vm/agent_ws_test_cipher.py` | Python | Adapter provider/read-only integration | MCP server/test helper | external API/.env | Runtime/Helper | Control Plane production ترجیحاً MCP |
 | `integrations/vm/block_devices.py` | Python | Adapter provider/read-only integration | MCP server/test helper | external API/.env | Runtime/Helper | Control Plane production ترجیحاً MCP |
+| `integrations/vm/central_dependency.py` | Python | Adapter provider/read-only integration | MCP server/test helper | external API/.env | Runtime/Helper | Control Plane production ترجیحاً MCP |
 | `integrations/vm/config_candidate_vault.py` | Python | Adapter provider/read-only integration | MCP server/test helper | external API/.env | Runtime/Helper | Control Plane production ترجیحاً MCP |
 | `integrations/vm/dependency_discovery.py` | Python | Adapter provider/read-only integration | MCP server/test helper | external API/.env | Runtime/Helper | Control Plane production ترجیحاً MCP |
 | `integrations/vm/dependency_investigation.py` | Python | Adapter provider/read-only integration | MCP server/test helper | external API/.env | Runtime/Helper | Control Plane production ترجیحاً MCP |
@@ -509,6 +511,7 @@
 | `tests/unit/test_agent_deterministic_intelligence.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_agent_failure_safety.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_agent_orchestrator_single_path.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
+| `tests/unit/test_alert_dependency_log_llm_correlation.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_all_operator_pages_persian.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_api_workflow_runtime_symbol.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_application_reliability_engine.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
@@ -523,6 +526,7 @@
 | `tests/unit/test_auto_config_prevalidation.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_base_orchestrator_decision_binding.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_benchmark_hardening_2026.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
+| `tests/unit/test_central_dependency_two_phase.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_centralized_config.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_change_correlation_engine.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_chat_answer_review.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
@@ -657,6 +661,7 @@
 | `tests/unit/test_kubernetes_resource_analyzers.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_last_incident_config_apply_timeout.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_latency_observability.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
+| `tests/unit/test_live_systemd_alias_dependency.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_llm_config_candidate_lifecycle.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_mcp_external_boundary.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
 | `tests/unit/test_mcp_server_contract.py` | Test | تست regression/contract برای بخش متناظر | pytest/CI | کد production | Test | شواهد repository-level |
