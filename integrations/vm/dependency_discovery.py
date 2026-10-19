@@ -37,8 +37,10 @@ SCHEMES = {
     "sqlserver": "mssql", "oracle": "oracle", "db2": "db2",
     "amqp": "amqp", "amqps": "amqp", "tcp": "custom_tcp",
     "ssl": "custom_tcp", "http": "http", "https": "https",
-    "nats": "nats", "mqtt": "mqtt", "bolt": "neo4j",
-    "cassandra": "cassandra",
+    "nats": "nats", "mqtt": "mqtt", "mqtts": "mqtt",
+    "kafka": "kafka", "elasticsearch": "elasticsearch",
+    "opensearch": "elasticsearch", "memcached": "memcached",
+    "bolt": "neo4j", "cassandra": "cassandra",
 }
 ENDPOINT_FIELDS = {"host", "hostname", "server", "endpoint", "endpoints",
                    "address", "nodes", "url", "uri", "baseurl", "brokerurl",
@@ -179,7 +181,8 @@ def discover(config: object, limit: int = MAX_ENDPOINTS) -> list[dict]:
             server, comma, port = host.partition(",")
             kind = ("mssql" if comma or "initial catalog" in parts or
                     "trusted_connection" in parts else
-                    "postgresql" if "port" in parts else hint)
+                    hint if hint not in {None, "database"} else
+                    "custom_tcp" if ("port" in parts or port) else "database")
             explicit = safe_port(parts.get("port") or port)
             default = next((p for k, p in KINDS.values() if k == kind), None)
             put(kind, server, explicit or default, inferred=explicit is None,
@@ -201,6 +204,8 @@ def discover(config: object, limit: int = MAX_ENDPOINTS) -> list[dict]:
                     default = next((p for k, p in KINDS.values() if k == kind), None)
                     if scheme == "amqps":
                         default = 5671
+                    if scheme == "mqtts":
+                        default = 8883
                     port = uri.port
                     put(kind, uri.hostname, port if port is not None else default,
                         inferred=port is None, source_key=source_key)
