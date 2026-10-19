@@ -150,6 +150,7 @@ def build_alert_focused_report(incident: dict, evidence: list[dict],
     family = _family(message + " " + _text(selected.get("signal_type"), 120)
                      if selected else message)
     observations = []
+    binding_diagnostics = []
     expected_service = _text(incident.get("service"), 120).lower().removesuffix(".service")
     for row in (brief.get("mcp_evidence") or [])[:100]:
         if not isinstance(row, dict):
@@ -164,6 +165,26 @@ def build_alert_focused_report(incident: dict, evidence: list[dict],
             # A different named service on the same host is NOT evidence for
             # this one. Explicitly mapped aliases require separate live identity.
             continue
+        if tool == "dependency_investigation" and len(binding_diagnostics) < 3:
+            binding_diagnostics.append({
+                "status": _text(row.get("dependency_discovery_status"), 70),
+                "binding_status": _text(row.get("llm_field_binding_status"), 70),
+                "config_files_read": row.get("dependency_config_files_read"),
+                "config_files_checked": row.get("dependency_config_files_checked"),
+                "config_files_parse_failed": row.get("dependency_config_files_parse_failed"),
+                "files": [
+                    {
+                        "path": _text(f.get("config_file"), 170),
+                        "status": _text(f.get("status"), 70),
+                        "host_fields": f.get("host_fields"),
+                        "port_fields": f.get("port_fields"),
+                        "verified_pairs": f.get("verified_pairs"),
+                    }
+                    for f in (row.get("dependency_llm_file_results") or [])[:4]
+                    if isinstance(f, dict)
+                ],
+                "evidence_ref": _text(row.get("evidence_ref"), 180),
+            })
         if not _is_relevant(family, tool, finding, checks, message):
             continue
         # Only matching dependency endpoints are displayed as direct tests.
@@ -220,6 +241,21 @@ def build_alert_focused_report(incident: dict, evidence: list[dict],
             "collected_at": _text(row.get("collected_at"), 60),
             "endpoints": endpoints,
             "llm_field_binding_status": _text(row.get("llm_field_binding_status"), 80),
+            "dependency_discovery_status": _text(row.get("dependency_discovery_status"), 80),
+            "config_files_read": row.get("dependency_config_files_read"),
+            "config_files_parse_failed": row.get("dependency_config_files_parse_failed"),
+            "config_files_checked": row.get("dependency_config_files_checked"),
+            "llm_file_results": [
+                {
+                    "config_file": _text(f.get("config_file"), 180),
+                    "status": _text(f.get("status"), 70),
+                    "host_fields": f.get("host_fields"),
+                    "port_fields": f.get("port_fields"),
+                    "verified_pairs": f.get("verified_pairs"),
+                }
+                for f in (row.get("dependency_llm_file_results") or [])[:4]
+                if isinstance(f, dict)
+            ],
             "evidence_refs": [_text(row.get("evidence_ref"), 180)] if row.get("evidence_ref") else [],
             "scope": (
                 "dependency_port_not_verified" if any(
@@ -309,6 +345,7 @@ def build_alert_focused_report(incident: dict, evidence: list[dict],
         "source_basis": "received_signal" if selected else "incident_summary_fallback",
         "family": family,
         "related_checks": observations,
+        "dependency_extraction_diagnostics": binding_diagnostics,
         "agent_interpretations": agent_interpretations,
         "assessment_fa": conclusion_fa,
         "next_check_fa": _FOLLOWUPS_FA[family],

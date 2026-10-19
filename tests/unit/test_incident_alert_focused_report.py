@@ -75,6 +75,44 @@ def test_redis_alarm_is_primary_even_when_unrelated_systemd_is_active():
     assert "Redis" in str(projection(brief)["received_alert_focus"])
 
 
+def test_no_port_discovery_is_explained_even_without_any_tcp_probe():
+    message = "GFP API Redis errors reached 10 events in the last 2 minutes"
+    evidence = [
+        _record("trigger", "zabbix", {
+            "signal_type": message, "signal_summary": message,
+            "name": message, "service": "gfpapi",
+        }),
+        _record("vm-no-port", "vm_mcp", {
+            "mcp_server": "vm_mcp",
+            "tool_name": "dependency_investigation",
+            "success": True, "service": "gfpapi", "status": "dependency_not_discovered",
+            "config_files_read": 2, "config_files_checked": 2,
+            "config_files_parse_failed": 0, "checks_executed": 0,
+            "llm_field_binding_status": "no_safe_host_port_candidates",
+            "llm_field_binding_files": [{
+                "config_file": "/srv/gfp/appsettings.json",
+                "status": "no_safe_host_port_candidates",
+                "candidate_host_count": 1,
+                "candidate_port_count": 0,
+                "verified_pair_count": 0,
+            }],
+            "dependencies": [],
+        }),
+    ]
+    brief = _brief(evidence, message)
+    report = brief["alert_focused_report"]
+    diagnostic = report["dependency_extraction_diagnostics"][0]
+    assert diagnostic["config_files_read"] == 2
+    assert diagnostic["config_files_parse_failed"] == 0
+    assert diagnostic["binding_status"] == "no_safe_host_port_candidates"
+    assert diagnostic["files"][0]["host_fields"] == 1
+    assert diagnostic["files"][0]["port_fields"] == 0
+    assert diagnostic["files"][0]["verified_pairs"] == 0
+    assert diagnostic["evidence_ref"] == "vm-no-port"
+    assert "6389" not in str(report)
+    assert report["root_cause_confirmed"] is False
+
+
 def test_database_alert_does_not_use_unrelated_redis_probe_as_proof():
     signal = "PostgreSQL connection timeout at checkout service"
     evidence = [
