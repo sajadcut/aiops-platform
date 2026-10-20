@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 615 | Dashboard JS files scanned: 8 | Symbols indexed: 7043**
+**Python files scanned: 615 | Dashboard JS files scanned: 8 | Symbols indexed: 7053**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -515,10 +515,10 @@
 | `agents/shared/base.py` | `BaseAgent.analysis_only_actions` | 740 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | BaseAgent |
 | `agents/shared/coordinator.py` | `IncidentCoordinator` | 8 | class | Deterministic coordinator for routing and multi-agent synthesis. | module |
 | `agents/shared/coordinator.py` | `IncidentCoordinator.select_agents` | 33 | method | بر اساس state/capability مسیر یا handler مناسب را انتخاب می‌کند | IncidentCoordinator |
-| `agents/shared/coordinator.py` | `IncidentCoordinator.select_agents.add` | 43 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentCoordinator.select_agents |
-| `agents/shared/coordinator.py` | `IncidentCoordinator._specialist_failed` | 117 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentCoordinator |
-| `agents/shared/coordinator.py` | `IncidentCoordinator.synthesize` | 127 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentCoordinator |
-| `agents/shared/coordinator.py` | `IncidentCoordinator.synthesize.vote_agreement` | 231 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentCoordinator.synthesize |
+| `agents/shared/coordinator.py` | `IncidentCoordinator.select_agents.add` | 46 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentCoordinator.select_agents |
+| `agents/shared/coordinator.py` | `IncidentCoordinator._specialist_failed` | 124 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentCoordinator |
+| `agents/shared/coordinator.py` | `IncidentCoordinator.synthesize` | 134 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentCoordinator |
+| `agents/shared/coordinator.py` | `IncidentCoordinator.synthesize.vote_agreement` | 238 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | IncidentCoordinator.synthesize |
 | `agents/shared/domain_agent.py` | `DomainSpec` | 15 | class | کلاس | module |
 | `agents/shared/domain_agent.py` | `DomainDiagnosticAgent` | 24 | class | Reusable specialist implementation for evidence-grounded operational domains. | module |
 | `agents/shared/domain_agent.py` | `DomainDiagnosticAgent.__init__` | 29 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | DomainDiagnosticAgent |
@@ -597,7 +597,8 @@
 | `agents/triage/__init__.py` | `TriageAgent.description` | 21 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | TriageAgent |
 | `agents/triage/__init__.py` | `TriageAgent.allowed_tools` | 25 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | TriageAgent |
 | `agents/triage/__init__.py` | `TriageAgent._legacy_asset_routes` | 29 | method | Preserve the historical handoff contract while runtime uses focused specialist_routes. | TriageAgent |
-| `agents/triage/__init__.py` | `TriageAgent.analyze` | 43 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | TriageAgent |
+| `agents/triage/__init__.py` | `TriageAgent._declared_dependency_routes` | 44 | method | Route explicit, same-service dependency alerts for READ-ONLY triage. | TriageAgent |
+| `agents/triage/__init__.py` | `TriageAgent.analyze` | 88 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | TriageAgent |
 | `agents/triage/engine.py` | `_parse_timestamp` | 51 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/triage/engine.py` | `_evidence_id` | 65 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `agents/triage/engine.py` | `_raw` | 70 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -2360,13 +2361,13 @@
 | `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._esql_string` | 69 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ElasticsearchMCPClient |
 | `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._json_text` | 75 | method | Remove only an explicit JSON markdown fence, never scan free text. | ElasticsearchMCPClient |
 | `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._safe_envelope_shape` | 87 | method | Diagnose unrecognized MCP envelopes using TYPES/known keys only. | ElasticsearchMCPClient |
-| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._rows_from_payload` | 114 | method | Decode bounded tabular ES/QL envelopes from Kibana Agent Builder MCP. | ElasticsearchMCPClient |
-| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._rows_from_payload.decode` | 124 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ElasticsearchMCPClient._rows_from_payload |
-| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._esql_empty_table` | 172 | method | Recognize an ES/QL *empty table*, including JSON-text MCP envelopes. | ElasticsearchMCPClient |
-| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._esql_payloads` | 210 | method | Prefer a real tabular response over metadata-only structuredContent. | ElasticsearchMCPClient |
-| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient.health_check` | 231 | async method | Require the exact allowlisted Agent Builder tool, not just a live MCP route. | ElasticsearchMCPClient |
-| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient.get_logs` | 239 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | ElasticsearchMCPClient |
-| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient.discover_service_hosts` | 408 | async method | Bounded, read-only Elasticsearch host *candidates*, never VM authority. | ElasticsearchMCPClient |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._rows_from_payload` | 133 | method | Decode bounded tabular ES/QL envelopes from Kibana Agent Builder MCP. | ElasticsearchMCPClient |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._rows_from_payload.decode` | 143 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ElasticsearchMCPClient._rows_from_payload |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._esql_empty_table` | 191 | method | Recognize an ES/QL *empty table*, including JSON-text MCP envelopes. | ElasticsearchMCPClient |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._esql_payloads` | 229 | method | Prefer a real tabular response over metadata-only structuredContent. | ElasticsearchMCPClient |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient.health_check` | 250 | async method | Require the exact allowlisted Agent Builder tool, not just a live MCP route. | ElasticsearchMCPClient |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient.get_logs` | 258 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | ElasticsearchMCPClient |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient.discover_service_hosts` | 427 | async method | Bounded, read-only Elasticsearch host *candidates*, never VM authority. | ElasticsearchMCPClient |
 | `integrations/http_transport.py` | `insecure_ssl_context` | 13 | function | Create a TLS context that does not validate server certificates or hostnames. | module |
 | `integrations/http_transport.py` | `_safe_destination` | 21 | function | Return log-safe destination fields without query strings, credentials or bodies. | module |
 | `integrations/http_transport.py` | `_log_completed` | 39 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -2500,12 +2501,12 @@
 | `integrations/mcp_client.py` | `MCPClient._post` | 175 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
 | `integrations/mcp_client.py` | `MCPClient.initialize` | 383 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
 | `integrations/mcp_client.py` | `MCPClient._request` | 410 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
-| `integrations/mcp_client.py` | `MCPClient.call_tool` | 440 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
-| `integrations/mcp_client.py` | `MCPClient._call_tool` | 445 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
-| `integrations/mcp_client.py` | `MCPClient.list_tools` | 448 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | MCPClient |
-| `integrations/mcp_client.py` | `MCPClient.json_content` | 454 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
-| `integrations/mcp_client.py` | `MCPClient.health_check` | 481 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
-| `integrations/mcp_client.py` | `MCPClient.close` | 488 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
+| `integrations/mcp_client.py` | `MCPClient.call_tool` | 463 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
+| `integrations/mcp_client.py` | `MCPClient._call_tool` | 468 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
+| `integrations/mcp_client.py` | `MCPClient.list_tools` | 471 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | MCPClient |
+| `integrations/mcp_client.py` | `MCPClient.json_content` | 477 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
+| `integrations/mcp_client.py` | `MCPClient.health_check` | 504 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
+| `integrations/mcp_client.py` | `MCPClient.close` | 511 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | MCPClient |
 | `integrations/prometheus/client.py` | `PrometheusClient` | 10 | class | Prometheus client preserving labels needed for deterministic asset identity. | module |
 | `integrations/prometheus/client.py` | `PrometheusClient.__init__` | 20 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | PrometheusClient |
 | `integrations/prometheus/client.py` | `PrometheusClient.source_name` | 25 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | PrometheusClient |
@@ -3778,6 +3779,11 @@
 | `tests/unit/test_check_elastic_mcp.py` | `test_missing_allowlisted_tool_is_not_a_pass` | 97 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_check_elastic_mcp.py` | `test_http_status_not_in_unrelated_errors` | 105 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_check_elastic_mcp.py` | `test_dotted_logical_tool_name_does_not_pass_wire_discovery` | 108 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_check_elastic_mcp.py` | `_expired_session_error` | 120 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `tests/unit/test_check_elastic_mcp.py` | `test_mcp_expired_session_read_reinitializes_only_once` | 130 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_check_elastic_mcp.py` | `test_mcp_expired_session_read_reinitializes_only_once.fake_post` | 139 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_mcp_expired_session_read_reinitializes_only_once |
+| `tests/unit/test_check_elastic_mcp.py` | `test_mcp_expired_session_does_not_replay_write_or_single_attempt_read` | 164 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_check_elastic_mcp.py` | `test_mcp_expired_session_does_not_replay_write_or_single_attempt_read.fake_post` | 173 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_mcp_expired_session_does_not_replay_write_or_single_attempt_read |
 | `tests/unit/test_cognia_client.py` | `_search_response` | 10 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_cognia_client.py` | `test_machine_token_is_opaque_cached_and_search_contract_is_exact` | 35 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_cognia_client.py` | `test_machine_token_is_opaque_cached_and_search_contract_is_exact.handler` | 39 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_machine_token_is_opaque_cached_and_search_contract_is_exact |
@@ -4558,6 +4564,7 @@
 | `tests/unit/test_elastic_mcp_wire_tool.py` | `test_gfp_prefers_verified_canonical_runtime_with_systemd_id.VM.close` | 1029 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_gfp_prefers_verified_canonical_runtime_with_systemd_id.VM |
 | `tests/unit/test_elastic_mcp_wire_tool.py` | `test_esql_fenced_json_is_decoded_without_executing_text` | 1043 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_elastic_mcp_wire_tool.py` | `test_esql_unknown_envelope_diagnostic_never_contains_log_or_secret` | 1064 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_unknown_results_envelope_reports_structure_only_not_secret_content` | 1080 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_elastic_verified_dependency_route.py` | `signal` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_elastic_verified_dependency_route.py` | `test_redis_alert_inspects_verified_gfpapi_systemd_config` | 38 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_elastic_verified_dependency_route.py` | `test_redis_alert_inspects_verified_gfpapi_systemd_config.Client` | 41 | class | کلاس | test_redis_alert_inspects_verified_gfpapi_systemd_config |
@@ -6390,6 +6397,9 @@
 | `tests/unit/test_triage_production_engine.py` | `test_insufficient_evidence_produces_low_confidence_bounded_investigation` | 156 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_triage_production_engine.py` | `test_stale_alert_is_explicit_and_fresh_replacement_is_requested` | 166 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_triage_production_engine.py` | `test_coordinator_uses_new_confidence_band_for_adaptive_fanout` | 189 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_triage_production_engine.py` | `test_zabbix_database_alert_reserves_database_slot_without_claiming_root_cause` | 232 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_triage_production_engine.py` | `test_declared_dependency_routes_require_matching_service_and_explicit_tags` | 259 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_triage_production_engine.py` | `test_declared_dependency_routes_require_matching_service_and_explicit_tags.alert` | 260 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_declared_dependency_routes_require_matching_service_and_explicit_tags |
 | `tests/unit/test_unique_json_punctuation_approval.py` | `_encoded` | 16 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_unique_json_punctuation_approval.py` | `test_extra_delimiter_at_real_dotnet_json_error_becomes_hash_bound_candidate` | 20 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_unique_json_punctuation_approval.py` | `test_missing_separator_reconstructs_without_modifying_key_or_values` | 56 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
