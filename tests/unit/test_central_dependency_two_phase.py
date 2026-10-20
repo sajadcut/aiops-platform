@@ -243,3 +243,23 @@ async def test_full_context_digest_mismatch_rejected(monkeypatch):
     item["complete_config_b64"] = base64.b64encode(b'{"Database":{"Password":"tampered"}}').decode()
     with pytest.raises(ValueError, match="vm_mcp_dependency_complete_config_digest_invalid"):
         validate_vm_observation("dependency_investigation", "vm", discovered)
+
+
+@pytest.mark.asyncio
+async def test_db_alarm_parses_connectionstrings_server_port_with_credentials():
+    # Regression: ConnectionStrings with explicit Port used to be labeled
+    # custom_tcp and silently excluded from a database-only investigation.
+    worker = VerifiedWorker({
+        "ConnectionStrings": {
+            "Core": "Server=pg.internal;Port=6439;Database=core;User ID=svc;Password=opaque"
+        }
+    })
+    model = CentralModel({"pairs": [], "endpoint_ids": ["e0"]})
+    result = await investigate_from_aiops(
+        worker, "vm", "GFP_Backend", priority_family="database", adapter=model,
+    )
+    assert ("pg.internal", 6439) in worker.probes
+    assert result["dependencies"][0]["kind"] == "database_tcp"
+    assert result["llm_field_binding_status"] == "verified"
+    assert "opaque" not in str(model.calls)
+    assert "opaque" not in str(result)
