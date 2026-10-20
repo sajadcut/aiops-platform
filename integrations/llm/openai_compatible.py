@@ -8,7 +8,7 @@ import httpx
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
-from integrations.http_transport import insecure_async_client
+from integrations.http_transport import insecure_async_client, verified_async_client
 
 from domain.contracts.config import settings
 from domain.contracts.logging import log_workflow_step
