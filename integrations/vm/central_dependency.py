@@ -102,7 +102,16 @@ async def investigate_from_aiops(
         # contract does NOT take this branch; it must be upgraded.
         old = await client.dependency_investigation(target, service)
         if isinstance(old, dict):
-            old["llm_field_binding_status"] = "central_llm_unavailable"
+            # Old VM agent cannot return candidate IDs nor reverify a
+            # centrally selected binding. This is a DEPLOYMENT/CONTRACT gap,
+            # not a failure of the configured central AIOps LLM.
+            old["llm_field_binding_status"] = "agent_upgrade_required"
+            old["dependency_agent_contract_status"] = "upgrade_required"
+            old["root_cause_confirmed"] = False
+            old["limitations"] = list(dict.fromkeys([
+                *(old.get("limitations") if isinstance(old.get("limitations"), list) else []),
+                "two_phase_central_llm_agent_contract_missing",
+            ]))
         return old
     if not isinstance(initial, dict) or initial.get("success") is not True:
         return initial
@@ -110,7 +119,16 @@ async def investigate_from_aiops(
     if not isinstance(candidates, list):
         # An older worker does not implement the two-phase contract; do not
         # imply that its unverified dependency result is LLM-reviewed.
-        initial["llm_field_binding_status"] = "central_llm_unavailable"
+        initial["llm_field_binding_status"] = "agent_upgrade_required"
+        initial["dependency_agent_contract_status"] = "upgrade_required"
+        initial["root_cause_confirmed"] = False
+        initial["limitations"] = list(dict.fromkeys([
+            *(initial.get("limitations") if isinstance(initial.get("limitations"), list) else []),
+            "two_phase_central_llm_agent_contract_missing",
+        ]))
+        logger.warning("vm_dependency_two_phase_agent_upgrade_required",
+                       service=service[:100], target=target[:120],
+                       candidate_projection_missing=True)
         return initial
 
     llm_status = "no_safe_host_port_candidates"
