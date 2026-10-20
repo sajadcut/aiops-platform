@@ -295,6 +295,7 @@ class ElasticsearchMCPClient(MCPClient):
         rows: list[dict[str, Any]] = []
         succeeded = 0
         unrecognized_payloads = 0
+        unrecognized_envelope_shapes: list[dict] = []
         last_error: Exception | None = None
         recognized_empty_envelopes = 0
         for name in names:
@@ -349,6 +350,10 @@ class ElasticsearchMCPClient(MCPClient):
                                 recognized_empty_envelopes += 1
                             else:
                                 unrecognized_payloads += 1
+                                if len(unrecognized_envelope_shapes) < 2:
+                                    shape = self._safe_envelope_shape(payload)
+                                    if shape not in unrecognized_envelope_shapes:
+                                        unrecognized_envelope_shapes.append(shape)
                         rows.extend(decoded)
                     if rows:
                         break
@@ -365,6 +370,7 @@ class ElasticsearchMCPClient(MCPClient):
             successful_queries=succeeded,
             decoded_rows=len(rows),
             unrecognized_envelopes=unrecognized_payloads,
+            unrecognized_envelope_shapes=unrecognized_envelope_shapes,
             recognized_empty_envelopes=recognized_empty_envelopes,
             observed_schema_lookup=schema_field_names is not None,
         )
@@ -372,6 +378,7 @@ class ElasticsearchMCPClient(MCPClient):
             "success_count": succeeded,
             "decoded_rows": len(rows),
             "unrecognized_envelopes": unrecognized_payloads,
+            "unrecognized_envelope_shapes": unrecognized_envelope_shapes,
             "recognized_empty_envelopes": recognized_empty_envelopes,
             "schema_lookup": schema_field_names is not None,
         }
