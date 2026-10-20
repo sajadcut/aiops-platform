@@ -509,3 +509,32 @@ def test_zabbix_kubernetes_node_identity_is_not_inferred_from_pod():
     assert asset["cluster"] == "prod-k8s"
     assert asset["owner"] == "infrastructure"
     assert asset["pod"] is None
+
+
+def test_long_pod_namespace_trigger_preserves_full_alert_without_validation_500():
+    # Regression: October 20: PodMemoryUsageMoreThan70% webhook was rejected
+    # with OperationalSignal.signal_type max_length=128, causing HTTP 500.
+    name = (
+        "PodMemoryUsageMoreThan70%  Namespace: technical-digital-operation-"
+        "herdook-services Pod: technical-digital-operation-herdook-services-"
+        "deployment-ap8s6s9 Cluster: cluster01"
+    )
+    payload = {
+        "eventid": "136983157", "event_status": "PROBLEM",
+        "name": name, "trigger": name, "severity": "Warning",
+        "host": "", "host_name": "Prometheus-Alerts Central",
+    }
+    signal = signal_from_zabbix(payload)
+    assert signal.source_id == "136983157"
+    assert signal.summary == name
+    assert signal.raw_data["name"] == name
+    assert signal.raw_data["trigger"] == name
+    assert len(signal.signal_type) <= 128
+    assert signal.signal_type.startswith("PodMemoryUsageMoreThan70%")
+    assert signal.signal_type == signal_from_zabbix(payload).signal_type
+
+    # Distinct long alerts must not silently collapse into one signal type.
+    payload["name"] = payload["trigger"] = name.replace("ap8s6s9", "ap8s6s0")
+    other = signal_from_zabbix(payload)
+    assert other.signal_type != signal.signal_type
+    assert other.summary != signal.summary
