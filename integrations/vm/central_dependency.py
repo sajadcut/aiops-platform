@@ -36,15 +36,17 @@ _INSTRUCTION = (
 
 
 def _approved_internal_full_config_gateway() -> bool:
-    """Explicit API policy: only the exact approved HTTPS LLM host sees secrets."""
-    if not settings.AIOPS_DEPENDENCY_LLM_FULL_CONFIG_ENABLED:
-        return False
+    """Reuse the already configured AIOps LLM; require HTTPS and a valid identity.
+
+    The destination comes ONLY from the administrator-owned existing LLM_BASE_URL.
+    No alert field, incident content or model response can choose a new gateway.
+    The LLM client validates its TLS certificate against the OS trust store.
+    """
     endpoint = urlparse(str(settings.LLM_BASE_URL or ""))
-    approved = {str(host).strip().lower()
-                for host in settings.AIOPS_DEPENDENCY_LLM_APPROVED_HOSTS}
     return bool(
-        endpoint.scheme == "https" and endpoint.hostname
-        and endpoint.hostname.lower() in approved
+        endpoint.scheme == "https" and endpoint.hostname and settings.LLM_MODEL
+        and str(settings.LLM_PROVIDER or "").strip().lower()
+        not in {"", "mock"}
         and not endpoint.username and not endpoint.password
         and not endpoint.fragment
     )
