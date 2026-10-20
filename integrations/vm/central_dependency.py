@@ -2,8 +2,8 @@
 
 The VM worker has no LLM gateway, keys or credentials. By default phase 1
 returns a bounded non-secret Host/Port projection of systemd-verified config.
-With explicit policy on both ends, phase 1 can also send an ephemeral complete
-file (including credentials) exclusively to an approved TLS-verified central LLM.
+With an already configured internal HTTPS LLM, phase 1 can also send
+an ephemeral complete file (including credentials) to the configured endpoint.
 The LLM chooses only candidate IDs. Phase 2 independently rereads config,
 checks SHA-256 and validates the candidate IDs before any TCP probe.
 """
@@ -36,11 +36,12 @@ _INSTRUCTION = (
 
 
 def _approved_internal_full_config_gateway() -> bool:
-    """Reuse the already configured AIOps LLM; require HTTPS and a valid identity.
+    """Reuse AIOps LLM settings with no new key or certificate configuration.
 
-    The destination comes ONLY from the administrator-owned existing LLM_BASE_URL.
-    No alert field, incident content or model response can choose a new gateway.
-    The LLM client validates its TLS certificate against the OS trust store.
+    Only the administrator-configured HTTPS endpoint can receive full context.
+    As requested for this internal gateway, LLM TLS certificate verification
+    is disabled; transport confidentiality cannot be independently assured.
+    No alert or LLM result is allowed to replace the configured destination.
     """
     endpoint = urlparse(str(settings.LLM_BASE_URL or ""))
     return bool(
@@ -219,7 +220,7 @@ async def investigate_from_aiops(
                                     "inline_endpoint_fields": item["inline_endpoint_fields"],
                                     # Full file, including usernames, passwords and
                                     # connection strings, only for an explicitly
-                                    # allowed internal TLS-verified LLM gateway.
+                                    # configured internal HTTPS LLM gateway.
                                     **({"complete_config": full_context_by_file[
                                         (item["file_index"], item["sha256"])],
                                         "complete_config_sha256": item["sha256"]}
