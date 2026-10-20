@@ -245,10 +245,19 @@ def validate_vm_observation(tool: str, target: str, payload: Any) -> dict[str, A
                      or not 0 <= entry["candidate_inline_endpoint_count"] <= 8)
             ):
                 raise ValueError("vm_mcp_dependency_llm_metadata_invalid")
-        if any(payload.get(k) is not False for k in (
-            "execution_authority", "root_cause_confirmed",
-            "config_contents_exposed", "secrets_exposed",
-        )):
+        if payload.get("execution_authority") is not False or payload.get("root_cause_confirmed") is not False:
+            raise ValueError("vm_mcp_dependency_safety_claim_invalid")
+        # Only a bounded discover response may admit explicit temporary
+        # credential-bearing content. Subsequent probe results must revert
+        # to non-exposure claims; no model output can authorize execution.
+        has_raw = any(
+            isinstance(row, dict) and "complete_config_b64" in row
+            for row in candidates
+        )
+        expected_exposure = bool(has_raw)
+        if (payload.get("config_contents_exposed") is not expected_exposure
+                or payload.get("secrets_exposed") is not expected_exposure
+                or (has_raw and payload.get("status") != "binding_candidates_ready")):
             raise ValueError("vm_mcp_dependency_safety_claim_invalid")
         checks = payload.get("next_checks", [])
         permitted_hints = {
