@@ -108,7 +108,7 @@ A successful model selection of the existing `Redis.Endpoints.Primary.Host` and 
 
 ### Runtime configuration and status
 
-To use this step, the **VM MCP process** (which executes the trusted config read) must have its own valid `LLM_PROVIDER`, `LLM_BASE_URL`, `LLM_MODEL` and, if required by the provider, `LLM_API_KEY` configuration. The model endpoint must use HTTPS (loopback HTTP is allowed for local development). Configuring an LLM **only** in the API process does not activate model calls from the separate VM MCP process. No extra signing keys are introduced.
+Current deployment: the VM MCP worker performs read-only discovery, parsing and revalidation without an LLM provider. Only the **central AIOps API** uses the existing `LLM_PROVIDER`, `LLM_BASE_URL`, `LLM_MODEL` and (when required) `LLM_API_KEY`; no new public key, CA bundle or VM Agent LLM configuration is needed for dependency investigation. An outdated Agent must be rebuilt to support two-phase discovery.
 
 The read-only `dependency_investigation` response reports `llm_field_binding_status` and bounded `llm_field_binding_files` metadata. Examples include `verified`, `trusted_llm_not_configured`, `no_safe_host_port_candidates`, `llm_response_invalid`, `llm_cross_dependency_selection` and `llm_binding_unavailable`. The existing strict parser can still discover and test explicitly configured endpoints if the LLM is unavailable; this fallback must be shown as deterministic rather than attributed to an LLM.
 
