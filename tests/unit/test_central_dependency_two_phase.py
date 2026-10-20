@@ -192,8 +192,8 @@ async def test_old_worker_without_new_python_parameters_is_explicitly_flagged():
 @pytest.mark.asyncio
 async def test_approved_internal_llm_receives_full_connection_string_and_secret_transiently(monkeypatch):
     from domain.contracts.config import settings
-    monkeypatch.setattr(settings, "AIOPS_DEPENDENCY_LLM_FULL_CONFIG_ENABLED", True)
-    monkeypatch.setattr(settings, "AIOPS_DEPENDENCY_LLM_APPROVED_HOSTS", ["llm.internal.example"])
+    monkeypatch.setattr(settings, "LLM_PROVIDER", "openai-compatible")
+    monkeypatch.setattr(settings, "LLM_MODEL", "assistance-model")
     monkeypatch.setattr(settings, "LLM_BASE_URL", "https://llm.internal.example/v1")
     secret = "BOUND_ONLY_TO_APPROVED_LLM"
     worker = VerifiedWorker({
@@ -215,11 +215,11 @@ async def test_approved_internal_llm_receives_full_connection_string_and_secret_
 
 
 @pytest.mark.asyncio
-async def test_unapproved_llm_host_cannot_receive_full_config(monkeypatch):
+async def test_non_https_llm_endpoint_cannot_receive_full_config(monkeypatch):
     from domain.contracts.config import settings
-    monkeypatch.setattr(settings, "AIOPS_DEPENDENCY_LLM_FULL_CONFIG_ENABLED", True)
-    monkeypatch.setattr(settings, "AIOPS_DEPENDENCY_LLM_APPROVED_HOSTS", ["llm.internal.example"])
-    monkeypatch.setattr(settings, "LLM_BASE_URL", "https://untrusted.example/v1")
+    monkeypatch.setattr(settings, "LLM_PROVIDER", "openai-compatible")
+    monkeypatch.setattr(settings, "LLM_MODEL", "assistance-model")
+    monkeypatch.setattr(settings, "LLM_BASE_URL", "http://untrusted.example/v1")
     worker = VerifiedWorker({"Database": {
         "Host": "db.internal", "Port": 5433, "Password": "MUST_NOT_LEAK"
     }})
@@ -234,7 +234,6 @@ async def test_unapproved_llm_host_cannot_receive_full_config(monkeypatch):
 @pytest.mark.asyncio
 async def test_full_context_digest_mismatch_rejected(monkeypatch):
     from domain.contracts.config import settings
-    monkeypatch.setattr(settings, "AIOPS_DEPENDENCY_LLM_FULL_CONFIG_ENABLED", True)
     worker = VerifiedWorker({"Database": {"Host": "db.internal", "Port": 5433}})
     discovered = await dependency_investigation.investigate(
         worker, "vm", "GFP_Backend", mode="discover", include_full_config=True,
@@ -268,8 +267,8 @@ async def test_db_alarm_parses_connectionstrings_server_port_with_credentials():
 @pytest.mark.asyncio
 async def test_full_config_inspected_when_parser_cannot_identify_database_fields(monkeypatch):
     from domain.contracts.config import settings
-    monkeypatch.setattr(settings, "AIOPS_DEPENDENCY_LLM_FULL_CONFIG_ENABLED", True)
-    monkeypatch.setattr(settings, "AIOPS_DEPENDENCY_LLM_APPROVED_HOSTS", ["llm.internal.example"])
+    monkeypatch.setattr(settings, "LLM_PROVIDER", "openai-compatible")
+    monkeypatch.setattr(settings, "LLM_MODEL", "assistance-model")
     monkeypatch.setattr(settings, "LLM_BASE_URL", "https://llm.internal.example/v1")
     worker = VerifiedWorker({
         "Opaque": {"Cfg": "UnknownDbAlias=db.internal;User=svc;Pwd=VISIBLE_TO_MODEL"}
