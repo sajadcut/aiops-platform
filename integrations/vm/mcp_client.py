@@ -205,7 +205,7 @@ class VMEdgeMCPClient(MCPClient):
     async def dependency_investigation(
         self, target: str, service: str, *,
         mode: str | None = None, selections: list[dict] | None = None,
-        priority_family: str = "",
+        priority_family: str = "", include_full_config: bool = False,
     ) -> Dict[str, Any]:
         params: dict = {"service": service}
         if mode is not None:
@@ -214,6 +214,8 @@ class VMEdgeMCPClient(MCPClient):
             params["selections"] = selections
         if priority_family:
             params["priority_family"] = priority_family
+        if include_full_config:
+            params["include_full_config"] = True
         return await self._invoke("dependency_investigation", target, **params)
     async def redis_dependency_check(self, target: str, service: str) -> Dict[str, Any]: return await self._invoke("redis_dependency_check", target, service=service)
     async def service_config_review(self, target: str, service: str) -> Dict[str, Any]: return await self._invoke("service_config_review", target, service=service)
