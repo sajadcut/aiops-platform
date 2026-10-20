@@ -1,8 +1,10 @@
 """AIOps control-plane LLM reasoning for read-only VM dependencies.
 
-The VM worker has no LLM gateway, keys or credentials. Phase 1 returns a
-bounded non-secret Host/Port candidate projection of systemd-verified config.
-AIOps LLM chooses only candidate IDs. Phase 2 independently rereads config,
+The VM worker has no LLM gateway, keys or credentials. By default phase 1
+returns a bounded non-secret Host/Port projection of systemd-verified config.
+With explicit policy on both ends, phase 1 can also send an ephemeral complete
+file (including credentials) exclusively to an approved TLS-verified central LLM.
+The LLM chooses only candidate IDs. Phase 2 independently rereads config,
 checks SHA-256 and validates the candidate IDs before any TCP probe.
 """
 from __future__ import annotations
