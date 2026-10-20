@@ -8,7 +8,7 @@ import httpx
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
-from integrations.http_transport import insecure_async_client, verified_async_client
+from integrations.http_transport import insecure_async_client
 
 from domain.contracts.config import settings
 from domain.contracts.logging import log_workflow_step
@@ -323,18 +323,14 @@ class OpenAICompatibleLLMProvider(LLMAdapter):
         for attempt in range(1, transport_attempts + 1):
             attempt_started = time.perf_counter()
             try:
-                # Credential-bearing full-file workflows require real TLS
-                # certificate and hostname verification (not merely HTTPS).
-                sensitive_config_stage = stage in {
-                    "central_dependency_config_binding", "full_config_llm_repair",
-                }
-                transport = verified_async_client if sensitive_config_stage else insecure_async_client
-                # Use the OS certificate trust store; no new per-feature CA config.
-                transport_options = {}
-                async with transport(
+                # The platform's configured internal LLM gateway uses the
+                # existing TLS-transport policy (certificate verification is
+                # disabled). Do not add a per-workflow CA/public-key setting.
+                # The HTTPS endpoint is still fixed by administrator-owned
+                # LLM_BASE_URL, never by alert text or model output.
+                async with insecure_async_client(
                     timeout=request_timeout,
                     component=f"llm:{self.provider_name}",
-                    **transport_options,
                 ) as client:
                     response = await client.post(
                         self.chat_endpoint,
