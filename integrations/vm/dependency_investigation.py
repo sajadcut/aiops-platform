@@ -1,7 +1,9 @@
 """Universal read-only downstream dependency investigation on trusted VM MCP edge.
 
 Requires service identity and systemd-verified config-file path. Models never
-provide targets. No config values, credentials, raw logs or HTTP bodies escape.
+provide targets. Default results expose no raw config; explicitly authorized
+discovery can transiently carry complete files to the central internal LLM.
+No complete content is returned by the probe stage or written to incident evidence.
 """
 from __future__ import annotations
 import base64
