@@ -8,7 +8,11 @@ checks SHA-256 and validates the candidate IDs before any TCP probe.
 from __future__ import annotations
 
 import asyncio
+import base64
+import binascii
+import hashlib
 import json
+from urllib.parse import urlparse
 from typing import Any
 
 from domain.contracts.config import settings
@@ -27,6 +31,35 @@ _INSTRUCTION = (
     "command, credential, config path, or identity. Return ONLY JSON: "
     '{"pairs":[{"host_id":"h0","port_id":"p0"}],"endpoint_ids":["e0"]}.'
 )
+
+
+def _approved_internal_full_config_gateway() -> bool:
+    """Explicit API policy: only the exact approved HTTPS LLM host sees secrets."""
+    if not settings.AIOPS_DEPENDENCY_LLM_FULL_CONFIG_ENABLED:
+        return False
+    endpoint = urlparse(str(settings.LLM_BASE_URL or ""))
+    approved = {str(host).strip().lower()
+                for host in settings.AIOPS_DEPENDENCY_LLM_APPROVED_HOSTS}
+    return bool(
+        endpoint.scheme == "https" and endpoint.hostname
+        and endpoint.hostname.lower() in approved
+        and not endpoint.username and not endpoint.password
+        and not endpoint.fragment
+    )
+
+
+def _verified_transient_config(encoded: Any, digest: Any) -> str | None:
+    """Discard tampered/oversized documents; never log text or bytes."""
+    if not isinstance(encoded, str) or len(encoded) > 87384:
+        return None
+    try:
+        original = base64.b64decode(encoded, validate=True)
+        if (not 1 <= len(original) <= 65536
+                or hashlib.sha256(original).hexdigest() != digest):
+            return None
+        return original.decode("utf-8-sig", "strict")
+    except (ValueError, UnicodeError, binascii.Error):
+        return None
 
 
 def _focused_fields(candidate: dict, family: str) -> dict:
@@ -91,9 +124,11 @@ async def investigate_from_aiops(
     A missing provider is not an error requiring on-host LLM configuration.
     Deterministic, explicit connection strings can still be probed safely.
     """
+    use_full_context = _approved_internal_full_config_gateway()
     try:
         initial = await client.dependency_investigation(
             target, service, mode="discover", priority_family=priority_family,
+            include_full_config=use_full_context,
         )
     except TypeError:
         # Backward-compatible local adapter with the old Python signature.
@@ -116,6 +151,19 @@ async def investigate_from_aiops(
     if not isinstance(initial, dict) or initial.get("success") is not True:
         return initial
     candidates = initial.get("binding_candidates")
+    # Remove secret-bearing material from the tool object immediately.
+    # Only the local variable below is allowed into the central LLM request;
+    # returned incident evidence, RAG and audit diagnostics never include it.
+    full_context_by_file: dict[tuple[int, str], str] = {}
+    if isinstance(candidates, list):
+        for row in candidates:
+            if not isinstance(row, dict):
+                continue
+            encoded = row.pop("complete_config_b64", None)
+            if encoded is not None and use_full_context:
+                decoded = _verified_transient_config(encoded, row.get("sha256"))
+                if decoded is not None:
+                    full_context_by_file[(row.get("file_index"), row.get("sha256"))] = decoded
     if not isinstance(candidates, list):
         # An older worker does not implement the two-phase contract; do not
         # imply that its unverified dependency result is LLM-reviewed.
@@ -157,9 +205,18 @@ async def investigate_from_aiops(
                                 {"role": "system", "content": _INSTRUCTION},
                                 {"role": "user", "content": json.dumps({
                                     "alert_family": priority_family,
+                                    "config_file": item["config_file"],
                                     "host_fields": item["host_fields"],
                                     "port_fields": item["port_fields"],
                                     "inline_endpoint_fields": item["inline_endpoint_fields"],
+                                    # Full file, including usernames, passwords and
+                                    # connection strings, only for an explicitly
+                                    # allowed internal TLS-verified LLM gateway.
+                                    **({"complete_config": full_context_by_file[
+                                        (item["file_index"], item["sha256"])],
+                                        "complete_config_sha256": item["sha256"]}
+                                       if (item["file_index"], item["sha256"])
+                                       in full_context_by_file else {}),
                                 }, ensure_ascii=False)},
                             ],
                             stage="central_dependency_config_binding",
@@ -176,6 +233,8 @@ async def investigate_from_aiops(
                 if selected["pairs"] or selected["endpoint_ids"]:
                     llm_status = "verified_selection_pending_worker"
 
+    # No secret-bearing candidate is present in the returned probe result.
+    full_context_by_file.clear()
     # The second call's original SHA and *field IDs*, not LLM output values,
     # are the only model-assisted input reaching the VM worker.
     result = await client.dependency_investigation(
