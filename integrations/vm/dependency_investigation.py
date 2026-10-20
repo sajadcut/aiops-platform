@@ -73,12 +73,18 @@ def _matches_priority(kind: str, family: str) -> bool:
 async def investigate(
     connector: Any, target: str, service: str, *,
     mode: str = "probe", selections: list[dict] | None = None,
-    priority_family: str = "",
+    priority_family: str = "", include_full_config: bool = False,
 ) -> dict:
     connector._validate_target(target)
     connector._validate_service(service)
     if mode not in {"probe", "discover"}:
         raise ValueError("vm_dependency_mode_invalid")
+    if type(include_full_config) is not bool or (include_full_config and mode != "discover"):
+        raise ValueError("vm_dependency_full_context_mode_invalid")
+    if include_full_config:
+        from domain.contracts.config import settings
+        if not settings.AIOPS_DEPENDENCY_LLM_FULL_CONFIG_ENABLED:
+            raise PermissionError("vm_dependency_full_context_not_enabled")
     if priority_family not in {"", "database", "messaging", "message_broker",
                                "redis", "cache", "http", "http_dependency"}:
         raise ValueError("vm_dependency_priority_invalid")
@@ -164,12 +170,22 @@ async def investigate(
                 facts = safe_candidate_fields(config)
                 # Worker returns only whitelisted structural Host/Port IDs.
                 # Never raw config, DSN text, passwords or arbitrary values.
+                # Optional, transient context to the authenticated central AIOps
+                # process only. Never truncate a secret-bearing document.
+                # Public incident evidence and probe results must not retain it.
+                full_context = (
+                    {"complete_config_b64": encoded}
+                    if include_full_config and len(raw) <= 65536 else {}
+                )
                 base["binding_candidates"].append({
                     "file_index": file_index,
                     "config_file": verified_path,
                     "sha256": fingerprint,
-                    **facts,
+                    **facts, **full_context,
                 })
+                if full_context:
+                    base["config_contents_exposed"] = True
+                    base["secrets_exposed"] = True
                 base["llm_field_binding_files"].append({
                     "config_file": verified_path,
                     "status": "central_llm_required" if (
