@@ -227,3 +227,54 @@ def test_coordinator_uses_new_confidence_band_for_adaptive_fanout(monkeypatch):
     }, enabled)
     assert low["reason"] == "fallback_broad_analysis"
     assert len(low["selected"]) == 5
+
+
+def test_zabbix_database_alert_reserves_database_slot_without_claiming_root_cause():
+    alert = {
+        "source": "zabbix", "type": "alert",
+        "raw_data": {
+            "service": "GFP_Backend",
+            "tags": [
+                {"tag": "dependency", "value": "database"},
+                {"tag": "service", "value": "GFP_Backend"},
+            ],
+        },
+    }
+    assert TriageAgent._declared_dependency_routes([alert], "GFP_Backend") == ["database"]
+    routes = IncidentCoordinator.select_agents({
+        "confidence": 0.4,
+        "handoff_agents": ["network", "vm", "infrastructure"],
+        "analysis_details": {
+            "primary_domain": "network",
+            "routing_confidence_band": "low",
+            "specialist_routes": ["network", "vm", "infrastructure", "application"],
+            "alert_dependency_routes": ["database"],
+        },
+    }, {"network", "vm", "infrastructure", "application", "dependency", "database"})
+    assert routes["reason"] == "fallback_broad_analysis"
+    assert routes["selected"][0] == "database"
+    assert "database" not in routes["skipped"]
+
+
+def test_declared_dependency_routes_require_matching_service_and_explicit_tags():
+    def alert(dependency, service="GFP_Backend", *, source="zabbix"):
+        return {"source": source, "type": "alert", "raw_data": {
+            "service": service,
+            "tags": [{"tag": "dependency", "value": dependency}],
+        }}
+    items = [
+        alert("postgresql", "wrong_service"),
+        alert("kafka"), alert("activemq"), alert("redis"),
+        alert("database", source="unknown"),
+        {"source": "zabbix", "type": "log", "raw_data": {
+            "service": "GFP_Backend", "tags": [{"tag": "dependency", "value": "database"}],
+        }},
+        {"source": "zabbix", "type": "alert", "raw_data": {
+            "service": "GFP_Backend", "message": "database failure, not confirmed",
+        }},
+    ]
+    assert TriageAgent._declared_dependency_routes(items, "GFP_Backend") == [
+        "messaging", "dependency",
+    ]
+    assert TriageAgent._declared_dependency_routes(items, "another") == []
+    assert TriageAgent._declared_dependency_routes([], "") == []

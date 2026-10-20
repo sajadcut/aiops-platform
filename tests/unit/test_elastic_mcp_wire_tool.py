@@ -1075,3 +1075,18 @@ def test_esql_unknown_envelope_diagnostic_never_contains_log_or_secret():
     assert "PRIVATE_PASSWORD" not in str(shape)
     assert "password" not in str(shape)
     assert "token" not in str(shape)
+
+
+def test_unknown_results_envelope_reports_structure_only_not_secret_content():
+    client = ElasticsearchMCPClient()
+    payload = {
+        "results": [{"type": "text", "text": "DB_PASSWORD_DO_NOT_LOG",
+                     "password": "DB_PASSWORD_DO_NOT_LOG"}],
+    }
+    shape = client._safe_envelope_shape(payload)
+    assert shape["keys"] == ["results"]
+    assert shape["nested_keys"]["results"]["type"] == "list"
+    assert shape["nested_keys"]["results"]["item_count"] == 1
+    assert shape["nested_keys"]["results"]["first_item_keys"] == ["text", "type"]
+    assert "DB_PASSWORD_DO_NOT_LOG" not in str(shape)
+    assert "password" not in str(shape)
