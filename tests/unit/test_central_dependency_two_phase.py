@@ -305,4 +305,6 @@ async def test_discovery_prioritizes_appsettings_over_message_templates():
     assert paths[:2] == [
         "/opt/GFP/appsettings.Production.json", "/opt/GFP/appsettings.json",
     ]
-    assert "/opt/GFP/MessageTemplates.json" not in paths
+    # Non-config JSON may still be inspected if the bounded budget permits,
+    # but must never displace the primary application settings.
+    assert paths.index("/opt/GFP/MessageTemplates.json") > paths.index("/opt/GFP/appsettings.json")
