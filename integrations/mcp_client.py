@@ -409,10 +409,33 @@ class MCPClient:
 
     async def _request(self, method: str, params: Dict[str, Any], *, tool_name: Optional[str] = None) -> Dict[str, Any]:
         await self.initialize()
-        result = await self._post(
-            {"jsonrpc": "2.0", "method": method, "params": params, "id": next(self._ids)},
-            tool_name=tool_name,
-        )
+        request = {"jsonrpc": "2.0", "method": method,
+                   "params": params, "id": next(self._ids)}
+        prior_session = self.session_id
+        try:
+            result = await self._post(request, tool_name=tool_name)
+        except RuntimeError as exc:
+            # MCP Streamable HTTP may return 404 for a session terminated or
+            # evicted by the remote server. Re-handshake only when a concrete
+            # prior session existed and only for replay-safe READ operations.
+            # Never replay a write or a single-attempt/long-running read.
+            cause = exc.__cause__
+            if not (
+                prior_session and tool_name not in self.write_tools
+                and tool_name not in self.single_attempt_read_tools
+                and isinstance(cause, httpx.HTTPStatusError)
+                and cause.response.status_code == 404
+            ):
+                raise
+            logger.warning("mcp_session_expired_reinitializing",
+                           server=self.server_name, tool=tool_name,
+                           method=method, http_status=404)
+            self.session_id = None
+            self._initialized = False
+            self.negotiated_protocol_version = self.protocol_version
+            await self.initialize()
+            # One replay only; _post owns transport retries separately.
+            result = await self._post(request, tool_name=tool_name)
         if result.get("error"):
             logger.warning("mcp_remote_error", server=self.server_name, method=method, tool=tool_name, response=self._safe_mcp_log(result, method=method, tool_name=tool_name))
             remote_error = result.get("error")
