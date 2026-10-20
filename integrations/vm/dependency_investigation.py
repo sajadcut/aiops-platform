@@ -136,6 +136,26 @@ async def investigate(
     if not filenames:
         return {**base, "status": "no_verified_config_files",
                 "limitations": ["systemd_config_path_not_verified"]}
+    # Prefer application settings over unrelated JSON resources when the
+    # verified runtime lists more files than the bounded read budget.
+    # Presence alone still does not establish the effective environment.
+    def _config_priority(path: str) -> tuple[int, str]:
+        filename = path.rsplit("/", 1)[-1].lower()
+        if filename == "appsettings.production.json":
+            return 0, filename
+        if filename in {"appsettings.json", "application-production.yml",
+                        "application-production.yaml", "application-production.properties"}:
+            return 1, filename
+        if filename.startswith("appsettings.") and filename.endswith(".json"):
+            return 2, filename
+        if filename in {"application.yml", "application.yaml",
+                        "application.properties", "application.toml"}:
+            return 2, filename
+        if any(marker in filename for marker in ("database", "connection", "config", "settings")):
+            return 3, filename
+        return 5, filename
+
+    filenames = sorted(dict.fromkeys(filenames), key=_config_priority)
     by_file: list[list[dict]] = []
     read_failed = 0
     if mode == "discover":
