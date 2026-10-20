@@ -125,7 +125,7 @@ async def test_full_config_llm_transport_does_not_replay_on_timeout(monkeypatch)
         timeouts.append(timeout)
         return StubGateway()
 
-    monkeypatch.setattr(provider_module, "verified_async_client", fake_client)
+    monkeypatch.setattr(provider_module, "insecure_async_client", fake_client)
     provider = provider_module.OpenAICompatibleLLMProvider(
         "https://trusted.example", "assistance-model"
     )
