@@ -154,10 +154,13 @@ def validate_vm_observation(tool: str, target: str, payload: Any) -> dict[str, A
             allowed_kinds = {kind for kind, _ in KINDS.values()}
             used_indices: set[int] = set()
             for entry in candidates:
-                if not isinstance(entry, dict) or set(entry) != {
+                required_candidate_fields = {
                     "file_index", "config_file", "sha256",
                     "host_fields", "port_fields", "inline_endpoint_fields",
-                }:
+                }
+                if (not isinstance(entry, dict)
+                        or not required_candidate_fields <= set(entry)
+                        or not set(entry) <= required_candidate_fields | {"complete_config_b64"}):
                     raise ValueError("vm_mcp_dependency_candidate_shape_invalid")
                 idx, digest, path = (entry["file_index"], entry["sha256"],
                                      entry["config_file"])
@@ -168,6 +171,22 @@ def validate_vm_observation(tool: str, target: str, payload: Any) -> dict[str, A
                         or checked_config_path(path) != path):
                     raise ValueError("vm_mcp_dependency_candidate_identity_invalid")
                 used_indices.add(idx)
+                if "complete_config_b64" in entry:
+                    # Never trust even an authenticated worker's claim that its
+                    # unredacted context is the same systemd-derived file.
+                    import base64
+                    import binascii
+                    import hashlib
+                    encoded = entry["complete_config_b64"]
+                    if not isinstance(encoded, str) or len(encoded) > 87384:
+                        raise ValueError("vm_mcp_dependency_complete_config_too_large")
+                    try:
+                        full_bytes = base64.b64decode(encoded, validate=True)
+                    except (ValueError, binascii.Error) as exc:
+                        raise ValueError("vm_mcp_dependency_complete_config_invalid") from exc
+                    if (not 1 <= len(full_bytes) <= 65536
+                            or hashlib.sha256(full_bytes).hexdigest() != digest):
+                        raise ValueError("vm_mcp_dependency_complete_config_digest_invalid")
                 for field, limit, prefix in (
                     ("host_fields", 16, "h"), ("port_fields", 16, "p"),
                     ("inline_endpoint_fields", 8, "e"),
