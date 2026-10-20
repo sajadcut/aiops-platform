@@ -111,3 +111,76 @@ def test_dotted_logical_tool_name_does_not_pass_wire_discovery():
     assert code == 6
     assert "platform_core_execute_esql" in output
     assert client.closed
+
+
+import pytest
+from integrations.mcp_client import MCPClient
+
+
+def _expired_session_error():
+    request = httpx.Request("POST", "https://mcp.example.test/mcp")
+    response = httpx.Response(404, request=request)
+    try:
+        raise httpx.HTTPStatusError("MCP session expired", request=request, response=response)
+    except httpx.HTTPStatusError as cause:
+        raise RuntimeError("mcp_http_error:prometheus") from cause
+
+
+@pytest.mark.asyncio
+async def test_mcp_expired_session_read_reinitializes_only_once(monkeypatch):
+    client = MCPClient(
+        "https://mcp.example.test/mcp", "prometheus",
+        allowed_tools={"ready", "dangerous"}, write_tools={"dangerous"},
+    )
+    client._initialized = True
+    client.session_id = "stale-session"
+    calls = []
+
+    async def fake_post(payload, **kwargs):
+        calls.append((payload["method"], client.session_id))
+        if payload["method"] == "tools/call" and client.session_id == "stale-session":
+            _expired_session_error()
+        if payload["method"] == "initialize":
+            client.session_id = "fresh-session"
+            return {"result": {"protocolVersion": "2025-03-26"}}
+        if payload["method"] == "notifications/initialized":
+            return {}
+        return {"result": {"content": [{"type": "text", "text": "ready"}]}}
+    monkeypatch.setattr(client, "_post", fake_post)
+    try:
+        result = await client.call_tool("ready", {})
+        assert result["content"][0]["text"] == "ready"
+        assert [method for method, _ in calls] == [
+            "tools/call", "initialize", "notifications/initialized", "tools/call",
+        ]
+        assert calls[0][1] == "stale-session"
+        assert calls[-1][1] == "fresh-session"
+    finally:
+        client.session_id = None
+        await client.close()
+
+
+@pytest.mark.asyncio
+async def test_mcp_expired_session_does_not_replay_write_or_single_attempt_read(monkeypatch):
+    client = MCPClient(
+        "https://mcp.example.test/mcp", "prometheus",
+        allowed_tools={"ready", "dangerous"}, write_tools={"dangerous"},
+    )
+    client._initialized = True
+    client.session_id = "stale-session"
+    client.single_attempt_read_tools = frozenset({"ready"})
+    calls = []
+    async def fake_post(payload, **kwargs):
+        calls.append(payload["method"])
+        _expired_session_error()
+    monkeypatch.setattr(client, "_post", fake_post)
+    try:
+        with pytest.raises(RuntimeError, match="mcp_http_error:prometheus"):
+            await client.call_tool("dangerous", {})
+        with pytest.raises(RuntimeError, match="mcp_http_error:prometheus"):
+            await client.call_tool("ready", {})
+        assert calls == ["tools/call", "tools/call"]
+        assert client.session_id == "stale-session"
+    finally:
+        client.session_id = None
+        await client.close()
