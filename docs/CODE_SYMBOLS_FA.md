@@ -3,7 +3,7 @@
 > این سند به‌صورت deterministic از source code ساخته می‌شود و class/function/methodهای Python و functionهای JavaScript داشبورد را index می‌کند.
 > هدف، پیدا کردن سریع مسئولیت هر symbol است؛ توضیح معماری عمیق‌تر در `CODEBASE_GUIDE_FA.md` قرار دارد.
 
-**Python files scanned: 615 | Dashboard JS files scanned: 8 | Symbols indexed: 7032**
+**Python files scanned: 615 | Dashboard JS files scanned: 8 | Symbols indexed: 7043**
 
 | File | Symbol | Line | Kind | Purpose | Parent/Context |
 |---|---|---:|---|---|---|
@@ -1175,9 +1175,9 @@
 | `apps/decision_brief.py` | `_agents` | 202 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/decision_brief.py` | `tool_observation_summary` | 272 | function | Only bounded, whitelisted scalar facts: never dump journals or tool JSON. | module |
 | `apps/decision_brief.py` | `_mcp` | 377 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/decision_brief.py` | `_knowledge` | 545 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/decision_brief.py` | `_memory` | 660 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
-| `apps/decision_brief.py` | `build_decision_brief` | 685 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
+| `apps/decision_brief.py` | `_knowledge` | 549 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/decision_brief.py` | `_memory` | 664 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
+| `apps/decision_brief.py` | `build_decision_brief` | 689 | function | یک ساختار canonical می‌سازد یا ورودی را normalize/resolve می‌کند | module |
 | `apps/decision_brief_history.py` | `archive_decision_brief` | 22 | async function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `apps/decision_brief_history.py` | `list_decision_brief_history` | 62 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
 | `apps/decision_brief_history.py` | `read_decision_brief_snapshot` | 83 | async function | داده را بدون تغییر state بازیابی/فهرست می‌کند | module |
@@ -2358,13 +2358,15 @@
 | `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._configured_authorization_header` | 45 | method | Resolve Elastic MCP auth without exposing raw Basic credentials to the generic client. | ElasticsearchMCPClient |
 | `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._with_namespace` | 59 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ElasticsearchMCPClient |
 | `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._esql_string` | 69 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ElasticsearchMCPClient |
-| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._rows_from_payload` | 75 | method | Decode bounded tabular ES/QL envelopes from Kibana Agent Builder MCP. | ElasticsearchMCPClient |
-| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._rows_from_payload.decode` | 85 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ElasticsearchMCPClient._rows_from_payload |
-| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._esql_empty_table` | 135 | method | Recognize an ES/QL *empty table*, including JSON-text MCP envelopes. | ElasticsearchMCPClient |
-| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._esql_payloads` | 173 | method | Prefer a real tabular response over metadata-only structuredContent. | ElasticsearchMCPClient |
-| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient.health_check` | 194 | async method | Require the exact allowlisted Agent Builder tool, not just a live MCP route. | ElasticsearchMCPClient |
-| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient.get_logs` | 202 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | ElasticsearchMCPClient |
-| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient.discover_service_hosts` | 364 | async method | Bounded, read-only Elasticsearch host *candidates*, never VM authority. | ElasticsearchMCPClient |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._json_text` | 75 | method | Remove only an explicit JSON markdown fence, never scan free text. | ElasticsearchMCPClient |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._safe_envelope_shape` | 87 | method | Diagnose unrecognized MCP envelopes using TYPES/known keys only. | ElasticsearchMCPClient |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._rows_from_payload` | 114 | method | Decode bounded tabular ES/QL envelopes from Kibana Agent Builder MCP. | ElasticsearchMCPClient |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._rows_from_payload.decode` | 124 | method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | ElasticsearchMCPClient._rows_from_payload |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._esql_empty_table` | 172 | method | Recognize an ES/QL *empty table*, including JSON-text MCP envelopes. | ElasticsearchMCPClient |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient._esql_payloads` | 210 | method | Prefer a real tabular response over metadata-only structuredContent. | ElasticsearchMCPClient |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient.health_check` | 231 | async method | Require the exact allowlisted Agent Builder tool, not just a live MCP route. | ElasticsearchMCPClient |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient.get_logs` | 239 | async method | داده را بدون تغییر state بازیابی/فهرست می‌کند | ElasticsearchMCPClient |
+| `integrations/elasticsearch/mcp_client.py` | `ElasticsearchMCPClient.discover_service_hosts` | 408 | async method | Bounded, read-only Elasticsearch host *candidates*, never VM authority. | ElasticsearchMCPClient |
 | `integrations/http_transport.py` | `insecure_ssl_context` | 13 | function | Create a TLS context that does not validate server certificates or hostnames. | module |
 | `integrations/http_transport.py` | `_safe_destination` | 21 | function | Return log-safe destination fields without query strings, credentials or bodies. | module |
 | `integrations/http_transport.py` | `_log_completed` | 39 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -3486,6 +3488,12 @@
 | `tests/unit/test_central_dependency_two_phase.py` | `test_unavailable_central_model_still_probes_literal_db_uri_without_guessing` | 105 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_central_dependency_two_phase.py` | `test_invalid_model_pair_not_used_as_network_destination` | 121 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_central_dependency_two_phase.py` | `test_projection_rejects_unexpected_raw_config_value` | 137 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_central_dependency_two_phase.py` | `test_old_vm_agent_with_single_phase_probes_reports_upgrade_not_llm_failure` | 147 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_central_dependency_two_phase.py` | `test_old_vm_agent_with_single_phase_probes_reports_upgrade_not_llm_failure.LegacyWorker` | 148 | class | کلاس | test_old_vm_agent_with_single_phase_probes_reports_upgrade_not_llm_failure |
+| `tests/unit/test_central_dependency_two_phase.py` | `test_old_vm_agent_with_single_phase_probes_reports_upgrade_not_llm_failure.LegacyWorker.dependency_investigation` | 149 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_old_vm_agent_with_single_phase_probes_reports_upgrade_not_llm_failure.LegacyWorker |
+| `tests/unit/test_central_dependency_two_phase.py` | `test_old_worker_without_new_python_parameters_is_explicitly_flagged` | 179 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_central_dependency_two_phase.py` | `test_old_worker_without_new_python_parameters_is_explicitly_flagged.VeryOldWorker` | 180 | class | کلاس | test_old_worker_without_new_python_parameters_is_explicitly_flagged |
+| `tests/unit/test_central_dependency_two_phase.py` | `test_old_worker_without_new_python_parameters_is_explicitly_flagged.VeryOldWorker.dependency_investigation` | 181 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_old_worker_without_new_python_parameters_is_explicitly_flagged.VeryOldWorker |
 | `tests/unit/test_centralized_config.py` | `_template_keys` | 9 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_centralized_config.py` | `_template_values` | 19 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_centralized_config.py` | `_settings_data` | 30 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
@@ -4548,6 +4556,8 @@
 | `tests/unit/test_elastic_mcp_wire_tool.py` | `test_gfp_prefers_verified_canonical_runtime_with_systemd_id.VM` | 1021 | class | کلاس | test_gfp_prefers_verified_canonical_runtime_with_systemd_id |
 | `tests/unit/test_elastic_mcp_wire_tool.py` | `test_gfp_prefers_verified_canonical_runtime_with_systemd_id.VM.service_status` | 1022 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_gfp_prefers_verified_canonical_runtime_with_systemd_id.VM |
 | `tests/unit/test_elastic_mcp_wire_tool.py` | `test_gfp_prefers_verified_canonical_runtime_with_systemd_id.VM.close` | 1029 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | test_gfp_prefers_verified_canonical_runtime_with_systemd_id.VM |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_esql_fenced_json_is_decoded_without_executing_text` | 1043 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_elastic_mcp_wire_tool.py` | `test_esql_unknown_envelope_diagnostic_never_contains_log_or_secret` | 1064 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_elastic_verified_dependency_route.py` | `signal` | 28 | function | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | module |
 | `tests/unit/test_elastic_verified_dependency_route.py` | `test_redis_alert_inspects_verified_gfpapi_systemd_config` | 38 | async function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_elastic_verified_dependency_route.py` | `test_redis_alert_inspects_verified_gfpapi_systemd_config.Client` | 41 | class | کلاس | test_redis_alert_inspects_verified_gfpapi_systemd_config |
@@ -6996,6 +7006,7 @@
 | `tests/unit/test_zabbix_team_guide_contract.py` | `test_exact_v11_media_type_fields_are_preserved_by_receiver` | 438 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_zabbix_team_guide_contract.py` | `test_zabbix_route_keeps_api_key_auth_and_high_volume_rate_limit` | 473 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_zabbix_team_guide_contract.py` | `test_zabbix_kubernetes_node_identity_is_not_inferred_from_pod` | 493 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
+| `tests/unit/test_zabbix_team_guide_contract.py` | `test_long_pod_namespace_trigger_preserves_full_alert_without_validation_500` | 514 | function | Regression/contract مورد نام‌برده را در pytest اثبات می‌کند | module |
 | `tests/unit/test_zabbix_webhook_logging.py` | `_Session` | 22 | class | کلاس | module |
 | `tests/unit/test_zabbix_webhook_logging.py` | `_Session.__aenter__` | 23 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Session |
 | `tests/unit/test_zabbix_webhook_logging.py` | `_Session.__aexit__` | 26 | async method | تابع/متد با مسئولیت مشخص‌شده توسط نام و فایل میزبان | _Session |
