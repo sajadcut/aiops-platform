@@ -139,20 +139,24 @@ def received_alert_intents(raw_evidence: list, service_name: str) -> list[dict]:
             continue
         data = raw.get("payload") if isinstance(raw.get("payload"), Mapping) else raw
         tags = data.get("tags")
+        labels = data.get("labels") if isinstance(data.get("labels"), Mapping) else {}
+        annotations = data.get("annotations") if isinstance(data.get("annotations"), Mapping) else {}
         tag_map = {
             str(row.get("tag") or "").lower(): str(row.get("value") or "")
             for row in tags[:40] if isinstance(row, Mapping)
         } if isinstance(tags, list) else {}
-        declared = str(data.get("service") or tag_map.get("service") or "").strip()
+        declared = str(data.get("service") or labels.get("service")
+                       or tag_map.get("service") or "").strip()
         if declared and declared.casefold() != service.casefold():
             continue
         # Source-bound text only, not arbitrary context/LLM interpretation.
         title = next((
             value for value in (
                 data.get("name"), data.get("trigger"), data.get("alertname"),
-                data.get("signal_summary"), item.get("message"),
-                data.get("operational_data"),
-                data.get("message"),
+                labels.get("alertname"), data.get("signal_summary"),
+                annotations.get("summary"), annotations.get("description"),
+                item.get("message"), data.get("operational_data"),
+                data.get("message"), data.get("reason"),
             ) if isinstance(value, str) and value.strip()
         ), "")
         # When service metadata is absent, the complete source title itself
@@ -162,7 +166,7 @@ def received_alert_intents(raw_evidence: list, service_name: str) -> list[dict]:
             title, re.I,
         ):
             continue
-        tag = tag_map.get("dependency") or data.get("dependency")
+        tag = tag_map.get("dependency") or data.get("dependency") or labels.get("dependency")
         intent = analyze_alert_text(title, dependency_tag=tag)
         if intent["basis"] == "negative_alert_text":
             continue
