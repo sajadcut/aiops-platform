@@ -130,7 +130,7 @@ The `GFP_Backend` database-connection test exposed two independent diagnostic fa
 
 A `dependency_investigation` call may successfully parse 4 files and execute 6 TCP checks **without testing the technology named in the received alert**. For example, all six checked endpoints may be Redis or HTTPS even though the alert concerns a SQL database. The alert-focused report now exposes the actual `alert_family`, `matching_endpoint_count`, and `other_dependency_kinds`. The Persian Incident Room explicitly says when no database endpoint was tested and separates unrelated network results. A per-file round-robin and one-representative-per-technology ordering helps a later SQL/Kafka/MQ endpoint share a fixed probe budget with a Redis cluster; this does not authorize any new destination or guarantee all configured peers were checked.
 
-The VM MCP process requires its own trusted `LLM_BASE_URL` and `LLM_MODEL` (plus `LLM_PROVIDER` and a provider token when necessary). A separate API-side LLM setup or a successful LLM call in an incident report does not activate `dependency_config_field_binding` in a PyInstaller-built on-target agent. Never place tokens in logs or in webhook fields.
+Legacy binaries that still report `trusted_llm_not_configured` must be rebuilt. The modern VM Agent never requires its own LLM configuration.
 
 The same incident reported `vm_canonical_unit_mismatch`: alert label `GFP_Backend` requested `gfp_backend`, but systemd returned canonical unit `gfpapi`. This mismatch must not be silently accepted as execution authority. After confirming the two names designate the same loaded unit, explicitly configure `ELASTIC_SERVICE_DISCOVERY_ALIASES={"gfpapi":["GFP_Backend"]}` in the API, restart its process and recheck host discovery. Rebuilding the on-target agent is necessary if its code is stale. If the mapping cannot be independently verified, leave binding unverified and require human review.
 
@@ -138,49 +138,32 @@ Finally, a received test webhook describing 10 database errors is a monitoring s
 
 ## Central AIOps dependency reasoning (control-plane only)
 
-### Optional full-context internal LLM mode (2026-10-20)
+### Full-config context through existing internal LLM (2026-10-20)
 
-The default two-phase dependency workflow continues to project **only** bounded
-non-secret field IDs and literal endpoints. For incidents that require a model to
-inspect all application configuration values (including `ConnectionStrings`,
-`User ID`, `Password`, API endpoints, usernames and credentials), the
-operator can explicitly enable a second, transient mode. This mode is not enabled
-by merely configuring `AIOPS_FULL_CONFIG_LLM_ENABLED`: that separate setting is
-for syntax-repair previews and does not enable dependency diagnosis.
+No new LLM settings or public-key/certificate configuration are required.
+When the existing API-side `LLM_PROVIDER`, `LLM_BASE_URL` and `LLM_MODEL`
+identify an HTTPS gateway, the central dependency workflow automatically
+requests the complete config through the authenticated VM MCP channel.
+The VM Agent itself never connects to the model.
 
-Set `AIOPS_DEPENDENCY_LLM_FULL_CONFIG_ENABLED=true` in both **AIOps API** and
-**VM Agent / VM MCP worker**. On the API set
-`AIOPS_DEPENDENCY_LLM_APPROVED_HOSTS=["your.internal.llm.hostname"]` and
-`LLM_BASE_URL=https://your.internal.llm.hostname/v1`. If the internal CA is
-not in the OS certificate store, configure
-`AIOPS_DEPENDENCY_LLM_CA_BUNDLE_PATH=/path/to/trusted-ca.pem` on the API.
-Only exact, approved HTTPS hostnames can receive complete configuration. The
-central adapter verifies TLS certificates and hostnames for both this mode and
-complete-file syntax-repair prompts, instead of disabling TLS verification.
+For verified files up to 64 KiB, the model receives the full text, including
+database connection strings, usernames and passwords. This information is
+transient: MCP request/response logs, incident evidence, Cognia and UI do not
+receive raw source contents. Source SHA-256, field IDs and selected destinations
+are independently checked before any read-only probe. Files above the budget
+retain the bounded projection; they are never silently truncated.
 
-In `dependency_investigation(mode=discover,include_full_config=true)`, the
-worker reads a systemd-verified config file, parses it, returns its bounded
-host/port IDs and (only for files <=64 KiB) the **entire raw source** in a
-transient base64 field. This base64 is only an encoding, not encryption; the MCP
-or Agent transport must be authenticated and confidential. The API verifies
-source SHA-256 against those exact bytes, removes the raw payload from the MCP
-result, and sends the complete decoded content to its configured internal LLM
-only. The model is still restricted to returning existing candidate IDs. The
-worker rereads and validates those IDs and the source hash before any read-only
-probe. Neither passwords nor the source document are placed in incident
-evidence, Cognia, chat history, frontend responses or MCP request/response
-logs. Files over the size cap are **not silently truncated**; they continue to
-use the bounded non-secret projection.
+The current internal-LLM HTTP client intentionally skips TLS certificate
+validation, including hostname verification, using the existing transport
+behavior. This requires no CA bundle/public key parameter, but does create
+an interception/impersonation risk even with HTTPS: production operators must
+accept that risk on their managed internal network. The URL is still sourced
+only from the configured API settings; neither alerts nor models can replace it.
 
-A full-text prompt does not guarantee extraction of an endpoint: if the local
-parser failed to create independently verifiable database candidate IDs, the
-LLM may explain ambiguity but cannot invent a probe destination. Likewise,
-service alias verification and VM Agent version compatibility are mandatory;
-`agent_upgrade_required` is a deployment failure, not a model diagnosis.
-The user must rebuild and redeploy the **on-VM vmmcpagent executable**, update
-the API and VM MCP together, and validate the endpoint and prompt coverage with
-a real incident. No Python installation is required on managed hosts.
-
+The root-guard public verifier for approved configuration writes is a separate
+mechanism; ignoring local PEM/PUB files in Git does not disable signed
+approval or independent validation. Rebuild and redeploy the API and the
+on-target VM Agent binary together to enable this workflow.
 
 **The VM Agent does not need an LLM endpoint or API key for dependency
 investigation.** The API owns all model inference, and the host worker owns
@@ -200,8 +183,7 @@ bounded read-only connectivity probes.
    and SHA-256 of the source bytes. This phase performs **zero probes**.
 3. The AIOps API invokes its own `LLM_PROVIDER`, `LLM_BASE_URL`,
    `LLM_MODEL`, `LLM_API_KEY` via
-   `central_dependency_config_binding`. The model sees only the matching
-   alert family and chooses previously listed IDs. An invented ID is ignored.
+   `central_dependency_config_binding`. The model sees matching alert-family candidate IDs and, for bounded verified files, the complete configuration. An invented ID is ignored.
 4. Send only file indices, SHA-256, and selected IDs via
    `dependency_investigation(mode=probe)`; never send model-proposed
    hostnames, ports or commands. Worker independently rereads the actual
@@ -221,8 +203,7 @@ A valid DB incident with Redis/HTTP config but no DB endpoint yields
 `alert_dependency_not_discovered` and no unrelated network probes.
 If the central model is unavailable, the worker still safely probes
 independently parsed explicit same-family endpoints, but it cannot assert
-a model-verified split-field binding. Full credentials, connection strings,
-SQL statements and raw log lines must not enter the selection LLM prompt.
+a model-verified split-field binding. Full credentials and connection strings enter the selection prompt only through the authenticated, transient full-config path. Raw database logs and SQL statements remain outside this specific workflow.
 
 **Deployment**: update API, VM MCP and *on-target vmmcpagent binary*
 together to support both phases and the `Names` live alias proof. Do not
