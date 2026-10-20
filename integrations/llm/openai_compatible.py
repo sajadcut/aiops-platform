@@ -329,10 +329,8 @@ class OpenAICompatibleLLMProvider(LLMAdapter):
                     "central_dependency_config_binding", "full_config_llm_repair",
                 }
                 transport = verified_async_client if sensitive_config_stage else insecure_async_client
-                transport_options = (
-                    {"ca_bundle_path": settings.AIOPS_DEPENDENCY_LLM_CA_BUNDLE_PATH}
-                    if sensitive_config_stage else {}
-                )
+                # Use the OS certificate trust store; no new per-feature CA config.
+                transport_options = {}
                 async with transport(
                     timeout=request_timeout,
                     component=f"llm:{self.provider_name}",
