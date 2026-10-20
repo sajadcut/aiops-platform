@@ -323,9 +323,20 @@ class OpenAICompatibleLLMProvider(LLMAdapter):
         for attempt in range(1, transport_attempts + 1):
             attempt_started = time.perf_counter()
             try:
-                async with insecure_async_client(
+                # Credential-bearing full-file workflows require real TLS
+                # certificate and hostname verification (not merely HTTPS).
+                sensitive_config_stage = stage in {
+                    "central_dependency_config_binding", "full_config_llm_repair",
+                }
+                transport = verified_async_client if sensitive_config_stage else insecure_async_client
+                transport_options = (
+                    {"ca_bundle_path": settings.AIOPS_DEPENDENCY_LLM_CA_BUNDLE_PATH}
+                    if sensitive_config_stage else {}
+                )
+                async with transport(
                     timeout=request_timeout,
                     component=f"llm:{self.provider_name}",
+                    **transport_options,
                 ) as client:
                     response = await client.post(
                         self.chat_endpoint,
