@@ -126,9 +126,11 @@ async def investigate_from_aiops(
     """
     use_full_context = _approved_internal_full_config_gateway()
     try:
+        discover_kwargs = {"mode": "discover", "priority_family": priority_family}
+        if use_full_context:
+            discover_kwargs["include_full_config"] = True
         initial = await client.dependency_investigation(
-            target, service, mode="discover", priority_family=priority_family,
-            include_full_config=use_full_context,
+            target, service, **discover_kwargs,
         )
     except TypeError:
         # Backward-compatible local adapter with the old Python signature.
