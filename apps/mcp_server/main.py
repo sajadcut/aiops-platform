@@ -92,6 +92,7 @@ _TOOL_SCHEMAS: Dict[str, Dict[str, Dict[str, Any]]] = {
             "required": ["target", "service"],
             "properties": {**_TARGET, **_SERVICE,
                 "mode": {"type": "string", "enum": ["discover", "probe"]},
+                "include_full_config": {"type": "boolean"},
                 "priority_family": {"type": "string", "enum": [
                     "", "database", "messaging", "message_broker", "redis",
                     "cache", "http", "http_dependency",
@@ -285,6 +286,7 @@ async def _call(provider: str, tool: str, args: Dict[str, Any]) -> Any:
             target, service, mode=args.get("mode", "probe"),
             selections=args.get("selections"),
             priority_family=args.get("priority_family", ""),
+            include_full_config=args.get("include_full_config", False),
         )
     if tool == "redis_dependency_check": return await connector.redis_dependency_check(target, service)
     if tool == "service_config_review": return await connector.service_config_review(target, service)
