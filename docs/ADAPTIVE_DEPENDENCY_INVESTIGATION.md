@@ -138,6 +138,50 @@ Finally, a received test webhook describing 10 database errors is a monitoring s
 
 ## Central AIOps dependency reasoning (control-plane only)
 
+### Optional full-context internal LLM mode (2026-10-20)
+
+The default two-phase dependency workflow continues to project **only** bounded
+non-secret field IDs and literal endpoints. For incidents that require a model to
+inspect all application configuration values (including `ConnectionStrings`,
+`User ID`, `Password`, API endpoints, usernames and credentials), the
+operator can explicitly enable a second, transient mode. This mode is not enabled
+by merely configuring `AIOPS_FULL_CONFIG_LLM_ENABLED`: that separate setting is
+for syntax-repair previews and does not enable dependency diagnosis.
+
+Set `AIOPS_DEPENDENCY_LLM_FULL_CONFIG_ENABLED=true` in both **AIOps API** and
+**VM Agent / VM MCP worker**. On the API set
+`AIOPS_DEPENDENCY_LLM_APPROVED_HOSTS=["your.internal.llm.hostname"]` and
+`LLM_BASE_URL=https://your.internal.llm.hostname/v1`. If the internal CA is
+not in the OS certificate store, configure
+`AIOPS_DEPENDENCY_LLM_CA_BUNDLE_PATH=/path/to/trusted-ca.pem` on the API.
+Only exact, approved HTTPS hostnames can receive complete configuration. The
+central adapter verifies TLS certificates and hostnames for both this mode and
+complete-file syntax-repair prompts, instead of disabling TLS verification.
+
+In `dependency_investigation(mode=discover,include_full_config=true)`, the
+worker reads a systemd-verified config file, parses it, returns its bounded
+host/port IDs and (only for files <=64 KiB) the **entire raw source** in a
+transient base64 field. This base64 is only an encoding, not encryption; the MCP
+or Agent transport must be authenticated and confidential. The API verifies
+source SHA-256 against those exact bytes, removes the raw payload from the MCP
+result, and sends the complete decoded content to its configured internal LLM
+only. The model is still restricted to returning existing candidate IDs. The
+worker rereads and validates those IDs and the source hash before any read-only
+probe. Neither passwords nor the source document are placed in incident
+evidence, Cognia, chat history, frontend responses or MCP request/response
+logs. Files over the size cap are **not silently truncated**; they continue to
+use the bounded non-secret projection.
+
+A full-text prompt does not guarantee extraction of an endpoint: if the local
+parser failed to create independently verifiable database candidate IDs, the
+LLM may explain ambiguity but cannot invent a probe destination. Likewise,
+service alias verification and VM Agent version compatibility are mandatory;
+`agent_upgrade_required` is a deployment failure, not a model diagnosis.
+The user must rebuild and redeploy the **on-VM vmmcpagent executable**, update
+the API and VM MCP together, and validate the endpoint and prompt coverage with
+a real incident. No Python installation is required on managed hosts.
+
+
 **The VM Agent does not need an LLM endpoint or API key for dependency
 investigation.** The API owns all model inference, and the host worker owns
 config parsing, identity verification, independent SHA/field-ID checks and
