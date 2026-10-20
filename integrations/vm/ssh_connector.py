@@ -1253,12 +1253,13 @@ class SSHVMConnector:
     async def dependency_investigation(
         self, target: str, service: str, *,
         mode: str = "probe", selections: list[dict] | None = None,
-        priority_family: str = "",
+        priority_family: str = "", include_full_config: bool = False,
     ) -> Dict[str, Any]:
         from integrations.vm.dependency_investigation import investigate
         return await investigate(
             self, target, service, mode=mode,
             selections=selections, priority_family=priority_family,
+            include_full_config=include_full_config,
         )
 
     async def redis_dependency_check(self, target: str, service: str) -> Dict[str, Any]:
