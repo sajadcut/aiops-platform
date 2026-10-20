@@ -36,6 +36,8 @@ build/
 *.pem
 *.key
 *.pub
+*.crt
+*.cer
 *.p12
 *.pfx
 config-change-verify.pem
