@@ -223,7 +223,7 @@ def discover(config: object, limit: int = MAX_ENDPOINTS) -> list[dict]:
             kind = ("mssql" if comma or "initial catalog" in parts or
                     "trusted_connection" in parts else
                     hint if hint not in {None, "database"} else
-                    "custom_tcp" if ("port" in parts or port) else "database")
+                    "database_tcp" if ("port" in parts or port) else "database")
             explicit = safe_port(parts.get("port") or port)
             default = next((p for k, p in KINDS.values() if k == kind), None)
             # Server/Port can be separate connection-string properties.
@@ -261,7 +261,8 @@ def discover(config: object, limit: int = MAX_ENDPOINTS) -> list[dict]:
             token = item.strip()
             match = HOSTPORT.fullmatch(token)
             if match:
-                put(hint, match.group(1), match.group(2), source_key=source_key,
+                put("database_tcp" if hint == "database" else hint,
+                    match.group(1), match.group(2), source_key=source_key,
                     tls_requested=(hint == "redis" and redis_tls))
             elif hint in {v[0] for v in KINDS.values()} and "=" not in token:
                 default = next((p for k, p in KINDS.values() if k == hint), None)
