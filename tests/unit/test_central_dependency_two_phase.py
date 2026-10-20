@@ -263,3 +263,23 @@ async def test_db_alarm_parses_connectionstrings_server_port_with_credentials():
     assert result["llm_field_binding_status"] == "verified"
     assert "opaque" not in str(model.calls)
     assert "opaque" not in str(result)
+
+
+@pytest.mark.asyncio
+async def test_full_config_inspected_when_parser_cannot_identify_database_fields(monkeypatch):
+    from domain.contracts.config import settings
+    monkeypatch.setattr(settings, "AIOPS_DEPENDENCY_LLM_FULL_CONFIG_ENABLED", True)
+    monkeypatch.setattr(settings, "AIOPS_DEPENDENCY_LLM_APPROVED_HOSTS", ["llm.internal.example"])
+    monkeypatch.setattr(settings, "LLM_BASE_URL", "https://llm.internal.example/v1")
+    worker = VerifiedWorker({
+        "Opaque": {"Cfg": "UnknownDbAlias=db.internal;User=svc;Pwd=VISIBLE_TO_MODEL"}
+    })
+    model = CentralModel({"pairs": [], "endpoint_ids": []})
+    result = await investigate_from_aiops(
+        worker, "vm", "GFP_Backend", priority_family="database", adapter=model,
+    )
+    assert "VISIBLE_TO_MODEL" in str(model.calls[0][0])
+    assert result["llm_full_config_reviewed_files"] == 1
+    assert "VISIBLE_TO_MODEL" not in str(result)
+    assert not worker.probes
+    assert result["status"] == "alert_dependency_not_discovered"
