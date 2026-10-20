@@ -98,16 +98,35 @@ class ElasticsearchMCPClient(MCPClient):
             return {"kind": type(payload).__name__}
         keys = sorted(key for key in payload if key in allowed)[:16]
         nested = {}
-        for key in ("structuredContent", "result", "content", "data"):
+        for key in ("structuredContent", "result", "results", "content", "data"):
             value = payload.get(key)
             if isinstance(value, dict):
-                nested[key] = sorted(k for k in value if k in allowed)[:12]
-            elif isinstance(value, list) and value:
-                first = value[0]
-                nested[key] = (
-                    sorted(k for k in first if k in allowed)[:12]
-                    if isinstance(first, dict) else type(first).__name__
-                )
+                nested[key] = {
+                    "type": "dict",
+                    "keys": sorted(k for k in value if k in allowed)[:12],
+                    "unknown_key_count": sum(1 for k in value if k not in allowed),
+                }
+            elif isinstance(value, list):
+                first = value[0] if value else None
+                nested[key] = {
+                    "type": "list",
+                    "item_count": min(len(value), 501),
+                    "first_item_type": type(first).__name__,
+                    "first_item_keys": (
+                        sorted(k for k in first if k in allowed)[:12]
+                        if isinstance(first, dict) else []
+                    ),
+                }
+            elif isinstance(value, str):
+                stripped = value.strip()
+                nested[key] = {
+                    "type": "str",
+                    "format": ("json" if stripped.startswith(("{", "[")) else
+                               "fenced_json" if stripped.startswith("```json") else
+                               "other"),
+                }
+            elif value is not None:
+                nested[key] = {"type": type(value).__name__}
         return {"kind": "dict", "keys": keys, "nested_keys": nested}
 
     @staticmethod
