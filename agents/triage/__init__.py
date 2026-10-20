@@ -4,6 +4,7 @@ from typing import List, Optional
 from agents.shared.base import AgentInput, AgentOutput, BaseAgent, OperationalHypothesis
 from agents.shared.intelligence import build_deterministic_analysis, prompt_evidence_projection, sanitize_prompt_value
 from agents.triage.engine import build_triage_decision_support
+from apps.alert_text_intent import received_alert_intents
 from domain.contracts.config import settings
 from domain.contracts.logging import logger
 from integrations.llm.base import LLMAdapter
@@ -42,48 +43,15 @@ class TriageAgent(BaseAgent):
 
     @staticmethod
     def _declared_dependency_routes(raw_evidence: list, service_name: str) -> List[str]:
-        """Route explicit, same-service dependency alerts for READ-ONLY triage.
+        """Select read-only specialists from the ORIGINAL alert text first.
 
-        The alert is not root-cause evidence. Do not parse arbitrary log
-        messages or use alerts naming a different service for this purpose.
+        Explicit tags are secondary. Ambiguities and contradictions are
+        exposed via alert_text_intents, not treated as proven root causes.
         """
-        family_routes = {
-            "database": "database", "db": "database", "postgres": "database",
-            "postgresql": "database", "mysql": "database", "mariadb": "database",
-            "mssql": "database", "sqlserver": "database", "oracle": "database",
-            "mongodb": "database", "cassandra": "database",
-            "kafka": "messaging", "activemq": "messaging", "rabbitmq": "messaging",
-            "amqp": "messaging", "messaging": "messaging", "broker": "messaging",
-            "redis": "dependency", "http": "dependency", "https": "dependency",
-            "grpc": "dependency", "upstream": "dependency",
-        }
-        service = str(service_name or "").strip().casefold()
-        if not service:
-            return []
-        routes: List[str] = []
-        for item in raw_evidence[:30]:
-            if not isinstance(item, dict) or str(item.get("source") or "").lower() != "zabbix":
-                continue
-            if str(item.get("type") or "").lower() != "alert":
-                continue
-            raw = item.get("raw_data")
-            if not isinstance(raw, dict):
-                continue
-            if isinstance(raw.get("payload"), dict):
-                raw = raw["payload"]
-            tags = raw.get("tags")
-            tag_map = {
-                str(entry.get("tag") or "").strip().lower(): str(entry.get("value") or "").strip()
-                for entry in tags[:40] if isinstance(entry, dict)
-            } if isinstance(tags, list) else {}
-            alerted_service = str(raw.get("service") or tag_map.get("service") or "").strip()
-            if not alerted_service or alerted_service.casefold() != service:
-                continue
-            declared = str(tag_map.get("dependency") or raw.get("dependency") or "").strip().lower()
-            route = family_routes.get(declared)
-            if route and route not in routes:
-                routes.append(route)
-        return routes
+        return list(dict.fromkeys(
+            intent["route"] for intent in received_alert_intents(raw_evidence, service_name)
+            if intent["route"]
+        ))
 
     async def analyze(self, input_data: AgentInput) -> AgentOutput:
         logger.info(f"TriageAgent analyzing: {input_data.incident_id}")
@@ -100,9 +68,10 @@ class TriageAgent(BaseAgent):
         topology_context = context.get("topology_context", {}) if isinstance(context.get("topology_context", {}), dict) else {}
 
         valid_routes = {str(name).lower() for name in settings.AGENT_ENABLED_AGENTS}
-        declared_dependency_routes = self._declared_dependency_routes(
-            raw_evidence, input_data.service_name,
-        )
+        alert_text_intents = received_alert_intents(raw_evidence, input_data.service_name)
+        declared_dependency_routes = list(dict.fromkeys(
+            intent["route"] for intent in alert_text_intents if intent["route"]
+        ))
         decision = build_triage_decision_support(
             fresh_evidence=evidence,
             raw_evidence=raw_evidence,
@@ -133,7 +102,9 @@ Classify primary_domain from {domains}. Return secondary_domains only when suppo
 Return JSON keys: primary_domain, secondary_domains, severity, health_status, urgency_reason, findings, affected_components, probable_dependencies, blast_radius, hypotheses, missing_evidence, evidence_gaps, next_best_evidence, specialist_routes, route_reasons, rejected_routes, immediate_checks, escalation_target, risk_level, uncertainty_reason, confidence.
 Hypotheses: hypothesis, probability, evidence_ids, conflicting_evidence_ids, falsification_checks, impacted_components, recommended_next_evidence. Only current live evidence IDs may be cited.
 Never invent a VM, OS, Kubernetes workload, deployment, compromise, outage, DB failure, packet loss, queue backlog, recovery failure or metric. immediate_checks are read-only evidence collection.
-Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={input_data.evidence_summary}\nTRIAGE_DECISION_SUPPORT={json.dumps(sanitize_prompt_value(decision), default=str)}\nDETERMINISTIC_ANALYSIS={json.dumps(deterministic, default=str)}\nASSET_CONTEXT={json.dumps(sanitize_prompt_value(asset), default=str)}\nTOPOLOGY_CONTEXT={json.dumps(sanitize_prompt_value(topology_context), default=str)}\nLIVE_EVIDENCE={json.dumps(prompt_evidence, default=str)}\nAUXILIARY_CONTEXT={json.dumps(sanitize_prompt_value(auxiliary), default=str)}\nContextSummary={json.dumps(sanitize_prompt_value(context.get('summary', {})), default=str)}"""
+Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={input_data.evidence_summary}\nALERT_TEXT_INTERPRETATION={json.dumps(sanitize_prompt_value(alert_text_intents), default=str, ensure_ascii=False)}
+Rule: the exact alert message is the primary statement of the reported symptom. Analyze its technology, condition and time window; tags only disambiguate missing topics. A contradiction must be reported; neither text nor tags PROVE a database outage or authorize a VM command.
+TRIAGE_DECISION_SUPPORT={json.dumps(sanitize_prompt_value(decision), default=str)}\nDETERMINISTIC_ANALYSIS={json.dumps(deterministic, default=str)}\nASSET_CONTEXT={json.dumps(sanitize_prompt_value(asset), default=str)}\nTOPOLOGY_CONTEXT={json.dumps(sanitize_prompt_value(topology_context), default=str)}\nLIVE_EVIDENCE={json.dumps(prompt_evidence, default=str)}\nAUXILIARY_CONTEXT={json.dumps(sanitize_prompt_value(auxiliary), default=str)}\nContextSummary={json.dumps(sanitize_prompt_value(context.get('summary', {})), default=str)}"""
         try:
             result = await self.generate_structured(prompt)
         except Exception as exc:
@@ -321,6 +292,7 @@ Incident={input_data.incident_id}\nService={input_data.service_name}\nSummary={i
                 "asset_routing": legacy_asset_routes,
                 "specialist_routes": focused_routes,
                 "alert_dependency_routes": declared_dependency_routes,
+                "alert_text_intents": alert_text_intents,
                 "routing_confidence": decision.get("routing_confidence"),
                 "routing_confidence_band": band,
                 "route_reasons": decision.get("route_reasons", []),
