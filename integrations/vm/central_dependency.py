@@ -183,11 +183,13 @@ async def investigate_from_aiops(
 
     llm_status = "no_safe_host_port_candidates"
     selections: list[dict] = []
+    full_context_reviewed_files = 0
     actionable = [
         item for original in candidates[:4]
         for item in [_focused_fields(original, priority_family)]
         if item.get("inline_endpoint_fields")
         or (item.get("host_fields") and item.get("port_fields"))
+        or (item.get("file_index"), item.get("sha256")) in full_context_by_file
     ]
     if actionable:
         llm_status = "central_llm_unavailable"
@@ -225,6 +227,8 @@ async def investigate_from_aiops(
                             temperature=0.0, max_tokens=300,
                         ), timeout=10.0,
                     )
+                    if (item["file_index"], item["sha256"]) in full_context_by_file:
+                        full_context_reviewed_files += 1
                     selected = _valid_selection(answer, item)
                 except Exception:
                     selected = None
@@ -245,6 +249,7 @@ async def investigate_from_aiops(
     )
     if not isinstance(result, dict) or result.get("success") is not True:
         return result
+    result["llm_full_config_reviewed_files"] = full_context_reviewed_files
     if result.get("llm_field_binding_status") != "verified":
         result["llm_field_binding_status"] = (
             "config_changed" if result.get("llm_field_binding_status") == "config_changed"
