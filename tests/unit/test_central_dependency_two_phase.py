@@ -42,11 +42,12 @@ class VerifiedWorker:
         return {"success": True, "resolved": False}
     async def dependency_investigation(self, target, service, *,
                                        mode="probe", selections=None,
-                                       priority_family=""):
+                                       priority_family="", include_full_config=False):
         self.phase_calls.append((mode, priority_family, selections))
         result = await dependency_investigation.investigate(
             self, target, service, mode=mode,
             selections=selections, priority_family=priority_family,
+            include_full_config=include_full_config,
         )
         return validate_vm_observation("dependency_investigation", target, result)
 
@@ -186,3 +187,123 @@ async def test_old_worker_without_new_python_parameters_is_explicitly_flagged():
     assert result["llm_field_binding_status"] == "agent_upgrade_required"
     assert result["dependency_agent_contract_status"] == "upgrade_required"
     assert result["root_cause_confirmed"] is False
+
+
+@pytest.mark.asyncio
+async def test_approved_internal_llm_receives_full_connection_string_and_secret_transiently(monkeypatch):
+    from domain.contracts.config import settings
+    monkeypatch.setattr(settings, "LLM_PROVIDER", "openai-compatible")
+    monkeypatch.setattr(settings, "LLM_MODEL", "assistance-model")
+    monkeypatch.setattr(settings, "LLM_BASE_URL", "https://llm.internal.example/v1")
+    secret = "BOUND_ONLY_TO_APPROVED_LLM"
+    worker = VerifiedWorker({
+        "ConnectionStrings": {
+            "Primary": "Server=sql.internal,1433;Database=Main;User ID=app;Password=" + secret
+        },
+        "Database": {"Host": "sql.internal", "Port": 1433},
+    })
+    model = CentralModel({"pairs": [{"host_id": "h0", "port_id": "p0"}], "endpoint_ids": []})
+    result = await investigate_from_aiops(
+        worker, "vm", "GFP_Backend", priority_family="database", adapter=model,
+    )
+    assert worker.phase_calls[0][0] == "discover"
+    assert secret in str(model.calls[0][0])
+    assert "ConnectionStrings" in str(model.calls[0][0])
+    assert secret not in str(result)
+    assert (("sql.internal", 1433) in worker.probes)
+    assert result["llm_field_binding_status"] == "verified"
+
+
+@pytest.mark.asyncio
+async def test_non_https_llm_endpoint_cannot_receive_full_config(monkeypatch):
+    from domain.contracts.config import settings
+    monkeypatch.setattr(settings, "LLM_PROVIDER", "openai-compatible")
+    monkeypatch.setattr(settings, "LLM_MODEL", "assistance-model")
+    monkeypatch.setattr(settings, "LLM_BASE_URL", "http://untrusted.example/v1")
+    worker = VerifiedWorker({"Database": {
+        "Host": "db.internal", "Port": 5433, "Password": "MUST_NOT_LEAK"
+    }})
+    model = CentralModel({"pairs": [{"host_id": "h0", "port_id": "p0"}], "endpoint_ids": []})
+    await investigate_from_aiops(
+        worker, "vm", "GFP_Backend", priority_family="database", adapter=model,
+    )
+    assert "MUST_NOT_LEAK" not in str(model.calls)
+    assert "complete_config" not in str(model.calls)
+
+
+@pytest.mark.asyncio
+async def test_full_context_digest_mismatch_rejected(monkeypatch):
+    from domain.contracts.config import settings
+    worker = VerifiedWorker({"Database": {"Host": "db.internal", "Port": 5433}})
+    discovered = await dependency_investigation.investigate(
+        worker, "vm", "GFP_Backend", mode="discover", include_full_config=True,
+    )
+    item = discovered["binding_candidates"][0]
+    item["complete_config_b64"] = base64.b64encode(b'{"Database":{"Password":"tampered"}}').decode()
+    with pytest.raises(ValueError, match="vm_mcp_dependency_complete_config_digest_invalid"):
+        validate_vm_observation("dependency_investigation", "vm", discovered)
+
+
+@pytest.mark.asyncio
+async def test_db_alarm_parses_connectionstrings_server_port_with_credentials():
+    # Regression: ConnectionStrings with explicit Port used to be labeled
+    # custom_tcp and silently excluded from a database-only investigation.
+    worker = VerifiedWorker({
+        "ConnectionStrings": {
+            "Core": "Server=pg.internal;Port=6439;Database=core;User ID=svc;Password=opaque"
+        }
+    })
+    model = CentralModel({"pairs": [], "endpoint_ids": ["e0"]})
+    result = await investigate_from_aiops(
+        worker, "vm", "GFP_Backend", priority_family="database", adapter=model,
+    )
+    assert ("pg.internal", 6439) in worker.probes
+    assert result["dependencies"][0]["kind"] == "database_tcp"
+    assert result["llm_field_binding_status"] == "verified"
+    assert "opaque" not in str(model.calls)
+    assert "opaque" not in str(result)
+
+
+@pytest.mark.asyncio
+async def test_full_config_inspected_when_parser_cannot_identify_database_fields(monkeypatch):
+    from domain.contracts.config import settings
+    monkeypatch.setattr(settings, "LLM_PROVIDER", "openai-compatible")
+    monkeypatch.setattr(settings, "LLM_MODEL", "assistance-model")
+    monkeypatch.setattr(settings, "LLM_BASE_URL", "https://llm.internal.example/v1")
+    worker = VerifiedWorker({
+        "Opaque": {"Cfg": "UnknownDbAlias=db.internal;User=svc;Pwd=VISIBLE_TO_MODEL"}
+    })
+    model = CentralModel({"pairs": [], "endpoint_ids": []})
+    result = await investigate_from_aiops(
+        worker, "vm", "GFP_Backend", priority_family="database", adapter=model,
+    )
+    assert "VISIBLE_TO_MODEL" in str(model.calls[0][0])
+    assert result["llm_full_config_reviewed_files"] == 1
+    assert "VISIBLE_TO_MODEL" not in str(result)
+    assert not worker.probes
+    assert result["status"] == "alert_dependency_not_discovered"
+
+
+@pytest.mark.asyncio
+async def test_discovery_prioritizes_appsettings_over_message_templates():
+    class ManyConfigs(VerifiedWorker):
+        async def service_config_discovery(self, target, service):
+            return {"success": True, "files": [
+                {"path": "/opt/GFP/MessageTemplates.json", "verified_exists": True},
+                {"path": "/opt/GFP/logging.json", "verified_exists": True},
+                {"path": "/opt/GFP/resources.json", "verified_exists": True},
+                {"path": "/opt/GFP/other.json", "verified_exists": True},
+                {"path": "/opt/GFP/appsettings.json", "verified_exists": True},
+                {"path": "/opt/GFP/appsettings.Production.json", "verified_exists": True},
+            ]}
+    worker = ManyConfigs({"Database": {"Host": "db.internal", "Port": 6432}})
+    inventory = await worker.dependency_investigation(
+        "vm", "GFP_Backend", mode="discover", priority_family="database",
+    )
+    paths = [row["config_file"] for row in inventory["binding_candidates"]]
+    assert paths[:2] == [
+        "/opt/GFP/appsettings.Production.json", "/opt/GFP/appsettings.json",
+    ]
+    # Non-config JSON may still be inspected if the bounded budget permits,
+    # but must never displace the primary application settings.
+    assert paths.index("/opt/GFP/MessageTemplates.json") > paths.index("/opt/GFP/appsettings.json")

@@ -323,6 +323,11 @@ class OpenAICompatibleLLMProvider(LLMAdapter):
         for attempt in range(1, transport_attempts + 1):
             attempt_started = time.perf_counter()
             try:
+                # The platform's configured internal LLM gateway uses the
+                # existing TLS-transport policy (certificate verification is
+                # disabled). Do not add a per-workflow CA/public-key setting.
+                # The HTTPS endpoint is still fixed by administrator-owned
+                # LLM_BASE_URL, never by alert text or model output.
                 async with insecure_async_client(
                     timeout=request_timeout,
                     component=f"llm:{self.provider_name}",

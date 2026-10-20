@@ -1,7 +1,9 @@
 """Universal read-only downstream dependency investigation on trusted VM MCP edge.
 
 Requires service identity and systemd-verified config-file path. Models never
-provide targets. No config values, credentials, raw logs or HTTP bodies escape.
+provide targets. Default results expose no raw config; explicitly authorized
+discovery can transiently carry complete files to the central internal LLM.
+No complete content is returned by the probe stage or written to incident evidence.
 """
 from __future__ import annotations
 import base64
@@ -73,12 +75,14 @@ def _matches_priority(kind: str, family: str) -> bool:
 async def investigate(
     connector: Any, target: str, service: str, *,
     mode: str = "probe", selections: list[dict] | None = None,
-    priority_family: str = "",
+    priority_family: str = "", include_full_config: bool = False,
 ) -> dict:
     connector._validate_target(target)
     connector._validate_service(service)
     if mode not in {"probe", "discover"}:
         raise ValueError("vm_dependency_mode_invalid")
+    if type(include_full_config) is not bool or (include_full_config and mode != "discover"):
+        raise ValueError("vm_dependency_full_context_mode_invalid")
     if priority_family not in {"", "database", "messaging", "message_broker",
                                "redis", "cache", "http", "http_dependency"}:
         raise ValueError("vm_dependency_priority_invalid")
@@ -130,6 +134,26 @@ async def investigate(
     if not filenames:
         return {**base, "status": "no_verified_config_files",
                 "limitations": ["systemd_config_path_not_verified"]}
+    # Prefer application settings over unrelated JSON resources when the
+    # verified runtime lists more files than the bounded read budget.
+    # Presence alone still does not establish the effective environment.
+    def _config_priority(path: str) -> tuple[int, str]:
+        filename = path.rsplit("/", 1)[-1].lower()
+        if filename == "appsettings.production.json":
+            return 0, filename
+        if filename in {"appsettings.json", "application-production.yml",
+                        "application-production.yaml", "application-production.properties"}:
+            return 1, filename
+        if filename.startswith("appsettings.") and filename.endswith(".json"):
+            return 2, filename
+        if filename in {"application.yml", "application.yaml",
+                        "application.properties", "application.toml"}:
+            return 2, filename
+        if any(marker in filename for marker in ("database", "connection", "config", "settings")):
+            return 3, filename
+        return 5, filename
+
+    filenames = sorted(dict.fromkeys(filenames), key=_config_priority)
     by_file: list[list[dict]] = []
     read_failed = 0
     if mode == "discover":
@@ -164,12 +188,22 @@ async def investigate(
                 facts = safe_candidate_fields(config)
                 # Worker returns only whitelisted structural Host/Port IDs.
                 # Never raw config, DSN text, passwords or arbitrary values.
+                # Optional, transient context to the authenticated central AIOps
+                # process only. Never truncate a secret-bearing document.
+                # Public incident evidence and probe results must not retain it.
+                full_context = (
+                    {"complete_config_b64": encoded}
+                    if include_full_config and len(raw) <= 65536 else {}
+                )
                 base["binding_candidates"].append({
                     "file_index": file_index,
                     "config_file": verified_path,
                     "sha256": fingerprint,
-                    **facts,
+                    **facts, **full_context,
                 })
+                if full_context:
+                    base["config_contents_exposed"] = True
+                    base["secrets_exposed"] = True
                 base["llm_field_binding_files"].append({
                     "config_file": verified_path,
                     "status": "central_llm_required" if (

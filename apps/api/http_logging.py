@@ -210,6 +210,12 @@ class HTTPTransactionLoggingMiddleware:
             if path.startswith("/api/v1/knowledge-reviews") or path.endswith("/operator-recommendation/fa"):
                 request_payload = {"omitted": "governed_knowledge_content"}
                 response_payload = {"omitted": "governed_knowledge_content"}
+            if path == "/mcp" or path.endswith("/mcp"):
+                # MCP dependency discovery can carry short base64-encoded
+                # secrets that are not detectable by key-based redaction.
+                # Never store MCP request/response payloads in transaction logs.
+                request_payload = {"omitted": "mcp_payload_sensitive"}
+                response_payload = {"omitted": "mcp_payload_sensitive"}
             route = getattr(scope.get("route"), "path", None) or path
             path_params = scope.get("path_params") or {}
             identity = state.get("identity_subject")

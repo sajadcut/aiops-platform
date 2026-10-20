@@ -147,6 +147,11 @@ class MCPClient:
     def _safe_mcp_log(self, payload: Any, *, method: str, tool_name: Optional[str]) -> Any:
         # ES|QL can return confidential log records. Redaction based only on
         # field names or payload size is insufficient; omit query and result.
+        # Authenticated VM discovery may carry complete credential-bearing
+        # documents exclusively for an opted-in internal LLM call. Neither
+        # request nor response body may be serialized into MCP diagnostics.
+        if tool_name == "dependency_investigation":
+            return {"omitted": "dependency_payload_sensitive"}
         if self.server_name == "elastic-agent-builder" and tool_name == "platform_core_execute_esql":
             if isinstance(payload, dict):
                 return {"omitted": "elastic_esql_payload", "isError": bool(

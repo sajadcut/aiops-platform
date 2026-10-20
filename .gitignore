@@ -31,3 +31,14 @@ vmmcpagent/.env
 dist/
 build/
 *.spec
+
+# Host-specific public/private keys and trust certificates (never commit local copies)
+*.pem
+*.key
+*.pub
+*.crt
+*.cer
+*.p12
+*.pfx
+config-change-verify.pem
+config-change-sign.pem
