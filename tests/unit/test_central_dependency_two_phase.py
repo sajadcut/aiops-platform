@@ -283,3 +283,26 @@ async def test_full_config_inspected_when_parser_cannot_identify_database_fields
     assert "VISIBLE_TO_MODEL" not in str(result)
     assert not worker.probes
     assert result["status"] == "alert_dependency_not_discovered"
+
+
+@pytest.mark.asyncio
+async def test_discovery_prioritizes_appsettings_over_message_templates():
+    class ManyConfigs(VerifiedWorker):
+        async def service_config_discovery(self, target, service):
+            return {"success": True, "files": [
+                {"path": "/opt/GFP/MessageTemplates.json", "verified_exists": True},
+                {"path": "/opt/GFP/logging.json", "verified_exists": True},
+                {"path": "/opt/GFP/resources.json", "verified_exists": True},
+                {"path": "/opt/GFP/other.json", "verified_exists": True},
+                {"path": "/opt/GFP/appsettings.json", "verified_exists": True},
+                {"path": "/opt/GFP/appsettings.Production.json", "verified_exists": True},
+            ]}
+    worker = ManyConfigs({"Database": {"Host": "db.internal", "Port": 6432}})
+    inventory = await worker.dependency_investigation(
+        "vm", "GFP_Backend", mode="discover", priority_family="database",
+    )
+    paths = [row["config_file"] for row in inventory["binding_candidates"]]
+    assert paths[:2] == [
+        "/opt/GFP/appsettings.Production.json", "/opt/GFP/appsettings.json",
+    ]
+    assert "/opt/GFP/MessageTemplates.json" not in paths
