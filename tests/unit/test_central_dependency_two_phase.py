@@ -141,3 +141,48 @@ async def test_projection_rejects_unexpected_raw_config_value():
     discovery["binding_candidates"][0]["raw_config"] = "secret bytes"
     with pytest.raises(ValueError, match="vm_mcp_dependency_candidate_shape_invalid"):
         validate_vm_observation("dependency_investigation", "vm", discovery)
+
+
+@pytest.mark.asyncio
+async def test_old_vm_agent_with_single_phase_probes_reports_upgrade_not_llm_failure():
+    class LegacyWorker:
+        async def dependency_investigation(self, target, service, **kwargs):
+            assert target == "vm" and service == "GFP_Backend"
+            return {
+                "success": True, "status": "checks_completed",
+                "config_files_checked": 4,
+                "llm_field_binding_status": "trusted_llm_not_configured",
+                "llm_field_binding_files": [{
+                    "status": "trusted_llm_not_configured",
+                    "candidate_host_count": 6, "candidate_port_count": 6,
+                }],
+                "dependencies": [{
+                    "kind": "redis", "host": "cache.internal",
+                    "port": 6380, "port_inferred": False,
+                    "tcp_reachable": True,
+                }],
+                "limitations": ["network_probe_not_equal_protocol_health"],
+            }
+    result = await investigate_from_aiops(
+        LegacyWorker(), "vm", "GFP_Backend", priority_family="database",
+        adapter=CentralModel({"pairs": [], "endpoint_ids": []}),
+    )
+    assert result["dependency_agent_contract_status"] == "upgrade_required"
+    assert result["llm_field_binding_status"] == "agent_upgrade_required"
+    assert result["root_cause_confirmed"] is False
+    assert result["status"] == "checks_completed"  # raw tool result retained
+    assert "two_phase_central_llm_agent_contract_missing" in result["limitations"]
+    assert result["dependencies"][0]["kind"] == "redis"  # unrelated evidence
+
+
+@pytest.mark.asyncio
+async def test_old_worker_without_new_python_parameters_is_explicitly_flagged():
+    class VeryOldWorker:
+        async def dependency_investigation(self, target, service):
+            return {"success": True, "status": "checks_completed"}
+    result = await investigate_from_aiops(
+        VeryOldWorker(), "vm", "GFP_Backend", priority_family="database",
+    )
+    assert result["llm_field_binding_status"] == "agent_upgrade_required"
+    assert result["dependency_agent_contract_status"] == "upgrade_required"
+    assert result["root_cause_confirmed"] is False

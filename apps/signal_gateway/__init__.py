@@ -1129,10 +1129,20 @@ def signal_from_zabbix(payload: Dict[str, Any]) -> OperationalSignal:
     # A Web Scenario monitoring host is not the monitored service.
     service = normalized.get("service") or _zabbix_service_from_tags(normalized)
     event_time = zabbix_event_time(normalized.get("timestamp"))
+    # OperationalSignal.signal_type is bounded to 128 characters. Zabbix
+    # sends complete, unbounded trigger expressions (Pod/Namespace/Cluster)
+    # as its name. Preserve the full title in summary and raw evidence, but
+    # give the routing field a stable, collision-resistant bounded identity.
+    # Never reject an otherwise valid alert with HTTP 500 for a long title.
+    signal_type = str(normalized.get("trigger") or normalized.get("name") or "zabbix_problem")
+    if len(signal_type) > 128:
+        import hashlib
+        signature = hashlib.sha256(signal_type.encode("utf-8")).hexdigest()[:16]
+        signal_type = signal_type[:111] + "~" + signature
     args = {
         "source": "zabbix",
         "source_id": str(normalized["eventid"]),
-        "signal_type": str(normalized.get("trigger") or normalized.get("name") or "zabbix_problem"),
+        "signal_type": signal_type,
         "severity": str(normalized.get("severity") or "unknown"),
         "summary": str(normalized.get("name") or normalized.get("message") or "Zabbix problem detected"),
         "service": str(service) if service else None,

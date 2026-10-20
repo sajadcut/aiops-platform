@@ -72,6 +72,45 @@ class ElasticsearchMCPClient(MCPClient):
         return '"' + str(value).replace("\\", "\\\\").replace('"', '\\"') + '"'
 
     @staticmethod
+    def _json_text(value: str) -> str:
+        """Remove only an explicit JSON markdown fence, never scan free text."""
+        candidate = value.strip()
+        if len(candidate) > 500_000:
+            return ""
+        if candidate.startswith("```") and candidate.endswith("```"):
+            first, sep, rest = candidate.partition("\n")
+            if sep and first.strip().lower() in {"```json", "```"}:
+                return rest.rsplit("```", 1)[0].strip()
+        return candidate
+
+    @staticmethod
+    def _safe_envelope_shape(payload: Any) -> dict:
+        """Diagnose unrecognized MCP envelopes using TYPES/known keys only.
+
+        No raw JSON, row cells, field values, log messages or secrets.
+        """
+        allowed = {
+            "structuredContent", "result", "content", "data", "results",
+            "rows", "values", "columns", "text", "json", "output",
+            "response", "type", "status", "isError",
+        }
+        if not isinstance(payload, dict):
+            return {"kind": type(payload).__name__}
+        keys = sorted(key for key in payload if key in allowed)[:16]
+        nested = {}
+        for key in ("structuredContent", "result", "content", "data"):
+            value = payload.get(key)
+            if isinstance(value, dict):
+                nested[key] = sorted(k for k in value if k in allowed)[:12]
+            elif isinstance(value, list) and value:
+                first = value[0]
+                nested[key] = (
+                    sorted(k for k in first if k in allowed)[:12]
+                    if isinstance(first, dict) else type(first).__name__
+                )
+        return {"kind": "dict", "keys": keys, "nested_keys": nested}
+
+    @staticmethod
     def _rows_from_payload(payload: Any) -> list[dict[str, Any]]:
         """Decode bounded tabular ES|QL envelopes from Kibana Agent Builder MCP.
 
@@ -86,10 +125,8 @@ class ElasticsearchMCPClient(MCPClient):
             if depth > 6:
                 return []
             if isinstance(value, str):
-                candidate = value.strip()
+                candidate = ElasticsearchMCPClient._json_text(value)
                 if not (candidate.startswith("{") or candidate.startswith("[")):
-                    return []
-                if len(candidate) > 500_000:
                     return []
                 try:
                     return decode(json.loads(candidate), depth + 1)
@@ -141,8 +178,8 @@ class ElasticsearchMCPClient(MCPClient):
         if depth > 6:
             return False
         if isinstance(payload, str):
-            candidate = payload.strip()
-            if len(candidate) > 500_000 or not candidate.startswith(("{", "[")):
+            candidate = ElasticsearchMCPClient._json_text(payload)
+            if not candidate.startswith(("{", "[")):
                 return False
             try:
                 import json
@@ -258,6 +295,7 @@ class ElasticsearchMCPClient(MCPClient):
         rows: list[dict[str, Any]] = []
         succeeded = 0
         unrecognized_payloads = 0
+        unrecognized_envelope_shapes: list[dict] = []
         last_error: Exception | None = None
         recognized_empty_envelopes = 0
         for name in names:
@@ -312,6 +350,10 @@ class ElasticsearchMCPClient(MCPClient):
                                 recognized_empty_envelopes += 1
                             else:
                                 unrecognized_payloads += 1
+                                if len(unrecognized_envelope_shapes) < 2:
+                                    shape = self._safe_envelope_shape(payload)
+                                    if shape not in unrecognized_envelope_shapes:
+                                        unrecognized_envelope_shapes.append(shape)
                         rows.extend(decoded)
                     if rows:
                         break
@@ -328,6 +370,7 @@ class ElasticsearchMCPClient(MCPClient):
             successful_queries=succeeded,
             decoded_rows=len(rows),
             unrecognized_envelopes=unrecognized_payloads,
+            unrecognized_envelope_shapes=unrecognized_envelope_shapes,
             recognized_empty_envelopes=recognized_empty_envelopes,
             observed_schema_lookup=schema_field_names is not None,
         )
@@ -335,6 +378,7 @@ class ElasticsearchMCPClient(MCPClient):
             "success_count": succeeded,
             "decoded_rows": len(rows),
             "unrecognized_envelopes": unrecognized_payloads,
+            "unrecognized_envelope_shapes": unrecognized_envelope_shapes,
             "recognized_empty_envelopes": recognized_empty_envelopes,
             "schema_lookup": schema_field_names is not None,
         }

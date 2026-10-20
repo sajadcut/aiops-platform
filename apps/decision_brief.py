@@ -489,7 +489,11 @@ def _mcp(rows: Iterable[dict], now: datetime) -> tuple[list[dict], list[dict]]:
                 for dep in arr(observed.get("dependencies"))[:6]
             )
             evidence_item["dependency_agent_contract_status"] = (
-                "upgrade_required" if version_mismatch else
+                "upgrade_required" if (
+                    version_mismatch
+                    or observed.get("dependency_agent_contract_status") == "upgrade_required"
+                    or observed.get("llm_field_binding_status") == "agent_upgrade_required"
+                ) else
                 "current" if isinstance(binding_rows, list)
                 and isinstance(observed.get("llm_field_binding_status"), str) else
                 "unverified"

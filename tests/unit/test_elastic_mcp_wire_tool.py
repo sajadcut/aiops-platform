@@ -1038,3 +1038,40 @@ async def test_gfp_prefers_verified_canonical_runtime_with_systemd_id(monkeypatc
     assert discovery["verified_runtime_service"] == "gfpapi"
     assert discovery["mapping_status"] == "verified_live_vm_mcp"
     assert evidence[0]["raw_data"]["unit_id"] == "gfpapi.service"
+
+
+def test_esql_fenced_json_is_decoded_without_executing_text():
+    client = ElasticsearchMCPClient()
+    response = {
+        "structuredContent": {"status": "complete"},
+        "content": [{"type": "text", "text": (
+            "```json\n"
+            '{"columns":[{"name":"@timestamp"},{"name":"service.name"},{"name":"message"}],'
+            '"values":[["2026-10-20T05:25:00Z","GFP_Backend",'
+            '"database connection refused"]]}'
+            "\n```"
+        )}],
+    }
+    selected = client._esql_payloads(response)
+    assert len(selected) == 1
+    rows = client._rows_from_payload(selected[0])
+    assert len(rows) == 1
+    assert rows[0]["service.name"] == "GFP_Backend"
+    assert rows[0]["message"] == "database connection refused"
+    assert client._esql_empty_table(selected[0]) is False
+
+
+def test_esql_unknown_envelope_diagnostic_never_contains_log_or_secret():
+    client = ElasticsearchMCPClient()
+    payload = {
+        "structuredContent": {"status": "complete", "token": "PRIVATE_PASSWORD"},
+        "content": [{"type": "text", "text": "PRIVATE_PASSWORD"}],
+        "password": "PRIVATE_PASSWORD",
+    }
+    shape = client._safe_envelope_shape(payload)
+    assert shape["kind"] == "dict"
+    assert "structuredContent" in shape["keys"]
+    assert "content" in shape["keys"]
+    assert "PRIVATE_PASSWORD" not in str(shape)
+    assert "password" not in str(shape)
+    assert "token" not in str(shape)
