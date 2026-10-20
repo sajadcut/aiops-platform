@@ -35,6 +35,9 @@ class IncidentCoordinator:
         details = triage.get("analysis_details", {}) if isinstance(triage.get("analysis_details", {}), dict) else {}
         requested = [str(x).lower() for x in (triage.get("handoff_agents") or [])]
         focused = [str(x).lower() for x in (details.get("specialist_routes") or [])]
+        # Explicit dependency tags from the SAME alert service reserve a
+        # specialist investigation slot. This is not a causal conclusion.
+        priority = [str(x).lower() for x in (details.get("alert_dependency_routes") or [])]
         primary = str(details.get("primary_domain") or "").lower()
         band = str(details.get("routing_confidence_band") or "").lower()
         conflict_count = int(details.get("topology_conflict_count", 0) or 0) + int(details.get("conflicting_evidence_count", 0) or 0)
@@ -51,6 +54,8 @@ class IncidentCoordinator:
         # The legacy handoff list remains backward compatible but no longer forces
         # broad execution when the deterministic triage engine has a stronger plan.
         if focused:
+            for name in priority:
+                add(name)
             for name in focused:
                 add(name)
             if primary:
@@ -92,6 +97,8 @@ class IncidentCoordinator:
             }
 
         # Legacy contract for callers that do not yet emit specialist_routes.
+        for name in priority:
+            add(name)
         for name in requested:
             add(name)
         if primary:
