@@ -83,10 +83,6 @@ async def investigate(
         raise ValueError("vm_dependency_mode_invalid")
     if type(include_full_config) is not bool or (include_full_config and mode != "discover"):
         raise ValueError("vm_dependency_full_context_mode_invalid")
-    if include_full_config:
-        from domain.contracts.config import settings
-        if not settings.AIOPS_DEPENDENCY_LLM_FULL_CONFIG_ENABLED:
-            raise PermissionError("vm_dependency_full_context_not_enabled")
     if priority_family not in {"", "database", "messaging", "message_broker",
                                "redis", "cache", "http", "http_dependency"}:
         raise ValueError("vm_dependency_priority_invalid")
