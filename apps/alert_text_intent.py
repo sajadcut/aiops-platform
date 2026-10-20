@@ -130,12 +130,20 @@ def received_alert_intents(raw_evidence: list, service_name: str) -> list[dict]:
     for item in raw_evidence[:80]:
         if not isinstance(item, Mapping):
             continue
-        if str(item.get("source") or "").lower() not in {
-            "zabbix", "prometheus", "elasticsearch", "kubernetes",
-        } or str(item.get("type") or "").lower() != "alert":
+        source = str(item.get("source") or "").lower()
+        if source not in {"zabbix", "prometheus", "elasticsearch", "kubernetes"}:
             continue
         raw = item.get("raw_data")
         if not isinstance(raw, Mapping):
+            continue
+        kind = str(item.get("type") or "").lower()
+        # Legacy Alertmanager ingress is projected as type=metric by the
+        # signal gateway. Only its explicit alertmanager marker qualifies;
+        # ordinary Prometheus samples are NOT alert text.
+        if kind != "alert" and not (
+            source == "prometheus" and kind == "metric"
+            and raw.get("prometheus_alert_kind") in {"alertmanager", "alertmanager_recovery"}
+        ):
             continue
         data = raw.get("payload") if isinstance(raw.get("payload"), Mapping) else raw
         tags = data.get("tags")
