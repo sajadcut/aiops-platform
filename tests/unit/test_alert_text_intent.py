@@ -89,7 +89,8 @@ def test_other_service_or_unscoped_log_cannot_control_alert_routes():
 
 
 def test_prometheus_alertmanager_annotation_title_is_analyzed():
-    evidence=[{"source":"prometheus","type":"alert","reference":"am-29","raw_data":{
+    evidence=[{"source":"prometheus","type":"metric","reference":"am-29","raw_data":{
+        "prometheus_alert_kind":"alertmanager",
         "labels":{"service":"GFP_Backend","dependency":"redis"},
         "annotations":{"summary":"GFP_Backend Kafka broker failures reached threshold"},
     }}]
