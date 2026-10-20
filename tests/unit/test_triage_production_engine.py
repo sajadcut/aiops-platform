@@ -256,7 +256,7 @@ def test_zabbix_database_alert_reserves_database_slot_without_claiming_root_caus
     assert "database" not in routes["skipped"]
 
 
-def test_declared_dependency_routes_require_matching_service_and_explicit_tags():
+def test_declared_dependency_routes_require_matching_service_and_use_alarm_text():
     def alert(dependency, service="GFP_Backend", *, source="zabbix"):
         return {"source": source, "type": "alert", "raw_data": {
             "service": service,
@@ -274,7 +274,7 @@ def test_declared_dependency_routes_require_matching_service_and_explicit_tags()
         }},
     ]
     assert TriageAgent._declared_dependency_routes(items, "GFP_Backend") == [
-        "messaging", "dependency",
+        "messaging", "dependency", "database",
     ]
     assert TriageAgent._declared_dependency_routes(items, "another") == []
     assert TriageAgent._declared_dependency_routes([], "") == []

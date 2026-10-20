@@ -1784,6 +1784,26 @@
     // optional LLM prose. systemd observations are supplementary unless the
     // original alarm was itself about service health.
     const alert=r.alert_focused_report||{};
+    const alertSemantics=alert.alert_text_analysis||{};
+    const topicNames={redis:'Redis',database:'دیتابیس',messaging:'صف و پیام‌رسان',
+      http:'HTTP/API',disk:'دیسک',memory:'حافظه',cpu:'CPU',
+      service:'سرویس',network:'شبکه',other:'نامشخص'};
+    const conditionNames={connection_refused:'Connection Refused',
+      connection_timeout:'Connection Timeout',authentication_error:'Authentication',
+      pool_exhaustion:'Connection Pool',error_threshold:'افزایش نرخ خطا',
+      error_reported:'گزارش خطا',unspecified:'نیازمند بررسی'};
+    const alertSemanticMarkup='<p><strong>'+
+      esc(fa?'برداشت ساختاری از متن آلارم: ':'Parsed alert topic: ')+
+      '</strong>'+txt(fa?(topicNames[alertSemantics.family]||alertSemantics.family||'نامشخص'):
+        (alertSemantics.family||'unknown'))+' · '+
+      txt(fa?(conditionNames[alertSemantics.condition]||alertSemantics.condition||'نیازمند بررسی'):
+        (alertSemantics.condition||'unknown'))+
+      ' · '+esc(fa?'مبنای انتخاب: ':'Based on: ')+
+      txt(alertSemantics.basis||'not_analyzed')+'</p>'+
+      (alertSemantics.tag_conflict?
+       '<p class="ic-ir-caution">'+esc(fa?
+         'اختلاف تگ و متن آلارم: متن اصلی برای تعیین موضوع بررسی اولویت دارد؛ هیچ علت ریشه‌ای تأیید نشده است.':
+         'Alert text and dependency tag disagree; original alert topic takes precedence, root cause remains unverified.')+'</p>':'');
     const alertObserved=arr(alert.related_checks);
     const alertName=String(alert.alert_message||i.summary||'').trim();
     const alertPrimary=alert.source_basis==='received_signal';
@@ -1883,6 +1903,7 @@
         (fa?'مستقیماً از سیگنال ذخیره‌شده':'From persisted received signal'):
         (fa?'از خلاصه رخداد؛ متن اصلی سیگنال موجود نیست':'Incident summary fallback; original alert unavailable'))+
       '</p>'+refs([alert.alert_evidence_ref].filter(Boolean))+
+      alertSemanticMarkup+
       focusedMarkup+
       extractionMarkup+
       (focusedMarkup?'':'<p class="ic-ir-caution"><strong>'+

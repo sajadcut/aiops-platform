@@ -10,6 +10,7 @@ import re
 from typing import Any
 
 from apps.received_signal_view import project_received_signal
+from apps.alert_text_intent import analyze_alert_text
 from domain.contracts.redaction import redact
 
 # Open-ended alerts still get a sourced answer. These families only guide
@@ -154,8 +155,24 @@ def build_alert_focused_report(incident: dict, evidence: list[dict],
     message = (_text(selected.get("message"), 420) if selected else "") or incident_summary
     if not message:
         message = "متن مشخصی برای آلارم ثبت نشده است."
-    family = _family(message + " " + _text(selected.get("signal_type"), 120)
-                     if selected else message)
+    # Interpret the literal received alarm first. Tags do not replace the
+    # message, and a conflicting tag must be visible to the operator.
+    original_payload = selected.get("payload") if selected else {}
+    if not isinstance(original_payload, dict):
+        original_payload = {}
+    if isinstance(original_payload.get("payload"), dict):
+        original_payload = original_payload["payload"]
+    original_tags = original_payload.get("tags")
+    dependency_tag = next((
+        row.get("value") for row in original_tags[:40]
+        if isinstance(row, dict) and str(row.get("tag") or "").lower() == "dependency"
+    ), None) if isinstance(original_tags, list) else None
+    if not dependency_tag:
+        dependency_tag = original_payload.get("dependency")
+    alert_intent = analyze_alert_text(message, dependency_tag=dependency_tag)
+    family = alert_intent["family"]
+    if family == "other" and alert_intent["basis"] == "unclassified":
+        family = _family(message)
     observations = []
     binding_diagnostics = []
     expected_service = _text(incident.get("service"), 120).lower().removesuffix(".service")
@@ -375,6 +392,7 @@ def build_alert_focused_report(incident: dict, evidence: list[dict],
         "alert_evidence_ref": source_ref,
         "source_basis": "received_signal" if selected else "incident_summary_fallback",
         "family": family,
+        "alert_text_analysis": alert_intent,
         "related_checks": observations,
         "dependency_extraction_diagnostics": binding_diagnostics,
         "agent_interpretations": agent_interpretations,
