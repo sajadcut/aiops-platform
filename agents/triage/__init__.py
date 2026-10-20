@@ -68,7 +68,14 @@ class TriageAgent(BaseAgent):
         topology_context = context.get("topology_context", {}) if isinstance(context.get("topology_context", {}), dict) else {}
 
         valid_routes = {str(name).lower() for name in settings.AGENT_ENABLED_AGENTS}
-        alert_text_intents = received_alert_intents(raw_evidence, input_data.service_name)
+        # Prefer the original trigger evidence over supplementary alerts from
+        # unrelated monitoring queries in the broad evidence collection.
+        received_triggers = context.get("trigger_evidence")
+        alert_origin = (
+            received_triggers if isinstance(received_triggers, list) and received_triggers
+            else raw_evidence
+        )
+        alert_text_intents = received_alert_intents(alert_origin, input_data.service_name)
         declared_dependency_routes = list(dict.fromkeys(
             intent["route"] for intent in alert_text_intents if intent["route"]
         ))
