@@ -75,6 +75,7 @@ class Settings(BaseSettings):
     # Explicitly opt in to transient, unredacted config context for the approved internal LLM.
     AIOPS_DEPENDENCY_LLM_FULL_CONFIG_ENABLED: bool = Field(default=False)
     AIOPS_DEPENDENCY_LLM_APPROVED_HOSTS: List[str] = Field(default_factory=list)
+    AIOPS_DEPENDENCY_LLM_CA_BUNDLE_PATH: Optional[str] = Field(default=None)
     AIOPS_CONFIG_CANDIDATE_DIRECTORY: str = Field(...)
     AGENT_MAX_DYNAMIC_EVIDENCE_TYPES: int = Field(...)
     AGENT_INITIAL_EVIDENCE_WINDOW_SECONDS: int = Field(...)
